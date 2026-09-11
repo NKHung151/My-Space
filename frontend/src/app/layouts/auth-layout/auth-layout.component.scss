@@ -1,0 +1,90 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.auth-shell {
+  position: relative;
+  display: grid;
+  min-height: 100dvh;
+  padding: clamp(1rem, 4vw, 3rem);
+  place-items: center;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 5%, var(--bg-body)), var(--bg-body) 48%),
+    var(--bg-body);
+}
+
+.auth-shell__ambient {
+  position: absolute;
+  width: 28rem;
+  height: 28rem;
+  border-radius: 50%;
+  background: var(--primary-color);
+  opacity: 0.06;
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+.auth-shell__ambient--top {
+  top: -18rem;
+  right: -11rem;
+}
+
+.auth-shell__ambient--bottom {
+  bottom: -21rem;
+  left: -13rem;
+}
+
+.auth-shell__card {
+  position: relative;
+  width: min(100%, 29rem);
+  padding: clamp(1.4rem, 5vw, 2.25rem);
+  border: 1px solid var(--border-color);
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--bg-panel) 96%, transparent);
+  box-shadow: 0 1.5rem 4rem rgb(15 23 42 / 10%);
+}
+
+.auth-shell__toolbar {
+  position: absolute;
+  top: 2.75rem;
+  right: 2.75rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+
+.auth-shell__toolbar app-theme-toggle {
+  --auth-control-size: 1.75rem;
+  --auth-control-radius: 0.375rem;
+}
+
+.auth-shell__header {
+  display: grid;
+  justify-items: center;
+  padding-top: 0.75rem;
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .auth-shell {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .auth-shell__card {
+    min-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .auth-shell__toolbar {
+    top: 1.5rem;
+    right: 1.5rem;
+  }
+}

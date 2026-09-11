@@ -1,0 +1,59 @@
+.simple-editor-page {
+  min-height: 100vh;
+  background-color: var(--color-surface);
+  
+  .editor-card {
+    background: var(--color-white);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+    .btn-light {
+      background-color: var(--color-surface);
+      border-color: transparent;
+      &:hover {
+        background-color: var(--color-surface-hover);
+      }
+    }
+    
+    .btn-accent {
+      background-color: var(--color-accent);
+      color: var(--color-white);
+      &:hover {
+        background-color: var(--color-accent-hover);
+      }
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  textarea {
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  input.form-control {
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  .editor-tag-group {
+    background: var(--color-surface);
+    border-radius: 6px;
+    padding: 0 8px;
+    input {
+      background: transparent;
+    }
+  }
+}

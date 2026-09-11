@@ -1,0 +1,37 @@
+@if (loading()) {
+  <div class="d-flex justify-content-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Đang tải</span>
+    </div>
+  </div>
+}
+
+@if (error()) {
+  <div class="alert alert-danger m-4" role="alert">
+    {{ error() }}
+  </div>
+}
+
+@if (post(); as p) {
+  <a href="#" (click)="$event.preventDefault(); goBack()"
+    class="text-decoration-none text-muted mb-4 d-inline-flex align-items-center fw-medium mt-3 ms-2">
+    <i class="bi bi-arrow-left me-2"></i>
+    <span>{{ authorPreview()  ? 'Quay lại bài viết của tôi' : 'Quay lại bảng tin' }}</span>
+  </a>
+
+  <div id="postDetailContainer" class="card p-3 p-md-4 border-light-subtle shadow-sm rounded-4 mb-5">
+    <app-post-card 
+      [post]="p" 
+      [isDetailMode]="true" 
+      [detailHtml]="displayedTranslation()?.safeContentHtml || ''" 
+      [hideFooter]="authorPreview()">
+    </app-post-card>
+
+    @if (!authorPreview()) {
+      <app-comment-section [postId]="p.id" [postAuthorId]="p.author.id"></app-comment-section>
+    }
+
+
+
+  </div>
+}

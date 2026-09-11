@@ -1,0 +1,103 @@
+<article class="post-card" [class.border-0]="isDetailMode" [class.shadow-none]="isDetailMode" [class.p-0]="isDetailMode">
+  <header class="post-header mb-2">
+    <div class="author-tooltip-container position-relative w-100 d-flex justify-content-between align-items-center">
+      <a [routerLink]="['/profile', post.author.id]" class="author-group text-decoration-none d-flex align-items-center gap-2">
+        <img
+          [appAssetImage]="post.author.avatarUrl"
+          [alt]="post.author.displayName"
+          class="author-avatar rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 1px solid var(--border-color);" />
+        <div class="author-meta d-flex flex-column">
+          <div class="author-name fw-bold text-dark d-flex align-items-center gap-1" style="font-size: 0.95rem;">
+            {{ post.author.displayName }}
+          </div>
+          <div class="post-time text-muted small" style="font-size: 0.8rem;">
+            {{ post.createdAt | localizedDate }}
+          </div>
+        </div>
+      </a>
+
+      @if (isOwnPost) {
+        <div class="dropdown ms-auto" (click)="$event.stopPropagation()">
+          <button class="btn btn-link text-muted p-1 text-decoration-none shadow-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="outline: none;">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-light-subtle" style="border-radius: 12px; min-width: 150px;">
+            <li>
+              <a class="dropdown-item py-2 fw-medium" [routerLink]="['/workspace/posts', post.id, 'edit']">
+                <i class="bi bi-pencil me-2"></i>Sửa bài viết
+              </a>
+            </li>
+            <li>
+              <button class="dropdown-item py-2 text-danger fw-medium" type="button" (click)="onDeleteClick($event)">
+                <i class="bi bi-trash me-2"></i>Xóa bài viết
+              </button>
+            </li>
+          </ul>
+        </div>
+      }
+
+      <app-author-tooltip [user]="post.author"></app-author-tooltip>
+    </div>
+  </header>
+
+  @if (isDetailMode) {
+    <div class="post-body-link text-reset d-block mt-3 mb-4">
+      @if (tagLabel()) {
+        <div class="mb-3">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill" style="font-size: 0.9rem;">#{{ tagLabel() }}</span>
+        </div>
+      }
+      <div class="article-content text-main" style="line-height: 1.8;" [innerHTML]="detailHtml"></div>
+    </div>
+  } @else {
+    <a [routerLink]="['/post', post.id]" class="post-body-link text-decoration-none text-reset d-block">
+      @if (tagLabel()) {
+        <div class="mb-2">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill" style="font-size: 0.85rem;">#{{ tagLabel() }}</span>
+        </div>
+      }
+      <div class="post-excerpt mb-2" style="font-size: 0.95rem; line-height: 1.5; white-space: pre-line;">
+
+        {{ excerpt() }}
+        <span class="fw-bold cursor-pointer ms-1" style="color: var(--text-muted); font-size: 0.9em;">... Xem thêm</span>
+      </div>
+
+      @if (post.coverVideoUrl) {
+        <div class="post-media mt-2 w-100 position-relative" style="background: #000; display: flex; justify-content: center; min-height: 250px;">
+          @if (isYoutubeEmbed(post.coverVideoUrl)) {
+            <iframe 
+              class="w-100 border-0" 
+              [src]="getSafeYoutubeUrl(post.coverVideoUrl)" 
+              allowfullscreen 
+              (click)="$event.stopPropagation()"
+              style="min-height: 250px; aspect-ratio: 16/9;">
+            </iframe>
+          } @else {
+            <video class="w-100" #videoEl [src]="post.coverVideoUrl" muted loop playsinline (mouseenter)="videoEl.controls = true" (mouseleave)="videoEl.controls = false" (click)="$event.stopPropagation()" style="max-height: 500px; object-fit: contain;"></video>
+          }
+        </div>
+      } @else if (post.coverImageUrl) {
+        <div class="post-media mt-2 w-100 text-center" style="background: #000; display: flex; justify-content: center;">
+          <img class="img-fluid w-100" [src]="post.coverImageUrl" [alt]="post.title" style="max-height: 500px; object-fit: contain;" />
+        </div>
+      }
+    </a>
+  }
+
+  <footer class="post-footer">
+    <button type="button" class="footer-action" [class.liked]="post.liked" (click)="toggleLike($event)">
+      <i class="bi" [class.bi-heart-fill]="post.liked" [class.bi-heart]="!post.liked"></i>
+      <span>{{ post.likeCount | compactNumber }}</span>
+    </button>
+
+    <a [routerLink]="['/post', post.id]" class="footer-action" fragment="comments">
+      <i class="bi bi-chat"></i>
+      <span>{{ post.commentCount | compactNumber }}</span>
+    </a>
+
+    <span class="footer-action muted">
+      <i class="bi bi-eye"></i>
+      <span>{{ post.viewCount | compactNumber }}</span>
+    </span>
+  </footer>
+</article>

@@ -1,0 +1,226 @@
+<div class="mt-5 pt-3 border-top">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Bình luận ({{ totalComments() }})</h4>
+  </div>
+
+  <div class="mb-4">
+    <textarea id="newCommentInput" class="form-control mb-2" rows="1" appAutosize [appAutosizeReset]="resetCounter" style="resize: none; overflow: hidden;"
+      placeholder="Viết bình luận..."
+      [disabled]="isSubmitting()"
+      maxlength="5000"
+      (focus)="handleCommentFocus($event)"
+      [(ngModel)]="newCommentText"></textarea>
+    <div class="d-flex justify-content-end align-items-center">
+      <button id="submitCommentBtn" class="btn btn-primary px-4 rounded-pill fw-medium"
+        [disabled]="!authService.isAuthenticated() || isSubmitting() || !newCommentText.trim()"
+        (click)="submitComment()">
+        @if (isSubmitting()) {
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        } @else {
+          Đăng bình luận
+        }
+      </button>
+    </div>
+  </div>
+
+  <div id="commentsListContainer" class="comments-list mt-4">
+    @if (loading() && currentPage() === 1) {
+      <div class="d-flex justify-content-center py-4">
+        <div class="spinner-border text-primary" role="status"></div>
+      </div>
+    } @else {
+      @for (comment of comments(); track comment.id) {
+        <div class="comment-card py-3 border-bottom border-light-subtle">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="d-inline-flex align-items-center gap-2 author-tooltip-container position-relative text-decoration-none text-body" style="cursor: pointer;" [routerLink]="['/profile', comment.author.id]">
+              <img [appAssetImage]="comment.author.avatarUrl"
+                   class="rounded-circle border" style="width:36px;height:36px;object-fit:cover;" [alt]="comment.author.displayName">
+              <span class="fw-bold fs-6 text-main">{{ comment.author.displayName }}</span>
+              @if (isPostAuthor(comment)) {
+                <span class="badge bg-primary text-white rounded-pill px-2 py-1" style="font-size: 0.65rem; margin-top: 1px;">Tác giả</span>
+              }
+              <app-author-tooltip [user]="comment.author"></app-author-tooltip>
+            </div>
+            <span class="text-muted small ms-auto">
+              @if (isCommentEdited(comment)) {
+                <span class="fst-italic me-1">Đã chỉnh sửa</span>
+              }
+              {{ comment.created_at | localizedDate:'dateTime' }}
+            </span>
+          </div>
+          <div class="mb-1 text-secondary comment-content-text">
+            @if (editingStates()[comment.id] !== undefined) {
+              <div class="edit-container">
+                <textarea class="form-control mb-2" rows="1" appAutosize style="resize: none; overflow: hidden;" maxlength="5000" placeholder="Chỉnh sửa bình luận..." [ngModel]="editingStates()[comment.id]" (ngModelChange)="updateEditingText(comment.id, $event)"></textarea>
+                <div class="d-flex justify-content-end gap-2 mb-2">
+                  <button class="btn btn-sm btn-light rounded-pill px-3 fw-medium" (click)="cancelEdit(comment.id)">Hủy bỏ</button>
+                  <button class="btn btn-sm btn-primary rounded-pill px-3 fw-medium" (click)="saveEdit(comment)">Lưu</button>
+                </div>
+              </div>
+            } @else {
+              <div [class.comment-clamped]="!isExpanded(comment.id) && comment.content.length > 300" style="word-break: break-word;">
+                <span style="white-space: pre-wrap;">{{ comment.content }}</span>
+              </div>
+              @if (comment.content.length > 300) {
+                <span class="text-primary mt-1 fw-medium d-block" style="font-size: 0.85rem; cursor: pointer;" (click)="toggleExpand(comment.id)">{{ isExpanded(comment.id) ? 'Thu gọn' : 'Đọc thêm' }}</span>
+              }
+            }
+          </div>
+          <div class="d-flex align-items-center gap-1 mt-2">
+            <button class="btn-reply d-flex align-items-center gap-1"
+                    [class.liked]="comment.liked" (click)="toggleLike(comment)">
+              <i class="bi" [class.bi-heart]="!comment.liked" [class.bi-heart-fill]="comment.liked"></i> <span class="like-count">{{ comment.likeCount | compactNumber }}</span>
+            </button>
+            <button class="btn-reply" (click)="setReplyTarget(comment, $event)">
+              Trả lời
+            </button>
+            
+            @if (canEdit(comment)) {
+              <button class="btn-reply ms-2" (click)="setEditTarget(comment, $event)">
+                Chỉnh sửa
+              </button>
+            }
+            @if (canDelete(comment)) {
+              <button class="btn-reply ms-1" (click)="deleteComment(comment)">
+                Xóa
+              </button>
+            }
+          </div>
+
+          @if (replyingStates()[comment.id] !== undefined) {
+            <div class="mt-3 pt-3 border-top w-100 reply-container">
+              <textarea class="form-control mb-2" rows="1" appAutosize style="resize: none; overflow: hidden;" maxlength="5000"
+                        placeholder="Viết câu trả lời..."
+                        [ngModel]="replyingStates()[comment.id]" (ngModelChange)="updateReplyingText(comment.id, $event)"></textarea>
+              <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-sm btn-light rounded-pill px-3 fw-medium" (click)="cancelReply(comment.id)">Hủy bỏ</button>
+                  <button class="btn btn-sm btn-primary rounded-pill px-3 fw-medium"
+                          [disabled]="!(replyingStates()[comment.id] || '').trim() || isSubmitting()"
+                          (click)="submitReply(comment)">Trả lời</button>
+              </div>
+            </div>
+          }
+
+          <!-- Replies Level 2 -->
+          @if (comment.replies && comment.replies.length > 0) {
+            <div class="comment-reply-list mt-3 ps-3 border-start border-2">
+              @for (reply of comment.replies; track reply.id) {
+                <div class="comment-reply-card py-2 border-bottom border-light-subtle">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <div class="d-inline-flex align-items-center gap-2 author-tooltip-container position-relative text-decoration-none text-body" style="cursor: pointer;" [routerLink]="['/profile', reply.author.id]">
+                      <img [appAssetImage]="reply.author.avatarUrl"
+                           class="rounded-circle border" style="width:28px;height:28px;object-fit:cover;" [alt]="reply.author.displayName">
+                      <span class="fw-bold fs-6 text-main">{{ reply.author.displayName }}</span>
+                      @if (isPostAuthor(reply)) {
+                        <span class="badge bg-primary text-white rounded-pill px-2 py-1" style="font-size: 0.65rem; margin-top: 1px;">Tác giả</span>
+                      }
+                      <app-author-tooltip [user]="reply.author"></app-author-tooltip>
+                    </div>
+                    <span class="text-muted small ms-auto">
+                      @if (isCommentEdited(reply)) {
+                        <span class="fst-italic me-1">Đã chỉnh sửa</span>
+                      }
+                      {{ reply.created_at | localizedDate:'dateTime' }}
+                    </span>
+                  </div>
+                  <div class="mb-1 text-secondary comment-content-text" style="font-size: 0.95rem;">
+                    @if (editingStates()[reply.id] !== undefined) {
+                      <div class="edit-container">
+                        <textarea class="form-control mb-2 mt-1" rows="1" appAutosize style="resize: none; overflow: hidden;" maxlength="5000" placeholder="Chỉnh sửa bình luận..." [ngModel]="editingStates()[reply.id]" (ngModelChange)="updateEditingText(reply.id, $event)"></textarea>
+                        <div class="d-flex justify-content-end gap-2 mb-2">
+                          <button class="btn btn-sm btn-light rounded-pill px-3 fw-medium" (click)="cancelEdit(reply.id)">Hủy bỏ</button>
+                          <button class="btn btn-sm btn-primary rounded-pill px-3 fw-medium" (click)="saveEdit(reply, comment)">Lưu</button>
+                        </div>
+                      </div>
+                    } @else {
+                      <div [class.comment-clamped]="!isExpanded(reply.id) && reply.content.length > 300" style="word-break: break-word;">
+                        @if (reply.reply_to_username) {
+                          <span class="text-primary fw-semibold me-1">{{ reply.reply_to_username }}</span>
+                        }
+                        <span style="white-space: pre-wrap;">{{ reply.content }}</span>
+                      </div>
+                      @if (reply.content.length > 300) {
+                        <span class="text-primary mt-1 fw-medium d-block" style="font-size: 0.85rem; cursor: pointer;" (click)="toggleExpand(reply.id)">{{ isExpanded(reply.id) ? 'Thu gọn' : 'Đọc thêm' }}</span>
+                      }
+                    }
+                  </div>
+                  <div class="d-flex align-items-center gap-1 mt-2">
+                    <button class="btn-reply d-flex align-items-center gap-1"
+                            [class.liked]="reply.liked" (click)="toggleLike(reply)">
+                      <i class="bi" [class.bi-heart]="!reply.liked" [class.bi-heart-fill]="reply.liked"></i> <span class="like-count">{{ reply.likeCount | compactNumber }}</span>
+                    </button>
+                    <button class="btn-reply" (click)="setReplyTarget(reply, $event)">
+                      Trả lời
+                    </button>
+                    
+                    @if (canEdit(reply)) {
+                      <button class="btn-reply ms-2" (click)="setEditTarget(reply, $event)">
+                        Chỉnh sửa
+                      </button>
+                    }
+                    @if (canDelete(reply)) {
+                      <button class="btn-reply ms-1" (click)="deleteComment(reply, comment)">
+                        Xóa
+                      </button>
+                    }
+                  </div>
+
+                  @if (replyingStates()[reply.id] !== undefined) {
+                    <div class="mt-2 pt-2 border-top reply-container">
+                      <textarea class="form-control mb-2" rows="1" appAutosize style="resize: none; overflow: hidden;" maxlength="5000"
+                                placeholder="Viết câu trả lời..."
+                                [ngModel]="replyingStates()[reply.id]" (ngModelChange)="updateReplyingText(reply.id, $event)"></textarea>
+                      <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-sm btn-light rounded-pill px-3 fw-medium" (click)="cancelReply(reply.id)">Hủy bỏ</button>
+                          <button class="btn btn-sm btn-primary rounded-pill px-3 fw-medium"
+                                  [disabled]="!(replyingStates()[reply.id] || '').trim() || isSubmitting()"
+                                  (click)="submitReply(reply)">Trả lời</button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+      } <!-- Closes @for -->
+      
+      @if (hasMore()) {
+        <div class="d-flex justify-content-center mt-4">
+          <button class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-medium"
+                  (click)="loadMore()" [disabled]="loading()">
+            @if (loading()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Đang tải
+            } @else {
+              Tải thêm bình luận
+            }
+          </button>
+        </div>
+      }
+    } <!-- Closes @else -->
+  </div> <!-- Closes commentsListContainer -->
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteCommentModal" tabindex="-1" aria-labelledby="deleteCommentModalLabel" aria-hidden="true" [class.show]="commentToDelete()" [style.display]="commentToDelete() ? 'block' : 'none'">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title fw-bold" id="deleteCommentModalLabel">Xóa</h5>
+          <button type="button" class="btn-close" (click)="cancelDelete()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-secondary">
+          Bạn có chắc muốn xóa bình luận này không?
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" (click)="cancelDelete()">Hủy bỏ</button>
+          <button type="button" class="btn btn-danger rounded-pill px-4 fw-medium" (click)="confirmDelete()">Xóa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (commentToDelete()) {
+    <div class="modal-backdrop fade show"></div>
+  }
+</div> <!-- Closes .mt-5.pt-3.border-top -->

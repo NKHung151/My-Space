@@ -1,0 +1,170 @@
+:host {
+  display: contents;
+}
+
+.admin-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 1040;
+  display: flex;
+  width: 16.25rem;
+  padding: 1.5rem 1.25rem 1.5rem 0.5rem;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid var(--border-color);
+  background: var(--bg-panel);
+}
+
+.admin-sidebar__brand {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.1rem 0.75rem 1.35rem;
+}
+
+.admin-brand-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.admin-sidebar__brand .myspace-logo {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.admin-panel-badge {
+  display: inline-block;
+  padding: 0.12rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 22%, transparent);
+  border-radius: 999px;
+  background: var(--accent-button-bg);
+  color: var(--primary-color);
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+
+.admin-sidebar__bottom {
+  padding: 1rem 0.35rem 0;
+  border-top: 1px solid var(--border-color);
+}
+
+
+.admin-icon-button {
+  display: inline-grid;
+  width: 2.375rem;
+  height: 2.375rem;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--bg-panel);
+  color: var(--text-main);
+}
+
+.admin-icon-button.admin-sidebar__close {
+  display: none;
+}
+
+.admin-more-container {
+  position: relative;
+}
+
+.admin-more-button {
+  display: flex;
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.65rem 0.75rem;
+  align-items: center;
+  gap: 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+
+  i {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    transition: color var(--transition-speed) ease;
+  }
+}
+
+.admin-more-button:hover,
+.admin-more-container[aria-expanded="true"] .admin-more-button {
+  background: color-mix(in srgb, var(--text-main) 4%, transparent);
+  color: var(--text-main);
+}
+
+.admin-more-button:hover i,
+.admin-more-container[aria-expanded="true"] .admin-more-button i {
+  color: var(--text-main);
+}
+
+.admin-more__menu {
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  left: 0.5rem;
+  display: grid;
+  width: 14rem;
+  padding: 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  background: var(--bg-panel);
+  box-shadow: 0 0.8rem 2rem rgb(15 23 42 / 16%);
+}
+
+.admin-more__menu a,
+.admin-more__menu span,
+.admin-more__menu button {
+  display: flex;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.85rem;
+  align-items: center;
+  gap: 0.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+
+  i {
+    font-size: 1.2rem;
+  }
+}
+
+.admin-more__menu a:hover,
+.admin-more__menu button:hover {
+  background: var(--accent-button-bg);
+  color: var(--primary-color);
+}
+
+.admin-more__menu button {
+  color: #dc3545;
+}
+
+@media (max-width: 991.98px) {
+  .admin-sidebar {
+    width: min(19rem, 86vw);
+    transform: translateX(-102%);
+    transition: transform 180ms ease;
+  }
+
+  .admin-sidebar--open {
+    transform: translateX(0);
+  }
+
+  .admin-icon-button.admin-sidebar__close {
+    display: inline-grid;
+  }
+}

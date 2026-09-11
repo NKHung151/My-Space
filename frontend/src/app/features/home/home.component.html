@@ -1,0 +1,37 @@
+<div class="home-page">
+  <a routerLink="/workspace/create" [queryParams]="{ fresh: '1' }" class="quick-draft-card">
+    <img
+      [appAssetImage]="quickDraftAvatar()"
+      alt="Avatar"
+      class="quick-draft-avatar" />
+    <span class="quick-draft-placeholder">Bạn đang nghĩ gì vậy?</span>
+  </a>
+
+
+
+  @if (loading() && posts().length === 0) {
+    <div class="state-block">
+      <i class="bi bi-arrow-repeat spin"></i>
+      <span>Đang tải nguồn cấp dữ liệu...</span>
+    </div>
+  } @else if (posts().length === 0) {
+    <div class="state-block">
+      <i class="bi bi-inbox"></i>
+      <span>Chưa có bài viết phù hợp.</span>
+    </div>
+  } @else {
+    <div class="posts-list">
+      @for (post of posts(); track post.id) {
+        <app-post-card [post]="post"></app-post-card>
+      }
+    </div>
+
+    @if (page() < totalPages()) {
+      <div #scrollTrigger class="scroll-trigger text-center py-4 text-muted">
+        @if (loadingMore()) {
+          <i class="bi bi-arrow-repeat spin me-2"></i> Đang tải thêm...
+        }
+      </div>
+    }
+  }
+</div>

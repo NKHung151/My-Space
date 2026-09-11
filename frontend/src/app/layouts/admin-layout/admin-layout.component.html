@@ -1,0 +1,18 @@
+<div class="admin-shell">
+  <header class="admin-mobile-header">
+    <button class="admin-icon-button" type="button" aria-label="Mở điều hướng quản trị viên" (click)="menuOpen.set(true)">
+      <i class="bi bi-list" aria-hidden="true"></i>
+    </button>
+    <app-brand></app-brand>
+  </header>
+
+  @if (menuOpen()) {
+    <button class="admin-backdrop" type="button" aria-label="Đóng điều hướng quản trị viên" (click)="closeMenu()"></button>
+  }
+
+  <app-admin-sidebar [isOpen]="menuOpen()" (close)="closeMenu()"></app-admin-sidebar>
+
+  <main class="admin-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

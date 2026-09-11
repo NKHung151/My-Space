@@ -1,0 +1,67 @@
+﻿.comment-card {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.comment-card:last-child {
+  border-bottom: none;
+}
+
+.comment-reply-list {
+  margin-left: 2.5rem;
+  margin-top: 0.75rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border-color);
+}
+.comment-reply-card {
+  margin-bottom: 1rem;
+}
+.comment-reply-card:last-child {
+  margin-bottom: 0;
+}
+.comment-content-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-main) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.btn-reply {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0;
+  margin-right: 1rem;
+  transition: color var(--transition-speed) ease;
+
+  span.like-count {
+    font-variant-numeric: tabular-nums;
+    min-width: 1.2ch;
+    display: inline-block;
+  }
+
+  i {
+    width: 1.15em;
+    text-align: center;
+  }
+}
+.btn-reply:hover {
+  color: var(--primary-color);
+}
+.btn-reply.liked {
+  color: var(--primary-color);
+}
+.btn-reply.liked:hover {
+  opacity: 0.8;
+}
+.btn-translate-toggle {
+  font-size: 0.8rem;
+}
+
+.comment-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

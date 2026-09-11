@@ -1,0 +1,37 @@
+@if (modalService.isOpen()) {
+  <div class="modal-backdrop fade show" (click)="close()"></div>
+  <div class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true" role="dialog" (click)="close()">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden p-3 p-sm-4" (click)="$event.stopPropagation()">
+        
+        <div class="d-flex justify-content-between align-items-center mb-2">
+
+          
+          <button type="button" class="btn-close shadow-none" (click)="close()" aria-label="Đóng" style="font-size: 0.85rem;"></button>
+        </div>
+        
+        <div class="modal-body text-center p-0">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-4" style="width: 56px; height: 56px; background-color: transparent; border: none;">
+            <img src="/assets/images/lingora-mark.svg" width="48" height="48" alt="My Space Logo">
+          </div>
+          
+          <h4 class="fw-bold text-main mb-2">Đăng nhập vào My Space</h4>
+          
+          <p class="text-secondary mb-4" style="font-size: 0.95rem;">
+            <span>Lần đầu tiên ở đây?</span>
+            <a [routerLink]="['/auth/register']" [queryParams]="{ returnUrl: modalService.redirectUrl() }" (click)="close()" class="text-decoration-none fw-medium" style="color: var(--primary-color, #ff6c1f);">
+              Tạo tài khoản
+            </a>
+          </p>
+          
+          <div class="d-grid gap-3 mb-3">
+            <a [routerLink]="['/auth/login']" [queryParams]="{ returnUrl: modalService.redirectUrl() }" (click)="close()" class="btn btn-primary fw-bold py-2" style="border-radius: 8px; font-size: 1rem;">
+              Đăng nhập
+            </a>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+}

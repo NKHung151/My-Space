@@ -1,0 +1,374 @@
+/* Dropdown styling updates (Caret and focus outline resets) */
+.no-caret::after {
+  display: none !important;
+}
+
+#avatarDropdown {
+  text-decoration: none !important;
+  box-shadow: none !important;
+}
+
+/* Force dropdown selects to have clear padding to prevent arrow overlaps */
+.form-select {
+  padding-right: 2.25rem !important;
+  background-position: right 0.75rem center !important;
+}
+
+select.form-select-sm {
+  padding-right: 2rem !important;
+  background-position: right 0.5rem center !important;
+}
+
+/* Custom Primary Switch */
+.form-check-input:checked {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+/* Admin Toast Fix */
+#adminToast,
+#settingsToast {
+  width: min(420px, calc(100vw - 2rem)) !important;
+  max-width: 420px !important;
+}
+
+#adminToast > .d-flex,
+#settingsToast > .d-flex {
+  display: block !important;
+  position: relative;
+}
+
+#adminToast .toast-body,
+#settingsToast .toast-body {
+  display: block !important;
+  width: 100%;
+  padding: 0.9rem 3rem 0.9rem 1rem;
+  line-height: 1.4;
+}
+
+#adminToast .toast-body > i,
+#settingsToast .toast-body > i {
+  display: inline-block;
+  margin-right: 0.45rem;
+  vertical-align: -0.12em;
+}
+
+#adminToast .toast-body > span,
+#settingsToast .toast-body > span {
+  display: inline;
+}
+
+#adminToast .btn-close,
+#settingsToast .btn-close {
+  position: absolute;
+  top: 50%;
+  right: 0.8rem;
+  margin: 0 !important;
+  transform: translateY(-50%);
+}
+
+.destructive-confirm-modal .modal-content {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color) !important;
+  border-radius: 22px !important;
+}
+
+.destructive-confirm-icon {
+  width: 64px;
+  height: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--primary-color);
+  background: var(--accent-button-bg);
+  font-size: 1.75rem;
+}
+
+.destructive-confirm-warning {
+  padding: 0.9rem 1rem;
+  color: var(--primary-color);
+  background: var(--accent-button-bg);
+  border-radius: 10px;
+  font-size: 0.875rem;
+}
+
+
+.auth-field-error {
+  display: none;
+  margin-top: 0.35rem;
+  color: var(--bs-danger);
+  font-size: 0.78rem;
+}
+
+.auth-field-error.is-visible { display: block; }
+.auth-card .form-control.is-invalid { border-color: var(--bs-danger) !important; }
+.auth-card .input-group:has(.form-control.is-invalid) .input-group-text,
+.auth-card .input-group:has(.form-control.is-invalid) .btn { border-color: var(--bs-danger) !important; }
+
+/* iOS Style Switch */
+
+/* Dynamic Auto-sizing Switch with text inside */
+
+/* Elegant Clean Switch (Text Outside) */
+
+/* Beautiful Stable Grid Switch (Text Inside) */
+
+/* Ultra-Compact Grid Switch (Text Inside) */
+
+
+/* Perfect Fixed-Width Toggle */
+.perfect-switch {
+  display: inline-flex;
+  margin: 0;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+}
+.perfect-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.perfect-switch-track {
+  position: relative;
+  box-sizing: border-box;
+  width: 46px;
+  height: 26px;
+  flex: 0 0 46px;
+  border: 1px solid #7d8998;
+  background-color: #98a2b3;
+  border-radius: 99px;
+  transition: background-color 0.3s ease;
+}
+.perfect-switch-input:checked + .perfect-switch-track {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color);
+}
+.perfect-switch-input:disabled + .perfect-switch-track {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* The Thumb */
+.perfect-switch-thumb {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  transform: translateY(-50%);
+  transition: transform 0.2s ease;
+  z-index: 2;
+}
+.perfect-switch-input:checked + .perfect-switch-track .perfect-switch-thumb {
+  transform: translate(20px, -50%);
+}
+.perfect-switch-input:focus-visible + .perfect-switch-track {
+  outline: 3px solid rgba(255, 103, 25, .22);
+  outline-offset: 2px;
+}
+
+/* The Text */
+.perfect-switch-text-on, .perfect-switch-text-off {
+  display: none !important;
+}
+
+/* ── Subscribe / Follow Button (Premium Redesign) ── */
+.btn-subscribe {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 32px;
+  min-width: 120px;
+  padding: 0 1.15rem;
+  border: 1px solid transparent !important;
+  border-radius: 50rem !important;
+  background: var(--primary-color) !important;
+  color: var(--accent-contrast, #ffffff) !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-subscribe:not(.subscribed):hover {
+  background: var(--primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(255, 103, 25, 0.15);
+}
+
+/* Subscribed state: subtle outlined pill */
+.btn-subscribe.subscribed {
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-subscribe:not(.subscribed):hover {
+  background: var(--primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(255, 103, 25, 0.15);
+}
+
+/* Subscribed state: subtle outlined pill */
+.btn-subscribe.subscribed {
+  border: 1px solid #ced4da !important;
+  color: var(--text-main) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Unified Profile Button to match Subscribe Button dimensions and colors */
+.btn-profile-unified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 32px;
+  min-width: 120px;
+  padding: 0 1.15rem;
+  border-radius: 50rem !important;
+  border: 1px solid #ced4da !important;
+  background: transparent !important;
+  color: var(--text-main) !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.btn-profile-unified:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: var(--text-main) !important;
+}
+
+/* Subscribed hover â†’ Twitter/X "Unfollow" red hint */
+.btn-subscribe.subscribed:hover {
+  border-color: #dc2626 !important;
+  color: #dc2626 !important;
+  background: rgba(220, 38, 38, 0.08) !important;
+  transform: none;
+}
+
+/* Hide real text on hover, show unfollow label via data-attr */
+.btn-subscribe.subscribed:hover .btn-subscribe-label {
+  visibility: hidden;
+}
+.btn-subscribe.subscribed:hover::after {
+  content: attr(data-unfollow-label);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+
+/* Editor Code Block Styles */
+.editor-code-block,
+.post-content .editor-code-block,
+.content-html .editor-code-block {
+  margin: 24px 0;
+  border: 1px solid var(--border-color, #e5e8e6);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-panel, #ffffff);
+}
+
+.editor-code-body {
+  min-height: 64px;
+  margin: 0 !important;
+  padding: 16px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--text-main, #252a2a) !important;
+  background: var(--bg-panel, #ffffff) !important;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: auto;
+  tab-size: 2;
+  white-space: pre-wrap;
+  position: relative;
+}
+
+.editor-code-body code {
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: inherit;
+}
+
+.code-line {
+  display: flex;
+  align-items: baseline;
+  min-width: max-content;
+  position: relative;
+}
+
+.code-line::before {
+  content: none;
+}
+
+.line-number {
+  flex: 0 0 40px;
+  color: var(--text-muted, #adb5bd);
+  text-align: right;
+  border-right: 1px solid var(--border-color, #dee2e6);
+  padding-right: 12px;
+  user-select: none;
+}
+
+.line-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 14px;
+  white-space: pre-wrap;
+}
+
+.post-content .editor-code-toolbar,
+.content-html .editor-code-toolbar,
+.post-content .editor-code-delete,
+.content-html .editor-code-delete,
+.post-content .editor-code-language-menu,
+.content-html .editor-code-language-menu {
+  display: none !important;
+}
+
+
+
+  .post-content a,
+  .content-html a {
+    color: #0ea5e9;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.14em;
+  }
+
+
+  .post-content a,
+  .content-html a {
+    color: #0ea5e9;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.14em;
+  }

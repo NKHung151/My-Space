@@ -1,0 +1,40 @@
+.ui-state {
+  display: grid;
+  min-height: 16rem;
+  padding: 2rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.75rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 1rem;
+  background: var(--bg-panel);
+  text-align: center;
+}
+
+.ui-state__icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-button-bg);
+  color: var(--primary-color);
+  font-size: 1.25rem;
+}
+
+.ui-state__icon--error {
+  background: rgb(220 53 69 / 10%);
+  color: #dc3545;
+}
+
+.ui-state__title {
+  margin: 0.25rem 0 0;
+  font-size: 1.05rem;
+}
+
+.ui-state__description {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

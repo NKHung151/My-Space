@@ -1,0 +1,53 @@
+:root,
+[data-bs-theme="light"] {
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-serif: 'Lora', 'Merriweather', 'Spectral', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-size-base: 16px;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+
+  /* Myspace Light Palette */
+  --bg-body: #ffffff;
+  --bg-sidebar: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-secondary: #f7f7f8;
+  --text-main: #1a1a1a;
+  --text-muted: #757575;
+  --border-color: #f0f0f0;
+  --border-light: #f5f5f5;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  --primary-color: #0095f6;
+  /* Modern Social Network Blue */
+  --primary-hover: #0077c5;
+
+  /* Button Accent (Light blue background) */
+  --accent-button-bg: rgba(0, 149, 246, 0.08);
+  --accent-button-text: #0095f6;
+
+  --transition-speed: 0.25s;
+
+  /* Sync Bootstrap 5 Variables */
+  --bs-body-bg: #ffffff;
+  --bs-body-color: #1a1a1a;
+  --bs-tertiary-bg: #ffffff;
+  --bs-secondary-bg: #f7f7f8;
+  --bs-border-color: #f0f0f0;
+  --bs-border-color-translucent: rgba(0, 0, 0, 0.08);
+  --bs-heading-color: #1a1a1a;
+  --bs-link-color: #1a1a1a;
+  --bs-dropdown-bg: #ffffff;
+  --bs-dropdown-link-color: #1a1a1a;
+  --bs-dropdown-border-color: #f0f0f0;
+  --bs-modal-bg: #ffffff;
+  --bs-modal-color: #1a1a1a;
+  --bs-modal-border-color: #f0f0f0;
+}
+
+

@@ -1,0 +1,21 @@
+# === BACKEND (Spring Boot) ===
+myspace/target/
+myspace/src/main/resources/application.properties
+myspace/src/main/resources/application-*.properties
+!myspace/src/main/resources/application.properties.example
+myspace/.mvn/wrapper/maven-wrapper.jar
+myspace/HELP.md
+
+# === FRONTEND (Angular) ===
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/cache/
+
+# === CHUNG ===
+.env
+*.env.local
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml

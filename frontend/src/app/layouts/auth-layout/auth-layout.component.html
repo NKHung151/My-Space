@@ -1,0 +1,18 @@
+<main class="auth-shell">
+  <div class="auth-shell__ambient auth-shell__ambient--top" aria-hidden="true"></div>
+  <div class="auth-shell__ambient auth-shell__ambient--bottom" aria-hidden="true"></div>
+
+  <section class="auth-shell__card" aria-labelledby="auth-page-title">
+    <div class="auth-shell__toolbar">
+
+
+    </div>
+
+    <header class="auth-shell__header">
+      <app-brand></app-brand>
+      <ng-content select="[auth-heading]"></ng-content>
+    </header>
+
+    <ng-content></ng-content>
+  </section>
+</main>

@@ -1,0 +1,56 @@
+<aside class="admin-sidebar" [class.admin-sidebar--open]="isOpen" aria-label="Điều hướng của quản trị viên">
+  <div class="admin-sidebar__top">
+    <div class="admin-sidebar__brand">
+      <div class="admin-brand-stack">
+        <app-brand link="/admin" />
+        <span class="admin-panel-badge">Quản trị viên</span>
+      </div>
+      <button class="admin-icon-button admin-sidebar__close" type="button" aria-label="Đóng điều hướng quản trị viên" (click)="closeMenu()">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <nav class="app-nav">
+      @for (item of navItems; track item.labelKey) {
+        @if (item.route) {
+          <a
+            class="app-nav-item"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="closeMenu()">
+            <i class="bi {{ item.icon }}" aria-hidden="true"></i>
+            <span>{{ item.labelKey }}</span>
+          </a>
+        } @else {
+          <button class="app-nav-item" type="button" aria-disabled="true">
+            <i class="bi {{ item.icon }}" aria-hidden="true"></i>
+            <span>{{ item.labelKey }}</span>
+          </button>
+        }
+      }
+    </nav>
+  </div>
+
+  <div class="admin-sidebar__bottom">
+
+    <div class="admin-more-container" data-admin-more>
+      <button
+        class="admin-more-button"
+        type="button"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="moreMenuOpen()"
+        (click)="toggleMoreMenu($event)">
+        <i class="bi bi-list" aria-hidden="true"></i>
+        <span>Thêm</span>
+      </button>
+
+      @if (moreMenuOpen()) {
+        <div class="admin-more__menu" role="menu">
+          <a routerLink="/admin/settings" (click)="closeMoreMenu()"><i class="bi bi-gear" aria-hidden="true"></i>Cài đặt</a>
+          <button type="button" (click)="logout()"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Đăng xuất</button>
+        </div>
+      }
+    </div>
+  </div>
+</aside>

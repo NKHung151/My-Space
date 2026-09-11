@@ -1,0 +1,266 @@
+<section class="container-fluid pt-0 pb-4 px-0" style="max-width: 780px; margin: 0 auto;">
+  <div class="sticky-top bg-body pt-4 pb-3 mb-4 border-bottom px-3" style="z-index: 1020;">
+
+    <div class="text-center">
+      <h1 class="h3 fw-bold mb-1">Cài đặt &amp; Tùy chọn</h1>
+      <p class="text-muted small mb-0">Quản lý tài khoản, giao diện và hồ sơ của bạn trên My Space.</p>
+    </div>
+  </div>
+
+  <div class="px-3">
+    <!-- Sidebar / Tabs -->
+    <aside class="mb-4">
+      <ul class="nav nav-pills justify-content-center gap-2 flex-nowrap overflow-auto pb-2" style="scrollbar-width: none;">
+        <li class="nav-item">
+          <button class="nav-link rounded-pill d-flex align-items-center gap-2" [class.active]="activeTab() === 'profile'" (click)="setTab('profile')">
+            <i class="bi bi-person-lines-fill"></i> Hồ sơ cá nhân
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link rounded-pill d-flex align-items-center gap-2" [class.active]="activeTab() === 'account'" (click)="setTab('account')">
+            <i class="bi bi-shield-lock"></i> Tài khoản & Bảo mật
+          </button>
+        </li>
+        @if (!adminContext) {
+          <li class="nav-item">
+            <button class="nav-link rounded-pill d-flex align-items-center gap-2" [class.active]="activeTab() === 'appearance'" (click)="setTab('appearance')">
+              <i class="bi bi-palette"></i> Giao diện & Đọc
+            </button>
+          </li>
+        }
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div>
+      
+      <!-- TAB: PROFILE -->
+      @if (activeTab() === 'profile') {
+        <article id="profile" class="card shadow-sm rounded-4 p-4 p-md-5 border-light-subtle mb-4">
+          <div class="mb-3">
+            <h2 class="h5 fw-bold mb-1">Chỉnh sửa hồ sơ</h2>
+            <p class="text-muted small mb-0">Cập nhật thông tin cá nhân và cách người khác nhìn thấy bạn.</p>
+          </div>
+          <hr class="text-light-subtle mb-4">
+          
+          <form id="profileForm" class="mt-4">
+            <div class="edit-avatar-wrap mb-4" style="position: relative; width: max-content;">
+              <button class="edit-avatar-button" type="button" aria-label="Change avatar"
+                (click)="avatarInput.click()" [disabled]="uploadingAvatar()">
+                <span class="profile-avatar has-image" style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; display: block; background: #e2e8f0;">
+                  <img [appAssetImage]="avatarUrl" [alt]="profileForm.displayName" style="width: 100%; height: 100%; object-fit: cover;">
+                </span>
+              </button>
+              <button class="edit-pencil" type="button" aria-label="Change avatar"
+                style="position: absolute; bottom: 0; right: 0; background: var(--bs-primary); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+                (click)="avatarInput.click()" [disabled]="uploadingAvatar()"><i
+                  class="bi bi-pencil" aria-hidden="true"></i></button>
+              <input #avatarInput class="hidden-file" style="display: none;" id="avatarInput" type="file" accept="image/*"
+                (change)="onAvatarSelected($event)">
+            </div>
+
+            <div class="field mb-3">
+              <label for="displayName" class="form-label fw-bold small">Tên hiển thị</label>
+              <input class="form-control" id="displayName" type="text" [(ngModel)]="profileForm.displayName" name="displayName" autocomplete="name">
+            </div>
+
+            <div class="field mb-3">
+              <label for="username" class="form-label fw-bold small">Tên định danh</label>
+              <div class="input-group">
+                <input class="form-control bg-light" id="username" type="text" [value]="profileForm.username" readonly aria-readonly="true">
+                <button class="btn btn-outline-secondary" type="button" (click)="showHandleModal.set(true)">Thay đổi</button>
+              </div>
+            </div>
+
+            <div class="field mb-4">
+              <label for="bio" class="form-label fw-bold small">Tiểu sử</label>
+              <textarea class="form-control" id="bio" rows="3" [(ngModel)]="profileForm.bio" name="bio"></textarea>
+            </div>
+
+
+            <button class="btn btn-primary px-4 py-2" type="button" (click)="saveProfile()" [disabled]="savingProfile() || uploadingAvatar()">
+              {{ savingProfile() ? 'Đang lưu...' : 'Lưu thay đổi' }}
+            </button>
+          </form>
+        </article>
+      }
+
+      <!-- TAB: ACCOUNT -->
+      @if (activeTab() === 'account') {
+        <article id="account" class="card shadow-sm rounded-4 p-4 p-md-5 border-light-subtle mb-4">
+          <div class="mb-3">
+            <h2 class="h5 fw-bold mb-1">Tài khoản & Bảo mật</h2>
+            <p class="text-muted small mb-0">Cập nhật mật khẩu để bảo vệ tài khoản của bạn.</p>
+          </div>
+          <hr class="text-light-subtle mb-4">
+
+          <form class="password-form mt-4" (ngSubmit)="submitPassword()">
+            <div class="mb-3">
+              <label for="profileCurrentPassword" class="form-label fw-bold small">Mật khẩu hiện tại</label>
+              <div class="input-group">
+                <input class="form-control" id="profileCurrentPassword" [type]="passwordFieldType" autocomplete="current-password" [(ngModel)]="passwordForm.current" (ngModelChange)="clearPasswordError('current')" name="currentPassword" [class.is-invalid]="!!passwordError('current')">
+                <button class="btn btn-outline-secondary" type="button" (click)="togglePasswordVisibility()">
+                  <i class="bi" [ngClass]="passwordFieldType === 'password' ? 'bi-eye' : 'bi-eye-slash'" aria-hidden="true"></i>
+                </button>
+              </div>
+              @if (passwordError('current'); as error) {
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label for="profileNewPassword" class="form-label fw-bold small">Mật khẩu mới</label>
+              <div class="input-group">
+                <input class="form-control" id="profileNewPassword" [type]="passwordFieldType" autocomplete="new-password" [(ngModel)]="passwordForm.new" (ngModelChange)="clearPasswordError('new')" name="newPassword" maxlength="72" [class.is-invalid]="!!passwordError('new')">
+                <button class="btn btn-outline-secondary" type="button" (click)="togglePasswordVisibility()">
+                  <i class="bi" [ngClass]="passwordFieldType === 'password' ? 'bi-eye' : 'bi-eye-slash'" aria-hidden="true"></i>
+                </button>
+              </div>
+              @if (passwordError('new'); as error) {
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              } @else {
+                <div class="form-text">Dùng 8–72 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt; không dùng khoảng trắng.</div>
+              }
+            </div>
+
+            <div class="mb-4">
+              <label for="profileConfirmPassword" class="form-label fw-bold small">Xác nhận mật khẩu mới</label>
+              <div class="input-group">
+                <input class="form-control" id="profileConfirmPassword" [type]="passwordFieldType" autocomplete="new-password" [(ngModel)]="passwordForm.confirm" (ngModelChange)="clearPasswordError('confirm')" name="confirmPassword" [class.is-invalid]="!!passwordError('confirm')">
+                <button class="btn btn-outline-secondary" type="button" (click)="togglePasswordVisibility()">
+                  <i class="bi" [ngClass]="passwordFieldType === 'password' ? 'bi-eye' : 'bi-eye-slash'" aria-hidden="true"></i>
+                </button>
+              </div>
+              @if (passwordError('confirm'); as error) {
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              }
+            </div>
+
+            <button class="btn btn-primary px-4 py-2" type="submit" [disabled]="savingPassword()">
+              {{ savingPassword() ? 'Đang cập nhật...' : 'Cập nhật mật khẩu' }}
+            </button>
+            @if (passwordErrors().form; as error) {
+              <div class="text-danger mt-2 small">{{ error }}</div>
+            }
+          </form>
+        </article>
+      }
+
+
+      <!-- TAB: APPEARANCE -->
+      @if (activeTab() === 'appearance' && !adminContext) {
+        <article class="card shadow-sm rounded-4 p-4 p-md-5 border-light-subtle mb-4">
+          <div class="mb-3">
+            <h2 class="h5 fw-bold mb-1"><i class="bi bi-sliders me-2 text-primary" aria-hidden="true"></i>Tùy chọn đọc</h2>
+            <p class="text-muted small mb-0">Tùy chỉnh cách bài viết và phương tiện xuất hiện trong nguồn cấp dữ liệu của bạn.</p>
+          </div>
+          <hr class="text-light-subtle mb-4">
+
+          <div class="d-flex flex-column gap-3">
+            <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 bg-light bg-opacity-50">
+              <div>
+                <strong class="d-block mb-1">Chế độ đọc nhỏ gọn</strong>
+                <small class="text-muted">Giảm kích thước hình ảnh và tăng mật độ bài viết trong nguồn cấp dữ liệu.</small>
+              </div>
+              <div class="form-check form-switch ms-3">
+                  <input class="form-check-input" type="checkbox" role="switch" id="compactViewSwitch"
+                         [ngModel]="preferences().compactView" 
+                         (ngModelChange)="updatePreference('compactView', $event)">
+                </div>
+              </div>
+              
+              <!-- Auto-play Media -->
+              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 bg-light bg-opacity-50">
+                <div>
+                  <strong class="d-block mb-1">Tự động phát video & GIF</strong>
+                  <small class="text-muted">Tự động phát phương tiện khi bạn cuộn qua một bài viết.</small>
+                </div>
+                <div class="form-check form-switch ms-3">
+                  <input class="form-check-input" type="checkbox" role="switch" id="autoPlaySwitch"
+                         [ngModel]="preferences().autoPlayMedia" 
+                         (ngModelChange)="updatePreference('autoPlayMedia', $event)">
+              </div>
+            </div>
+          </div>
+        </article>
+      }
+
+    </div>
+  </div>
+</section>
+
+<!-- MODALS -->
+
+<!-- Handle Modal -->
+<div class="handle-modal" [hidden]="!showHandleModal()">
+  <div class="handle-modal-backdrop" (click)="showHandleModal.set(false)" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1040;"></div>
+  <section class="handle-modal-panel bg-body p-4 rounded-4" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);" role="dialog">
+    <header class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h3 class="h5 mb-0 fw-bold">Chỉnh sửa tên định danh</h3>
+        <button class="btn-close" type="button" (click)="showHandleModal.set(false)" aria-label="Đóng"></button>
+      </div>
+      <p class="text-muted small mb-0">Tên định danh giúp mọi người tìm thấy và kết nối với bạn trên My Space.</p>
+    </header>
+
+    <div class="d-flex flex-column gap-3 mb-4">
+      <label class="form-check p-3 border rounded-3 d-flex align-items-center m-0" style="cursor: pointer;">
+        <input class="form-check-input m-0 me-3" type="radio" name="handleChoice" value="current" [(ngModel)]="handleOption">
+        <div>
+          <div class="fw-bold">{{ profileForm.username }}</div>
+          <div class="text-muted small">Tên định danh hiện tại</div>
+        </div>
+      </label>
+
+      <label class="form-check p-3 border rounded-3 d-flex align-items-center m-0" style="cursor: pointer;">
+        <input class="form-check-input m-0 me-3" type="radio" name="handleChoice" value="suggested" [(ngModel)]="handleOption">
+        <div>
+          <div class="fw-bold">Được đề xuất</div>
+          <div class="text-muted small">Được tạo tự động</div>
+        </div>
+      </label>
+
+      <label class="form-check p-3 border rounded-3 d-flex align-items-center m-0" style="cursor: pointer;">
+        <input class="form-check-input m-0 me-3" type="radio" name="handleChoice" value="custom" [(ngModel)]="handleOption">
+        <div class="w-100">
+          <input class="form-control border-0 p-0 shadow-none" type="text" placeholder="@ Nhập tên định danh" autocomplete="off" spellcheck="false" [(ngModel)]="customHandle">
+        </div>
+      </label>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button class="btn btn-light" type="button" (click)="showHandleModal.set(false)">Hủy bỏ</button>
+      <button class="btn btn-primary" type="button" (click)="updateHandle()">Cập nhật tên định danh</button>
+    </div>
+  </section>
+</div>
+
+<!-- Avatar Crop Modal -->
+@if (avatarCropOpen()) {
+  <div class="avatar-crop-backdrop" role="presentation" (click)="cancelAvatarCrop()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1040;">
+    <section class="avatar-crop-dialog bg-body p-4 rounded-4" role="dialog" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; width: 90%; max-width: 500px;" (click)="$event.stopPropagation()">
+      <header class="mb-4 text-center">
+        <h3 class="h5 fw-bold mb-1">Điều chỉnh ảnh hồ sơ</h3>
+        <p class="text-muted small mb-0">Kéo và thu phóng hình ảnh để điều chỉnh.</p>
+      </header>
+
+      <div class="avatar-crop-stage d-flex justify-content-center bg-dark mb-3 rounded" style="overflow: hidden; height: 300px; position: relative;">
+        <div class="avatar-crop-viewport" style="width: 260px; height: 260px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: move;"
+          (pointerdown)="beginAvatarCropDrag($event)" (pointermove)="moveAvatarCrop($event)" (pointerup)="endAvatarCrop($event)" (pointercancel)="endAvatarCrop($event)">
+          <img class="avatar-crop-image" [src]="cropImageUrl()" [style.width.px]="cropDisplayWidth()" [style.height.px]="cropDisplayHeight()" [style.transform]="cropTransform()" style="position: absolute; top: 50%; left: 50%; max-width: none; pointer-events: none;" alt="" draggable="false">
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-3 mb-4 px-3">
+        <i class="bi bi-image text-muted"></i>
+        <input type="range" class="form-range flex-grow-1" min="1" max="3" step="0.01" [ngModel]="cropZoom()" (ngModelChange)="updateCropZoom($event)">
+        <i class="bi bi-image-fill text-muted"></i>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-light" type="button" (click)="cancelAvatarCrop()">Hủy bỏ</button>
+        <button class="btn btn-primary" type="button" (click)="confirmAvatarCrop()">Sử dụng ảnh</button>
+      </div>
+    </section>
+  </div>
+}

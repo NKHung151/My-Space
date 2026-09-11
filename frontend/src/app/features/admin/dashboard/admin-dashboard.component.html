@@ -1,0 +1,77 @@
+<div class="admin-container">
+  <header class="admin-header">
+    <span>
+      <h1>Tổng quan</h1>
+      <p>Thống kê nền tảng trực tiếp, kiểm duyệt và xã hội.</p>
+    </span>
+  </header>
+
+  @if (loading()) {
+    <app-ui-state kind="loading" title="Đang tải trang tổng quan" description="Thu thập số liệu thống kê nền tảng mới nhất." />
+  } @else if (error()) {
+    <app-ui-state kind="error" title="Trang tổng quan không có sẵn" [description]="error()" actionLabel="Thử lại" (action)="loadOverview()" />
+  } @else {
+    @if (overview(); as data) {
+    <section class="stats-grid" aria-label="Platform statistics">
+      @for (stat of stats(); track stat.label) {
+        @if (stat.route) {
+          <a class="admin-card stat-card stat-card--link" [routerLink]="stat.route" [attr.aria-label]="'Mở quản lý: ' + stat.label">
+            <span class="stat-icon" aria-hidden="true"><i class="bi {{ stat.icon }}"></i></span>
+            <span><small>{{ stat.label }}</small><strong>{{ formatNumber(stat.value) }}</strong></span>
+            <i class="bi bi-arrow-up-right stat-link-icon" aria-hidden="true"></i>
+          </a>
+        } @else {
+          <article class="admin-card stat-card">
+            <span class="stat-icon" aria-hidden="true"><i class="bi {{ stat.icon }}"></i></span>
+            <span><small>{{ stat.label }}</small><strong>{{ formatNumber(stat.value) }}</strong></span>
+          </article>
+        }
+      }
+    </section>
+
+    <section class="dashboard-primary-row">
+      <article class="admin-card chart-card">
+        <header class="card-heading">
+          <span><h2>Người dùng mới</h2><p>Đăng ký trong 7 ngày qua</p></span>
+          <strong>{{ formatNumber(data.users.byStatus['active'] || 0) }} Đang hoạt động</strong>
+        </header>
+        <div class="chart-box" aria-label="New user registrations over the last seven days">
+          @for (point of data.users.growth; track point.date; let index = $index) {
+            <span class="chart-column">
+              <span class="chart-value">{{ point.count }}</span>
+              <span class="chart-bar" [style.height.%]="growthChart()[index]"></span>
+            </span>
+          }
+        </div>
+        <div class="chart-labels">
+          @for (point of data.users.growth; track point.date) { <span>{{ dayLabel(point.date) }}</span> }
+        </div>
+      </article>
+
+      <article class="admin-card featured-card">
+        <header class="featured-header">
+          <span><h2>Nối bật</h2><p>Xếp hạng theo tổng lượt xem</p></span>
+          <span class="featured-icon" aria-hidden="true"><i class="bi bi-stars"></i></span>
+        </header>
+        @if (data.posts.topArticles.length) {
+          <ol class="article-list">
+            @for (article of data.posts.topArticles; track article.id; let index = $index) {
+              <li>
+                <a [routerLink]="['/post', article.id]" [attr.aria-label]="'Open article: ' + article.title">
+                  <span class="article-rank">{{ index + 1 }}</span>
+                  <span class="article-copy"><strong>{{ article.title }}</strong><small>{{ formatNumber(article.viewCount) }} lượt xem</small></span>
+                  <i class="bi bi-chevron-right article-link-icon" aria-hidden="true"></i>
+                  <span class="article-meter"><span [style.width.%]="articleChart()[index]"></span></span>
+                </a>
+              </li>
+            }
+          </ol>
+        } @else {
+          <div class="featured-empty"><i class="bi bi-journal-text"></i><strong>Chưa có bài viết nào</strong><span>Các bài viết đã xuất bản sẽ xuất hiện ở đây.</span></div>
+        }
+      </article>
+    </section>
+
+    }
+  }
+</div>

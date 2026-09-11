@@ -1,0 +1,63 @@
+﻿body {
+  background-color: var(--bg-body) !important;
+}
+
+
+
+/* ======================================================== */
+/* AUTHENTICATION PAGES (LOGIN / REGISTER) */
+/* ======================================================== */
+.auth-title {
+  letter-spacing: -0.03em;
+  font-size: 1.75rem;
+}
+
+.auth-subtitle {
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+/* ======================================================== */
+/* SHARED NAVIGATION MENU ITEMS                             */
+/* ======================================================== */
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.app-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 1.05rem;
+  background-color: transparent;
+  transition: all var(--transition-speed) ease;
+  text-decoration: none;
+  width: 100%;
+  min-height: 2.85rem;
+  border: 0;
+  gap: 0.95rem;
+  text-align: left;
+}
+.app-nav-item i {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  transition: color var(--transition-speed) ease;
+}
+.app-nav-item:hover, .app-nav-item:focus-visible {
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--text-main) 4%, transparent);
+  outline: none;
+}
+.app-nav-item:hover i, .app-nav-item:focus-visible i {
+  color: var(--text-main);
+}
+.app-nav-item.active {
+  color: var(--text-main);
+  font-weight: 700;
+}
+.app-nav-item.active i {
+  color: var(--primary-color);
+}

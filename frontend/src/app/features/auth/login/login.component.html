@@ -1,0 +1,84 @@
+<app-auth-layout>
+  <div auth-heading>
+    <h1 id="auth-page-title" class="auth-title mt-4 mb-2">Chào mừng trở lại</h1>
+    <p class="auth-subtitle text-muted mb-0">Đăng nhập để tiếp tục đọc và xuất bản với My Space.</p>
+  </div>
+
+  @if (errorMessage) {
+    <div class="alert alert-danger d-flex align-items-start gap-2 py-2 px-3 small" role="alert">
+      <i class="bi bi-exclamation-triangle-fill mt-1" aria-hidden="true"></i>
+      <span>{{ errorMessage }}</span>
+    </div>
+  }
+
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+    <div class="mb-3">
+      <label for="loginIdentity" class="form-label small fw-semibold">Email hoặc tên người dùng</label>
+      <div class="input-group">
+        <span class="input-group-text bg-transparent border-end-0 text-muted">
+          <i class="bi bi-person" aria-hidden="true"></i>
+        </span>
+        <input
+          id="loginIdentity"
+          class="form-control border-start-0 py-2"
+          type="text"
+          formControlName="emailOrUsername"
+          [class.is-invalid]="loginForm.get('emailOrUsername')?.touched && loginForm.get('emailOrUsername')?.invalid"
+          [attr.aria-invalid]="loginForm.get('emailOrUsername')?.touched && loginForm.get('emailOrUsername')?.invalid"
+          placeholder="name@example.com"
+          autocomplete="username"
+          required>
+      </div>
+      @if (loginForm.get('emailOrUsername')?.touched && loginForm.get('emailOrUsername')?.invalid) {
+        <div class="text-danger small mt-1" aria-live="polite">Nhập email hoặc tên người dùng của bạn.</div>
+      }
+    </div>
+
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <label for="loginPassword" class="form-label small fw-semibold mb-0">Mật khẩu</label>
+        <a routerLink="/auth/forgot-password" class="small text-primary fw-semibold">Quên mật khẩu?</a>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text bg-transparent border-end-0 text-muted">
+          <i class="bi bi-lock" aria-hidden="true"></i>
+        </span>
+        <input
+          id="loginPassword"
+          class="form-control border-start-0 border-end-0 py-2"
+          [type]="showPassword ? 'text' : 'password'"
+          formControlName="password"
+          [class.is-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+          [attr.aria-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          required>
+        <button
+          type="button"
+          class="btn border border-start-0 text-muted bg-transparent"
+          [attr.aria-label]="showPassword  ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'"
+          (click)="togglePasswordVisibility()">
+          <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'" aria-hidden="true"></i>
+        </button>
+      </div>
+      @if (loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')) {
+        <div class="text-danger small mt-1" aria-live="polite">Nhập mật khẩu của bạn.</div>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill fw-semibold mb-3" [disabled]="isSubmitting">
+      @if (isSubmitting) {
+        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+      }
+      {{ isSubmitting  ? 'Đang đăng nhập...' : 'Đăng nhập' }}
+    </button>
+  </form>
+
+  <p class="text-center text-muted small mb-0">
+    Bạn mới sử dụng My Space?
+    <a
+      routerLink="/auth/register"
+      [queryParams]="returnUrl ? { returnUrl } : null"
+      class="text-primary fw-semibold">Tạo tài khoản</a>
+  </p>
+</app-auth-layout>

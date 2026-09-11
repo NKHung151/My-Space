@@ -1,0 +1,184 @@
+<div class="sticky-top bg-body pt-3 pb-0 px-3 mb-4 border-bottom" #stickyHeader style="z-index: 1020;">
+  <!-- Explore Search Bar -->
+  <div class="position-relative mb-3" id="exploreSearchBox">
+    <div class="input-group">
+      <span class="input-group-text bg-light border-light-subtle rounded-start-pill ps-3">
+        <i class="bi bi-search text-muted"></i>
+      </span>
+      <input type="text" id="explorePageSearchInput" class="form-control bg-light border-light-subtle border-start-0 border-end-0" 
+             placeholder="Tìm kiếm My Space..."
+             autocomplete="off" 
+             [value]="query" 
+             (input)="updateQuery($event)"
+             style="box-shadow: none;">
+      @if (query) {
+        <button type="button" class="btn btn-light bg-light border-light-subtle border-start-0 rounded-end-pill pe-3 text-muted" 
+                id="exploreClearBtn" 
+                aria-label="Xóa"
+                (click)="clearQuery()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      } @else {
+        <span class="input-group-text bg-light border-light-subtle border-start-0 rounded-end-pill pe-3"></span>
+      }
+    </div>
+  </div>
+
+  <!-- Myspace Explore Tabs -->
+  <ul class="nav nav-underline nav-justified w-100">
+    <li class="nav-item">
+      <a class="nav-link text-dark fw-medium" [class.active]="tab === 'top'" href="#" (click)="$event.preventDefault(); setTab('top')">Nổi bật</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link text-dark fw-medium" [class.active]="tab === 'posts'" href="#" (click)="$event.preventDefault(); setTab('posts')">Bài viết</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link text-dark fw-medium" [class.active]="tab === 'people'" href="#" (click)="$event.preventDefault(); setTab('people')">Tác giả</a>
+    </li>
+  </ul>
+</div>
+
+<!-- Selected Tag Filter Header -->
+@if (selectedTag && tab === 'posts') {
+  <div id="exploreTagHeader" class="mb-3 text-muted small mt-4 px-2 d-flex align-items-center">
+    <span>Đang xem chủ đề </span><strong class="text-main ms-1">#{{ selectedTag }}</strong>
+    <a (click)="clearTag()" class="ms-2 text-decoration-none text-danger" style="cursor: pointer;"
+      title="Xóa bộ lọc" aria-label="Xóa bộ lọc">
+      <i class="bi bi-x-circle-fill fs-6"></i>
+    </a>
+  </div>
+}
+
+<!-- Search Query Header / Results Count -->
+@if (query) {
+  <div id="exploreQueryHeader" class="mb-3 text-muted small mt-4 px-2">
+    <span>Kết quả cho </span><strong class="text-main">"{{ query }}"</strong>
+  </div>
+}
+
+<!-- Results Feed Container -->
+<div id="exploreResultsContainer" class="explore-results-list pb-5 mt-4" [style.opacity]="loading ? 0.3 : 1" style="transition: opacity 0.15s ease-in-out">
+  
+  <!-- SKELETON LOADING -->
+  @if (loading && isCurrentTabEmpty()) {
+    <div class="px-2">
+      <div class="skeleton-line mb-3 w-50" style="height: 24px; border-radius: 4px;"></div>
+      <div class="d-flex align-items-center mb-4">
+        <div class="skeleton-circle me-3" style="width: 50px; height: 50px;"></div>
+        <div class="flex-grow-1">
+          <div class="skeleton-line mb-2 w-75"></div>
+          <div class="skeleton-line w-50"></div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center mb-4">
+        <div class="skeleton-circle me-3" style="width: 50px; height: 50px;"></div>
+        <div class="flex-grow-1">
+          <div class="skeleton-line mb-2 w-75"></div>
+          <div class="skeleton-line w-50"></div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TOP TAB -->
+  @if (tab === 'top') {
+    @if (topPosts.length === 0 && featuredPeople.length === 0 && hasInitialized) {
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-search fs-1 d-block mb-2"></i>
+        <span>Không tìm thấy kết quả phù hợp.</span>
+      </div>
+    }
+
+
+
+    <!-- Bài viết thịnh hành / Posts matching -->
+    @if (topPosts.length > 0) {
+      <div class="mb-2">
+        <h6 class="fw-bold text-main mb-3 d-flex align-items-center gap-2">
+          @if (query) {
+            <i class="bi bi-file-earmark-post text-primary"></i><span>Bài viết phù hợp "{{ query }}"</span>
+          } @else {
+            <i class="bi bi-file-earmark-post text-primary"></i><span>Bài viết thịnh hành</span>
+          }
+        </h6>
+        @for (post of topPosts; track post.id) {
+          <app-post-card [post]="post"></app-post-card>
+        }
+      </div>
+    }
+  }
+
+  <!-- POSTS TAB -->
+  @if (tab === 'posts') {
+    <!-- Filters Area (Video Toggle & Tags) -->
+    <div class="px-2 mb-3">
+      <div class="d-flex align-items-center mb-2">
+        <button class="btn btn-sm rounded-pill d-flex align-items-center gap-1"
+                [class.btn-primary]="onlyVideo"
+                [class.btn-outline-secondary]="!onlyVideo"
+                (click)="toggleVideo()">
+          <i class="bi bi-play-circle-fill"></i> Chỉ hiện Video
+        </button>
+      </div>
+      
+      @if (!selectedTag && popularTags.length > 0) {
+        <div class="d-flex overflow-auto gap-2 pb-2" style="white-space: nowrap; scrollbar-width: thin;">
+          @for (pt of popularTags; track pt.tag) {
+             <button class="btn btn-sm btn-light rounded-pill border" (click)="selectTag(pt.tag)">
+               #{{ pt.tag }} <span class="badge text-bg-secondary ms-1">{{ pt.count }}</span>
+             </button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (posts.length === 0 && hasInitialized) {
+      <div class="text-center py-5 text-muted">Không tìm thấy bài viết nào</div>
+    }
+    @for (post of posts; track post.id) {
+      <app-post-card [post]="post"></app-post-card>
+    }
+  }
+
+  <!-- PEOPLE TAB -->
+  @if (tab === 'people') {
+    @if (people.length === 0 && hasInitialized) {
+      <div class="text-center py-5 text-muted">Không có tác giả phù hợp với tìm kiếm của bạn.</div>
+    }
+    @for (person of people; track person.id) {
+          <div class="card p-3 d-flex flex-row align-items-center gap-3 border-light-subtle shadow-sm rounded-4 mb-3">
+            <div class="flex-grow-1" style="min-width: 0;">
+              <div class="author-tooltip-container position-relative">
+                <a [routerLink]="['/profile', person.id]" class="d-flex align-items-center text-decoration-none text-reset gap-3">
+                  <div class="flex-shrink-0" style="width: 52px; height: 52px;">
+                    <img [appAssetImage]="person.avatarUrl" class="rounded-circle border w-100 h-100" style="object-fit: cover;" [alt]="person.displayName">
+                  </div>
+                  <div class="flex-grow-1" style="min-width: 0;">
+                    <div class="fw-bold fs-6 mb-1 text-truncate">{{ person.displayName }}</div>
+                    <div class="text-muted small text-truncate">{{ person.username ? '@'+person.username : '0 bài viết' }}</div>
+                  </div>
+                </a>
+                <app-author-tooltip [user]="person"></app-author-tooltip>
+              </div>
+            </div>
+            <div class="flex-shrink-0 ms-auto">
+              <app-friend-button [userId]="person.id.toString()" size="small"></app-friend-button>
+            </div>
+          </div>
+    }
+  }
+
+  @if (!loading && (tab === 'posts' || tab === 'people')) {
+    <!-- Infinite scroll trigger -->
+    <div #infiniteScrollTrigger style="height: 10px; width: 100%;"></div>
+    
+    @if (loadingMore) {
+      <div class="text-center py-3 text-muted small">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        Đang tải thêm...
+      </div>
+    }
+  }
+</div>
+
+

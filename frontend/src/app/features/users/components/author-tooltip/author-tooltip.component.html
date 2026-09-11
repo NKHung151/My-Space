@@ -1,0 +1,33 @@
+<div
+  class="author-hover-card"
+  [class.flipped]="isFlipped"
+  [style.top.px]="cardTop"
+  [style.left.px]="cardLeft"
+  (click)="$event.stopPropagation()">
+
+  <!-- Cover Banner -->
+  <div class="tooltip-cover"></div>
+
+  <div class="tooltip-content">
+    <div class="tooltip-header d-flex justify-content-between align-items-start">
+      <img [appAssetImage]="avatarUrl" class="tooltip-avatar" [alt]="user?.displayName || user?.username" (click)="goToAuthor($event)">
+      
+      <div class="tooltip-action">
+        @if (isSelf) {
+          <button class="btn btn-outline-primary btn-sm rounded-pill fw-bold px-3" (click)="editProfile($event)">Sửa hồ sơ</button>
+        } @else if (user) {
+          <app-friend-button [userId]="user.id.toString()" />
+        }
+      </div>
+    </div>
+    
+    <div class="tooltip-info mt-2" (click)="goToAuthor($event)">
+      <div class="tooltip-name text-truncate">{{ user?.displayName || user?.username }}</div>
+      <div class="tooltip-handle text-truncate">&#64;{{ user?.username }}</div>
+    </div>
+
+    @if (user?.bio) {
+      <p class="tooltip-bio mt-3">{{ user?.bio }}</p>
+    }
+  </div>
+</div>

@@ -1,0 +1,31 @@
+@if (modalService.isOpen()) {
+  <div class="modal-backdrop fade show" (click)="close(false)"></div>
+  <div class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true" role="dialog" (click)="close(false)">
+    <div class="modal-dialog modal-dialog-centered confirm-modal-dialog">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden p-3" (click)="$event.stopPropagation()">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="confirm-modal-spacer"></div> <!-- Spacer for centering title -->
+          <h4 class="fw-bold text-main mb-0 fs-5 text-center flex-grow-1">Rời khỏi trang?</h4>
+          <button type="button" class="btn-close shadow-none confirm-modal-close" (click)="close(false)" aria-label="Close"></button>
+        </div>
+        
+        <div class="modal-body p-2 pt-0 pb-3">
+          <p class="text-secondary mb-4 confirm-modal-text">
+            Bạn chưa hoàn tất bình luận. Bạn có muốn rời mà không hoàn tất không?
+          </p>
+          
+          <div class="d-flex justify-content-end gap-3 align-items-center">
+            <button type="button" class="btn text-primary fw-semibold px-3 py-2 confirm-modal-btn" (click)="close(false)">
+              Ở lại Trang
+            </button>
+            <button type="button" class="btn btn-primary fw-semibold px-4 py-2 confirm-modal-btn" (click)="close(true)">
+              Rời khỏi Trang
+            </button>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,222 @@
+<div class="admin-container">
+  <div class="admin-sticky-header">
+    <header class="admin-header">
+      <h1>Quản lý người dùng</h1>
+      <p>Xem thư mục người dùng, lọc theo vai trò và quản lý trạng thái tài khoản.</p>
+    </header>
+
+    <form class="admin-filter-panel" [formGroup]="filterForm" aria-label="Bộ lọc người dùng">
+      <div class="admin-search-field">
+        <label class="visually-hidden" for="directorySearch">Tìm kiếm người dùng</label>
+        <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+        <input id="directorySearch" class="form-control" type="search" formControlName="search"
+          placeholder="Tìm kiếm theo tên, email hoặc ID người dùng..." autocomplete="off">
+      </div>
+      <label>
+        <span class="visually-hidden">Lọc theo vai trò</span>
+        <select class="form-select" formControlName="role">
+          <option value="">Tất cả vai trò</option>
+          <option value="admin">Quản trị viên</option>
+          <option value="member">Thành viên</option>
+        </select>
+      </label>
+      <label>
+        <span class="visually-hidden">Lọc theo trạng thái</span>
+        <select class="form-select" formControlName="status">
+          <option value="">Tất cả trạng thái</option>
+          <option value="active">Đang hoạt động</option>
+          <option value="inactive">Không hoạt động</option>
+        </select>
+      </label>
+      <button class="btn btn-outline-secondary clear-filter" type="button" title="Xóa bộ lọc"
+        aria-label="Xóa bộ lọc" (click)="clearFilters()">
+        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+      </button>
+    </form>
+  </div>
+
+  <div class="admin-results-bar" aria-live="polite">
+    {{ pagination().total }} / {{ directoryTotal() }} Người dùng
+  </div>
+
+  @if (loading()) {
+    <app-ui-state kind="loading" title="Đang tải người dùng"></app-ui-state>
+  } @else if (errorMessage()) {
+    <app-ui-state kind="error" title="Thư mục người dùng không có sẵn" [description]="errorMessage()"
+      actionLabel="Thử lại" (action)="loadUsers()"></app-ui-state>
+  } @else {
+    <div class="admin-table-wrap">
+      <table class="table admin-table align-middle" aria-label="Thư mục người dùng">
+        <thead>
+          <tr>
+            <th scope="col">người dùng</th>
+            <th scope="col">E-mail</th>
+            <th scope="col">Đã tham gia</th>
+            <th scope="col">Vai trò</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Hoạt động</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (!users().length) {
+            <tr>
+              <td colspan="6" class="admin-empty-state">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <strong>Không tìm thấy người dùng nào</strong>
+                <span>Hãy thử thay đổi hoặc xóa bộ lọc hiện tại của bạn.</span>
+              </td>
+            </tr>
+          } @else {
+            @for (user of users(); track user.id) {
+              <tr class="admin-table-row directory-user-row" tabindex="0" (click)="openUser(user)"
+                (keydown)="openUserFromKeyboard($event, user)"
+                [attr.aria-label]="'Open details for ' + userName(user)">
+                <td data-label="User">
+                  <div class="user-cell">
+                    <img class="user-avatar" [appAssetImage]="user.avatarUrl" width="38" height="38" alt="">
+                    <div class="user-cell-meta">
+                      <div class="user-cell-name">
+                        {{ userName(user) }}
+                        @if (isCurrentUser(user)) {
+                          <span class="you-badge">Bạn</span>
+                        }
+                      </div>
+                      <div class="user-cell-id">#{{ user.id }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td data-label="Email">{{ user.email }}</td>
+                <td data-label="Joined" class="joined-cell">{{ user.createdAt | localizedDate }}</td>
+                <td data-label="Role">
+                  <span class="role-badge role-badge-{{ user.role || 'member' }}">
+                    <i class="bi" [class.bi-shield-check]="user.role === 'admin'"
+                      [class.bi-person]="user.role !== 'admin'" aria-hidden="true"></i>
+                    {{ user.role === 'admin'  ? 'Quản trị viên' : 'Thành viên' }}
+                  </span>
+                </td>
+                <td data-label="Status">
+                  <span class="status-pill status-{{ user.status }}">
+                    <i class="bi bi-circle-fill" aria-hidden="true"></i>
+                    {{ user.status === 'active'  ? 'Đang hoạt động' : 'Không hoạt động' }}
+                  </span>
+                </td>
+                <td data-label="Action" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+                  <div class="users-action">
+                    @if (user.role === 'admin') {
+                      <span class="admin-lock" title="Tài khoản quản trị viên không thể bị vô hiệu hóa.">
+                        <i class="bi bi-lock-fill" aria-hidden="true"></i>Được bảo vệ
+                      </span>
+                    } @else {
+                      <label class="perfect-switch"
+                        [title]="(user.status === 'active' ? 'Vô hiệu hóa tài khoản: ' : 'Kích hoạt tài khoản: ') + userName(user)">
+                        <input #statusToggle class="perfect-switch-input" type="checkbox"
+                          [checked]="user.status === 'active'" [disabled]="updatingUserIds().has(user.id)"
+                          (change)="toggleUserStatus(user, statusToggle)"
+                          [attr.aria-label]="'Account active for ' + userName(user)">
+                        <span class="perfect-switch-track"><span class="perfect-switch-thumb"></span></span>
+                      </label>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination
+      [currentPage]="pagination().page"
+      [totalPages]="pagination().totalPages"
+      (pageChange)="loadUsers($event)" />
+  }
+</div>
+
+@if (drawerOpen()) {
+  <button class="offcanvas-backdrop" type="button" aria-label="Đóng thông tin người dùng" (click)="closeDrawer($event)"></button>
+  <aside class="user-offcanvas" role="dialog" aria-modal="true" aria-labelledby="userDetailTitle">
+    <header class="offcanvas-header">
+      <h2 id="userDetailTitle">Chi tiết người dùng</h2>
+      <button class="close-button" type="button" aria-label="Đóng" (click)="closeDrawer($event)">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    @if (detailLoading()) {
+      <app-ui-state kind="loading" title="Đang tải chi tiết"></app-ui-state>
+    } @else {
+      @if (selectedUser(); as user) {
+        <div class="offcanvas-body">
+        <form id="userEditForm" [formGroup]="editForm" (ngSubmit)="saveUser()">
+          <div class="detail-profile">
+            <img class="detail-avatar" [appAssetImage]="user.avatarUrl" width="76" height="76" alt="">
+            <div>
+              <strong>{{ userName(user) }}</strong>
+              <span>#{{ user.id }} · Đã tham gia {{ user.createdAt | localizedDate }}</span>
+              <span class="role-badge role-badge-{{ user.role || 'member' }}">{{ user.role === 'admin'  ? 'Quản trị viên' : 'Thành viên' }}</span>
+            </div>
+          </div>
+
+          <section class="detail-section">
+            <h3>Thông tin cơ bản</h3>
+            <label for="editUserName">Tên đầy đủ</label>
+            <input id="editUserName" class="form-control" type="text" [value]="userName(user)" readonly aria-readonly="true">
+
+            <label for="editUserEmail">Địa chỉ email</label>
+            <input id="editUserEmail" class="form-control" type="email" [value]="user.email" readonly aria-readonly="true">
+            <div class="form-text">Email được sử dụng để đăng nhập và không thể thay đổi ở đây.</div>
+
+            <label for="editUserBio">Tiểu sử ngắn</label>
+            <textarea id="editUserBio" class="form-control" rows="3" [value]="user.bio || ''" readonly aria-readonly="true"
+              placeholder="Người dùng chưa cập nhật tiểu sử..."></textarea>
+          </section>
+
+          <section class="detail-section">
+            <h3>Truy cập & tài khoản</h3>
+            <label for="editUserRole">Vai trò</label>
+            <select id="editUserRole" class="form-select" formControlName="role">
+              <option value="member">Thành viên</option>
+              <option value="admin">Quản trị viên</option>
+            </select>
+            <div class="form-text">
+              {{ selectedUserIsAdmin()  ? 'Vai trò quản trị viên được bảo vệ và không thể hạ cấp tại đây.' : 'Chọn Quản trị viên để quảng bá thành viên này.' }}
+            </div>
+
+            <div class="account-status-card">
+              <div>
+                <strong>Trạng thái tài khoản</strong>
+                <span>
+                  {{ adminProtectionActive()  ? 'Tài khoản quản trị viên luôn hoạt động và không thể bị vô hiệu hóa.' : 'Cho phép người dùng này truy cập My Space.' }}
+                </span>
+              </div>
+              <label class="perfect-switch" [class.is-disabled]="editForm.controls.active.disabled">
+                <input class="perfect-switch-input" type="checkbox" formControlName="active">
+                <span class="perfect-switch-track"><span class="perfect-switch-thumb"></span></span>
+              </label>
+            </div>
+
+            @if (adminProtectionActive()) {
+              <div class="admin-protection-notice" role="note">
+                <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
+                Tài khoản quản trị viên không thể bị vô hiệu hóa.
+              </div>
+            }
+          </section>
+        </form>
+      </div>
+
+      <footer class="offcanvas-footer">
+        <button class="btn btn-outline-secondary" type="button" (click)="closeDrawer($event)">Hủy bỏ</button>
+        <button class="btn btn-primary" type="submit" form="userEditForm" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          } @else {
+            <i class="bi bi-check2" aria-hidden="true"></i>
+          }
+          Lưu thay đổi
+        </button>
+        </footer>
+      }
+    }
+  </aside>
+}

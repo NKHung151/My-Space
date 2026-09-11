@@ -1,0 +1,107 @@
+
+:host {
+  display: contents;
+}
+
+.sidebar-profile-avatar {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+
+
+.sidebar-more-button {
+  justify-content: flex-start !important;
+  padding: 0.65rem 0.75rem !important;
+  min-height: 2.85rem;
+}
+
+.sidebar-popup {
+  position: relative;
+}
+
+.sidebar-popup-menu {
+  position: absolute;
+  top: auto;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 1200;
+  display: block;
+  min-width: 12rem;
+  padding: 0.4rem;
+  border-radius: 0.75rem;
+  background: var(--bg-panel);
+}
+
+.left-sidebar:has(.sidebar-popup-menu) {
+  overflow: visible;
+}
+
+
+
+.sidebar-more-menu {
+  width: 100%;
+  min-width: 13rem;
+}
+
+.sidebar-popup-menu .dropdown-item {
+  display: flex;
+  min-height: 2.4rem;
+  align-items: center;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text-main);
+}
+
+.sidebar-popup-menu .dropdown-item:hover,
+.sidebar-popup-menu .dropdown-item:focus,
+.sidebar-popup-menu .dropdown-item.active {
+  background: var(--accent-button-bg);
+  color: var(--primary-color);
+}
+
+
+
+.myspace-logo-container { padding: 0.5rem 0.75rem 1.5rem 0.75rem; cursor: pointer; }
+.sidebar-create-btn { background-color: var(--primary-color, #ff6c1f) !important; border-color: var(--primary-color, #ff6c1f) !important; color: var(--accent-contrast, #ffffff) !important; border-radius: 99px !important; padding: 0.65rem 1.5rem !important; font-weight: 600 !important; font-size: 0.95rem !important; width: 100%; text-align: center; margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s ease; text-decoration: none !important; }
+.sidebar-create-btn:hover { background-color: var(--primary-hover, #e55a00) !important; border-color: var(--primary-hover, #e55a00) !important; color: var(--accent-contrast, #ffffff) !important; }
+.sidebar-footer-menu { margin-top: auto; padding-top: 1.25rem; border-top: 1px solid var(--border-color); }
+
+/* Left Sidebar: Sticky, full screen height, logo on top, plus menu bottom */
+.left-sidebar {
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  padding: 1.5rem 1.25rem 1.5rem 0.5rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 1010;
+  transition: border-color var(--transition-speed) ease;
+}
+
+.left-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.left-sidebar::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.left-sidebar:hover::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+
+@media (max-width: 991px) {
+  .left-sidebar {
+    display: none;
+  }
+}

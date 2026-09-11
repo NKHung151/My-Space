@@ -1,0 +1,126 @@
+﻿:host { display: block; }
+
+.directory-user-row { transition: background-color .15s ease; }
+.admin-table th:first-child { width: 25%; }
+.admin-table th:nth-child(2) { width: 23%; }
+.admin-table th:last-child,
+.admin-table td:last-child { width: 150px; min-width: 150px; text-align: center; }
+
+.user-cell { display: flex; min-width: 0; align-items: center; gap: .75rem; }
+.user-avatar { width: 38px; height: 38px; flex: 0 0 38px; border: 1px solid var(--border-color); border-radius: 50%; object-fit: cover; }
+.user-avatar--fallback,
+.detail-avatar--fallback { display: grid; place-items: center; color: var(--accent-contrast, #fff); background: var(--primary-color); font-weight: 700; }
+.user-cell-meta { min-width: 0; }
+.user-cell-name { overflow: hidden; color: var(--text-main); font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.user-cell-id { color: var(--text-muted); font-size: .78rem; }
+.you-badge { margin-left: .3rem; padding: .12rem .4rem; border: 1px solid var(--border-color); border-radius: .3rem; background: var(--bg-body); color: var(--text-muted); font-size: .68rem; }
+.joined-cell { color: var(--text-muted) !important; }
+
+.users-action { display: flex; min-height: 32px; align-items: center; justify-content: center; }
+.admin-lock { display: inline-flex; min-width: 84px; min-height: 30px; padding: .3rem .6rem; align-items: center; justify-content: center; gap: .4rem; border: 1px solid var(--border-color); border-radius: 999px; color: var(--text-muted); background: var(--border-light); font-size: .78rem; white-space: nowrap; }
+
+.perfect-switch.is-disabled { cursor: not-allowed; opacity: .65; }
+
+.offcanvas-backdrop { position: fixed; inset: 0; z-index: 1050; border: 0; background: rgb(0 0 0 / 50%); }
+.user-offcanvas { position: fixed; inset: 0 0 0 auto; z-index: 1060; display: flex; width: min(440px, 92vw); flex-direction: column; border-left: 1px solid var(--border-color); background: var(--bg-panel); box-shadow: -1rem 0 3rem rgb(0 0 0 / 18%); }
+.offcanvas-header { display: flex; padding: 1rem 1.25rem; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); }
+.offcanvas-header h2 { margin: 0; color: var(--text-main); font-size: 1.25rem; font-weight: 700; }
+.close-button { display: grid; width: 2.5rem; height: 2.5rem; padding: 0; place-items: center; border: 0; color: var(--text-main); background: transparent; cursor: pointer; }
+.offcanvas-body { flex: 1; padding: 1.25rem; overflow-y: auto; }
+.offcanvas-footer { display: flex; padding: 1rem 1.25rem; justify-content: flex-end; gap: .5rem; border-top: 1px solid var(--border-color); background: var(--bg-panel); }
+.offcanvas-footer .btn-primary { min-width: 9rem; background: var(--primary-color); border-color: var(--primary-color); }
+
+.detail-profile { display: flex; margin: .5rem 0 1rem; align-items: center; gap: .9rem; }
+.detail-avatar { width: 76px; height: 76px; flex: 0 0 76px; border: 1px solid var(--border-color); border-radius: 50%; object-fit: cover; }
+.detail-profile > div { display: grid; min-width: 0; justify-items: start; gap: .2rem; }
+.detail-profile strong { overflow: hidden; max-width: 100%; color: var(--text-main); font-size: 1.1rem; text-overflow: ellipsis; white-space: nowrap; }
+.detail-profile > div > span:not(.role-badge) { color: var(--text-muted); font-size: .78rem; }
+.detail-profile .role-badge { margin-top: .3rem; }
+
+.detail-section { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); }
+.detail-section h3 { margin: 0 0 1rem; color: var(--text-muted); font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.detail-section > label { display: block; margin: 1rem 0 .4rem; color: var(--text-main); font-size: .82rem; font-weight: 600; }
+.detail-section .form-control,
+.detail-section .form-select { border-color: var(--border-color); color: var(--text-main); background: var(--bg-body); }
+.form-text { color: var(--text-muted); font-size: .75rem; }
+.field-error { margin-top: .3rem; color: #dc3545; font-size: .75rem; }
+.account-status-card { display: flex; margin-top: 1rem; padding: 1rem; align-items: center; justify-content: space-between; gap: .75rem; border: 1px solid var(--border-color); border-radius: .5rem; }
+.account-status-card > div { display: grid; gap: .2rem; }
+.account-status-card strong { color: var(--text-main); font-size: .82rem; }
+.account-status-card span { color: var(--text-muted); font-size: .75rem; }
+.admin-protection-notice { margin-top: 1rem; padding: .75rem; border: 1px solid #ffe69c; border-radius: .5rem; color: #997404; background: #fff3cd; font-size: .8rem; }
+
+@media (max-width: 767.98px) {
+  .users-action { width: 100%; justify-content: flex-end; }
+}
+
+/* ==========================================================
+   PREMIUM HUMAN-DESIGNED BADGES & STATUS INDICATORS (Non-AI)
+   ========================================================== */
+.role-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.role-badge-admin {
+  background-color: #fff3e8;
+  color: #b54708;
+  border: 1px solid #ffd6ae;
+}
+
+.role-badge-creator,
+.role-badge-member {
+  background-color: #eff8ff;
+  color: #175cd3;
+  border: 1px solid #b2ddff;
+}
+
+[data-bs-theme="dark"] .role-badge-creator,
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .3rem .65rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-pill i { font-size: .45rem; }
+.status-active { color: #067647; background: #ecfdf3; }
+.status-inactive, .status-banned { color: #b42318; background: #fef3f2; }
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot-active {
+  background-color: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.status-dot-banned {
+  background-color: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+}
+

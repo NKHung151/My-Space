@@ -1,0 +1,94 @@
+<div class="admin-container">
+  <div class="admin-sticky-header">
+    <header class="admin-header">
+      <h1>Quản lý bài đăng</h1>
+      <p>Xem và xóa bài đăng của thành viên.</p>
+    </header>
+
+    <div class="admin-filter-panel" aria-label="Post filters">
+      <div class="input-group admin-search-field">
+        <span class="input-group-text border-end-0"><i class="bi bi-search" aria-hidden="true"></i></span>
+        <input class="form-control border-start-0" type="search" [(ngModel)]="search"
+          (ngModelChange)="loadPosts(1)" placeholder="Tìm kiếm theo tiêu đề hoặc tác giả...">
+      </div>
+    </div>
+  </div>
+
+  @if (!loading() && !errorMessage()) {
+    <div class="admin-results-bar" aria-live="polite">{{ posts().length }} / {{ pagination().total }} Bài viết</div>
+  }
+
+  @if (loading()) {
+    <app-ui-state kind="loading" title="Đang tải bài viết..."></app-ui-state>
+  } @else if (errorMessage()) {
+    <app-ui-state kind="error" title="Không thể tải bài viết" [description]="errorMessage()" actionLabel="Thử lại"
+      (action)="loadPosts(pagination().page)"></app-ui-state>
+  } @else if (!posts().length) {
+    <app-ui-state kind="empty" title="Không tìm thấy bài viết nào" description="Hãy thử tiêu đề hoặc tác giả khác."></app-ui-state>
+  } @else {
+    <div class="admin-table-wrap">
+      <table class="admin-table" aria-label="Posts list">
+        <thead><tr><th>Bài viết</th><th>Tác giả</th><th>Tag</th><th>Ngày đăng</th></tr></thead>
+        <tbody>
+          @for (post of posts(); track post.id) {
+            <tr class="admin-table-row post-row" tabindex="0" (click)="openPanel(post)" (keydown)="openFromKeyboard($event, post)">
+              <td data-label="Post">
+                <div class="post-title" [title]="post.title">{{ post.title }}</div>
+              </td>
+              <td data-label="Author">
+                <div class="author-cell">
+                  <img class="author-avatar" [appAssetImage]="post.author.avatarUrl" alt="">
+                  <span>{{ post.author.displayName }}</span>
+                </div>
+              </td>
+              <td data-label="Tag">
+                <div class="tag-cell">
+                  <span class="tag-cell-label">{{ post.tag || 'Chưa gắn thẻ' }}</span>
+                </div>
+              </td>
+              <td data-label="Created" class="muted">{{ post.createdAt | localizedDate:'dateTime' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [currentPage]="pagination().page"
+      [totalPages]="pagination().totalPages"
+      (pageChange)="loadPosts($event)" />
+  }
+</div>
+
+@if (panelOpen()) {
+  <button class="panel-backdrop" type="button" aria-label="Đóng panel" (click)="closePanel($event)"></button>
+  <aside class="review-panel" role="dialog" aria-modal="true" aria-labelledby="review-title">
+    <header class="panel-header">
+      <h2 id="review-title">Chi tiết bài đăng</h2>
+      <button class="panel-close" type="button" (click)="closePanel($event)" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+    </header>
+    <div class="panel-body">
+      @if (detailLoading()) {
+        <app-ui-state kind="loading" title="Đang tải bài viết"></app-ui-state>
+      } @else {
+        @if (selectedPost(); as post) {
+          <h3 class="review-title">{{ post.title }}</h3>
+          <div class="review-meta">
+            <div class="meta-box"><span>Tác giả</span><strong>{{ post.author.displayName }}</strong></div>
+            <div class="meta-box"><span>Tag</span><strong>{{ post.tag || 'Chưa gắn thẻ' }}</strong></div>
+            <div class="meta-box"><span>Ngày đăng</span><strong>{{ post.createdAt | localizedDate:'dateTime' }}</strong></div>
+          </div>
+          <h4 class="section-label">Xem trước nội dung</h4>
+          <div class="review-content" [innerHTML]="post.content || '&mdash;'"></div>
+          <div class="delete-actions mt-4 pt-3 border-top">
+            <p class="text-danger mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Bài viết sẽ bị xóa vĩnh viễn và không thể khôi phục.</p>
+            <button type="button" id="admin-delete-post-btn" class="btn btn-danger w-100" [disabled]="saving()" (click)="deletePost()">
+              @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+              @else { <i class="bi bi-trash me-2"></i> }
+              Xóa bài viết
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </aside>
+}

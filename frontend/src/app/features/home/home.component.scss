@@ -1,0 +1,133 @@
+:host {
+  display: block;
+  padding-top: 1.5rem;
+
+  @media (max-width: 991px) {
+    padding-top: 1.5rem;
+  }
+}
+
+.quick-draft-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 16px);
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--bg-panel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(255, 103, 25, 0.12);
+    background-color: var(--bg-secondary);
+  }
+}
+
+.quick-draft-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.quick-draft-placeholder {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.dropdown-wrap {
+  position: relative;
+}
+
+.filter-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  flex-direction: column;
+  min-width: 220px;
+  padding: 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-panel);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+
+  &.show {
+    display: flex;
+  }
+}
+
+.dropdown-item {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  text-align: left;
+  font-size: 0.9rem;
+
+  &:hover {
+    background-color: var(--bg-secondary);
+  }
+
+  &.active {
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+}
+
+.state-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 4rem 0;
+  color: var(--text-muted);
+
+  i {
+    font-size: 2rem;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.posts-list {
+  display: flex;
+  flex-direction: column;
+}
+

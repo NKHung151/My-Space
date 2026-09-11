@@ -1,0 +1,82 @@
+
+<aside class="left-sidebar">
+  <div>
+    <div class="myspace-logo-container d-none d-lg-block" (click)="onHomeClick()">
+      <app-brand link="/home" style="pointer-events: none;" />
+    </div>
+
+    <nav class="app-nav">
+      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+        class="app-nav-item" (click)="onHomeClick()">
+        <i class="bi bi-house-door"></i><span>{{ 'Trang chủ' }}</span>
+      </a>
+      <a routerLink="/friends" routerLinkActive="active" class="app-nav-item" (click)="closeMenus()">
+        <i class="bi bi-people"></i><span>{{ 'Bạn bè' }}</span>
+      </a>
+      <a routerLink="/explore" routerLinkActive="active" class="app-nav-item" (click)="closeMenus()">
+        <i class="bi bi-compass"></i><span>{{ 'Khám phá' }}</span>
+      </a>
+
+      <a routerLink="/profile" routerLinkActive="active" class="app-nav-item" (click)="closeMenus()">
+        <img
+          class="sidebar-profile-avatar"
+          [appAssetImage]="profileAvatar"
+          alt="">
+        <span>{{ 'Hồ sơ' }}</span>
+      </a>
+    </nav>
+
+    <a routerLink="/workspace/create" [queryParams]="{ fresh: '1' }" class="sidebar-create-btn" (click)="closeMenus()">
+      <span>{{ 'Viết bài' }}</span><i class="bi bi-plus-lg"></i>
+    </a>
+  </div>
+
+  <div class="sidebar-footer-menu">
+
+
+    <div class="sidebar-popup" data-sidebar-more>
+      <button
+        class="sidebar-more-button btn btn-link text-decoration-none text-main d-flex align-items-center gap-2 p-1.5 w-100 border-0 text-start"
+        type="button"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="moreMenuOpen()"
+        (click)="toggleMoreMenu($event)">
+        <i class="bi bi-list fs-5"></i>
+        <span class="fw-medium">{{ 'Thêm' }}</span>
+      </button>
+
+      @if (moreMenuOpen()) {
+        <ul
+          class="dropdown-menu sidebar-popup-menu sidebar-more-menu show shadow border-light-subtle"
+          role="menu">
+          <li>
+            <a class="dropdown-item py-2" routerLink="/settings" (click)="closeMenus()">
+              <i class="bi bi-gear me-2"></i><span>{{ 'Cài đặt' }}</span>
+            </a>
+          </li>
+          @if (isAdmin()) {
+            <li>
+              <a class="dropdown-item py-2" routerLink="/admin" (click)="closeMenus()">
+                <i class="bi bi-speedometer2 me-2"></i><span>{{ 'Quản trị viên' }}</span>
+              </a>
+            </li>
+          }
+          <li><hr class="dropdown-divider"></li>
+          @if (isAuthenticated()) {
+            <li>
+              <a class="dropdown-item py-2 text-danger" href="#" id="signOutBtn" (click)="signOut($event)">
+                <i class="bi bi-box-arrow-right me-2"></i><span>{{ 'Đăng xuất' }}</span>
+              </a>
+            </li>
+          } @else {
+            <li>
+              <a class="dropdown-item py-2" routerLink="/auth/login" id="signInBtn" (click)="closeMenus()">
+                <i class="bi bi-box-arrow-in-right me-2"></i><span>{{ 'Đăng nhập' }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+</aside>

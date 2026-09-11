@@ -1,0 +1,87 @@
+<app-auth-layout>
+  <div auth-heading>
+    <h1 id="auth-page-title" class="auth-title mt-4 mb-2">Tạo tài khoản của bạn</h1>
+    <p class="auth-subtitle text-muted mb-0">Tham gia cộng đồng độc giả và nhà văn độc lập toàn cầu.</p>
+  </div>
+
+  @if (errorMessage) {
+    <div class="alert alert-danger d-flex align-items-start gap-2 py-2 px-3 small" role="alert">
+      <i class="bi bi-exclamation-triangle-fill mt-1" aria-hidden="true"></i>
+      <span>{{ errorMessage }}</span>
+    </div>
+  }
+
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+    <div class="mb-3">
+      <label for="regName" class="form-label small fw-semibold">Tên đầy đủ</label>
+      <div class="input-group">
+        <span class="input-group-text bg-transparent border-end-0 text-muted">
+          <i class="bi bi-person" aria-hidden="true"></i>
+        </span>
+        <input id="regName" class="form-control border-start-0 py-2" type="text" formControlName="fullName" [class.is-invalid]="registerForm.get('fullName')?.touched && registerForm.get('fullName')?.invalid" [attr.aria-invalid]="registerForm.get('fullName')?.touched && registerForm.get('fullName')?.invalid" placeholder="Elena Rostova" maxlength="80" autocomplete="name" required>
+      </div>
+      @if (registerForm.get('fullName')?.touched && registerForm.get('fullName')?.invalid) {
+        <div class="text-danger small mt-1" aria-live="polite">Nhập ít nhất 2 ký tự.</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="regEmail" class="form-label small fw-semibold">E-mail</label>
+      <div class="input-group">
+        <span class="input-group-text bg-transparent border-end-0 text-muted">
+          <i class="bi bi-envelope" aria-hidden="true"></i>
+        </span>
+        <input id="regEmail" class="form-control border-start-0 py-2" type="email" formControlName="email" [class.is-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" [attr.aria-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" placeholder="name@example.com" autocomplete="email" required>
+      </div>
+      @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+        <div class="text-danger small mt-1" aria-live="polite">Nhập địa chỉ email hợp lệ.</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="regPassword" class="form-label small fw-semibold">Mật khẩu</label>
+      <div class="input-group">
+        <span class="input-group-text bg-transparent border-end-0 text-muted">
+          <i class="bi bi-lock" aria-hidden="true"></i>
+        </span>
+        <input id="regPassword" class="form-control border-start-0 border-end-0 py-2" [type]="showPassword ? 'text' : 'password'" formControlName="password" [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" [attr.aria-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" placeholder="Dùng 8–72 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt; không dùng khoảng trắng." autocomplete="new-password" maxlength="72" required>
+        <button type="button" class="btn border border-start-0 text-muted bg-transparent" [attr.aria-label]="showPassword  ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'" (click)="togglePasswordVisibility('password')">
+          <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'" aria-hidden="true"></i>
+        </button>
+      </div>
+      @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
+        <div class="text-danger small mt-1" aria-live="polite">Dùng 8–72 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt; không dùng khoảng trắng.</div>
+      }
+    </div>
+
+    <div class="mb-4">
+      <label for="regConfirmPassword" class="form-label small fw-semibold">Xác nhận mật khẩu</label>
+      <div class="input-group">
+        <span class="input-group-text bg-transparent border-end-0 text-muted">
+          <i class="bi bi-shield-check" aria-hidden="true"></i>
+        </span>
+        <input id="regConfirmPassword" class="form-control border-start-0 border-end-0 py-2" [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" [class.is-invalid]="registerForm.get('confirmPassword')?.touched && (registerForm.get('confirmPassword')?.invalid || registerForm.hasError('mismatch'))" [attr.aria-invalid]="registerForm.get('confirmPassword')?.touched && (registerForm.get('confirmPassword')?.invalid || registerForm.hasError('mismatch'))" placeholder="Lặp lại mật khẩu của bạn" autocomplete="new-password" required>
+        <button type="button" class="btn border border-start-0 text-muted bg-transparent" [attr.aria-label]="showConfirmPassword  ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'" (click)="togglePasswordVisibility('confirm')">
+          <i class="bi" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'" aria-hidden="true"></i>
+        </button>
+      </div>
+      @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('required')) {
+        <div class="text-danger small mt-1" aria-live="polite">Xác nhận mật khẩu của bạn.</div>
+      } @else if (registerForm.get('confirmPassword')?.touched && registerForm.hasError('mismatch')) {
+        <div class="text-danger small mt-1" aria-live="polite">Mật khẩu không khớp.</div>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill fw-semibold mb-3" [disabled]="isSubmitting">
+      @if (isSubmitting) {
+        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+      }
+      {{ isSubmitting  ? 'Đang tạo tài khoản...' : 'Tạo tài khoản' }}
+    </button>
+  </form>
+
+  <p class="text-center text-muted small mb-0">
+    Đã có tài khoản?
+    <a routerLink="/auth/login" class="text-primary fw-semibold">Đăng nhập</a>
+  </p>
+</app-auth-layout>

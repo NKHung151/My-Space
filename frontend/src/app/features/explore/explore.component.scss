@@ -1,0 +1,28 @@
+/* ===================================================   MYSPACE EXPLORE PAGE STYLES
+   ========================================================== */
+:host {
+  display: block;
+}
+
+
+
+
+.skeleton-line, .skeleton-circle {
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border-color) 50%, var(--bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: loadingSkeleton 1.5s infinite;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+@keyframes loadingSkeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+

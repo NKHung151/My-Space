@@ -1,0 +1,26 @@
+.modal.fade.show {
+  animation: bsModalFadeIn 0.15s linear forwards;
+}
+
+.modal.fade.show .modal-dialog {
+  animation: bsModalSlideDown 0.3s ease-out forwards;
+}
+
+.modal-backdrop.fade.show {
+  animation: bsBackdropFadeIn 0.15s linear forwards;
+}
+
+@keyframes bsModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bsBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 0.5; }
+}
+
+@keyframes bsModalSlideDown {
+  from { transform: translate(0, -50px); }
+  to { transform: none; }
+}

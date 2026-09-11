@@ -1,0 +1,71 @@
+:host { display: block; }
+.admin-table th:nth-child(1) { width: 25%; }
+.admin-table th:nth-child(2) { width: 16%; }
+.admin-table th:nth-child(3) { width: 15%; }
+.admin-table th:nth-child(4) { width: 15%; }
+.admin-table th:nth-child(5) { width: 19%; }
+.admin-table th:nth-child(6) { width: 10%; }
+
+.post-title { display: block; max-width: 100%; overflow: hidden; font-weight: 650; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.post-id { margin-top: .2rem; color: var(--text-muted); font-size: .76rem; }
+.author-cell { display: flex; min-width: 0; align-items: center; gap: .6rem; }
+.author-cell > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.author-avatar, .author-placeholder { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; }
+.author-avatar { object-fit: cover; }
+.author-placeholder { display: grid; place-items: center; border: 1px solid var(--border-color); color: var(--primary-color); background: var(--accent-button-bg); }
+
+
+.tag-cell { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: .45rem; }
+.tag-cell-label { max-width: 100%; color: var(--text-main); font-weight: 600; line-height: 1.35; }
+.tag-state { display: inline-flex; min-height: 24px; padding: .22rem .58rem; align-items: center; gap: .32rem; border: 1px solid transparent; border-radius: 999px; font-size: .68rem; font-weight: 700; line-height: 1; white-space: nowrap; }
+.tag-state-hidden { color: #9a6700; border-color: #fedf89; background: #fffaeb; }
+
+
+.panel-backdrop { position: fixed; inset: 0; z-index: 1070; border: 0; background: rgb(0 0 0 / 58%); }
+.review-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 1080; display: grid; width: min(520px, 94vw); grid-template-rows: auto minmax(0, 1fr) auto; border-left: 1px solid var(--border-color); background: var(--bg-panel); }
+.panel-header, .panel-footer { display: flex; padding: 1rem 1.25rem; align-items: center; justify-content: space-between; gap: .75rem; }
+.panel-header { border-bottom: 1px solid var(--border-color); }
+.panel-header h2 { margin: 0; color: var(--text-main); font-size: 1.2rem; }
+.panel-close { display: grid; width: 38px; height: 38px; padding: 0; place-items: center; border: 0; color: var(--text-main); background: transparent; }
+.panel-body { min-height: 0; overflow-y: auto; padding: 1.25rem; }
+.panel-footer { border-top: 1px solid var(--border-color); }
+.panel-footer .btn { display: inline-flex; min-width: 120px; align-items: center; justify-content: center; gap: .35rem; }
+
+.review-title { margin: .75rem 0; color: var(--text-main); font-size: 1.45rem; }
+.review-meta { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.meta-box { display: grid; padding: .75rem; gap: .2rem; border: 1px solid var(--border-color); border-radius: 10px; }
+.meta-box span, .section-label { color: var(--text-muted); font-size: .72rem; text-transform: uppercase; }
+.meta-box strong { color: var(--text-main); font-size: .86rem; }
+.section-label { margin: 1rem 0 .5rem; font-weight: 700; }
+
+.review-content { max-height: 380px; overflow: auto; padding: 1rem; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); background: var(--bg-body); font-size: .9rem; line-height: 1.65; }
+.review-content img, .review-content video { max-width: 100%; height: auto; }
+.review-form { display: grid; margin-top: 1rem; gap: .4rem; }
+.review-form label { color: var(--text-main); font-weight: 650; }
+.review-form textarea { border-color: var(--border-color); color: var(--text-main); background: var(--bg-body); }
+.field-error { color: #dc3545; font-size: .75rem; }
+.meta-box .tag-state { width: fit-content; margin-top: .25rem; font-style: normal; }
+
+@media (max-width: 767.98px) {
+  .review-meta { grid-template-columns: 1fr; }
+}
+
+/* Post moderation preview is injected HTML, so these rules intentionally live
+   outside component encapsulation. Dark status colors mirror the static admin prototype. */
+:host ::ng-deep .review-content > :first-child { margin-top: 0; }
+:host ::ng-deep .review-content > :last-child { margin-bottom: 0; }
+:host ::ng-deep .review-content p { margin: 0 0 .85rem; }
+:host ::ng-deep .review-content h2 { margin: 1.15rem 0 .55rem; color: var(--text-main); font-size: 1.05rem; font-weight: 700; line-height: 1.35; }
+:host ::ng-deep .review-content blockquote { margin: .9rem 0; padding: .75rem .9rem; border-left: 3px solid var(--primary-color); border-radius: 0 8px 8px 0; color: var(--text-muted); background: var(--border-light); }
+:host ::ng-deep .review-content ol,
+:host ::ng-deep .review-content ul { margin: 0 0 .9rem; padding-left: 1.25rem; }
+:host ::ng-deep .review-content li + li { margin-top: .4rem; }
+:host ::ng-deep .review-content figure { margin: .9rem 0; }
+:host ::ng-deep .review-content img,
+:host ::ng-deep .review-content video { display: block; width: 100%; height: auto; max-height: 320px; object-fit: cover; border: 1px solid var(--border-color); border-radius: 10px; background: var(--border-light); }
+:host ::ng-deep .review-content figcaption,
+:host ::ng-deep .review-content .editor-media-caption { margin-top: .5rem; color: var(--text-muted); font-size: .85rem; text-align: center; }
+
+:host ::ng-deep .review-content a { color: var(--primary-color); text-decoration: none; }
+:host ::ng-deep .review-content a:hover,
+:host ::ng-deep .review-content a:focus-visible { text-decoration: underline; }

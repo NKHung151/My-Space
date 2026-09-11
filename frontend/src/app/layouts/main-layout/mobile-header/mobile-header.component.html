@@ -1,0 +1,30 @@
+<header class="mobile-header">
+  <div class="header-container">
+    <button type="button" class="btn btn-link d-lg-none me-2 text-reset p-0" (click)="menuClick.emit()" aria-label="Mở trình đơn">
+      <i class="bi bi-list fs-3"></i>
+    </button>
+    
+    <div (click)="onHomeClick()">
+      <app-brand link="/home" style="pointer-events: none;" />
+    </div>
+
+    <div class="d-none d-sm-flex flex-grow-1 justify-content-center px-3">
+      <div class="header-search-box w-100" style="max-width: 400px;" (click)="searchModalService.open()">
+        <i class="bi bi-search"></i>
+        <input type="text" readonly placeholder="Tìm kiếm My Space..." (focus)="searchModalService.open()">
+      </div>
+    </div>
+    
+    <div class="d-flex align-items-center ms-auto gap-3">
+      <button type="button" class="btn btn-link text-reset p-0 d-inline-flex align-items-center d-sm-none"
+              (click)="searchModalService.open()"
+              aria-label="Tìm kiếm My Space...">
+        <i class="bi bi-search fs-5"></i>
+      </button>
+
+      <a routerLink="/profile" class="text-decoration-none flex-shrink-0">
+        <img [appAssetImage]="profileAvatar" class="rounded-circle border" width="32" height="32" alt="Avatar" style="object-fit: cover;" />
+      </a>
+    </div>
+  </div>
+</header>

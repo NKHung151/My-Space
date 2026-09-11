@@ -1,0 +1,22 @@
+<section class="ui-state" [attr.aria-live]="kind === 'loading' ? 'polite' : null">
+  @if (kind === 'loading') {
+    <span class="spinner-border text-primary" aria-hidden="true"></span>
+    <span class="visually-hidden">Đang tải</span>
+  } @else {
+    <span class="ui-state__icon" [class.ui-state__icon--error]="kind === 'error'" aria-hidden="true">
+      <i class="bi" [class.bi-inbox]="kind === 'empty'" [class.bi-exclamation-triangle]="kind === 'error'"></i>
+    </span>
+  }
+
+  @if (title) {
+    <h2 class="ui-state__title">{{ title }}</h2>
+  }
+  @if (description) {
+    <p class="ui-state__description">{{ description }}</p>
+  }
+  @if (actionLabel) {
+    <button class="btn btn-outline-primary rounded-pill px-4" type="button" (click)="action.emit()">
+      {{ actionLabel }}
+    </button>
+  }
+</section>

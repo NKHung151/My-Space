@@ -1,0 +1,34 @@
+@if (!isSelf) {
+  <div class="d-inline-flex gap-2">
+    <button
+      [class]="buttonClass + ' rounded-pill fw-medium'"
+      [style.width]="size === 'small' ? '150px' : '165px'"
+      style="white-space: nowrap; transition: all 0.2s ease;"
+      (click)="handleAction($event)"
+      (mouseenter)="isHovered = true"
+      (mouseleave)="isHovered = false"
+      [disabled]="loading"
+      type="button">
+      @if (loading) {
+        <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+      } @else {
+        @if (status === 'none') {
+          <i class="bi bi-person-plus-fill me-1"></i>
+        } @else if (status === 'pending_sent') {
+          <i class="bi" [class.bi-person-dash-fill]="isHovered" [class.bi-clock-fill]="!isHovered"></i>
+        } @else if (status === 'pending_received') {
+          <i class="bi bi-check-lg me-1"></i>
+        } @else if (status === 'friends') {
+          <i class="bi" [class.bi-person-dash-fill]="isHovered" [class.bi-person-check-fill]="!isHovered"></i>
+        }
+      }
+      <span class="ms-1">{{ buttonText }}</span>
+    </button>
+
+    @if (status === 'pending_received') {
+      <button class="btn btn-secondary rounded-pill fw-medium" [class.btn-sm]="size === 'small'" [class.btn-lg]="size === 'large'" [style.width]="size === 'small' ? '105px' : '115px'" style="white-space: nowrap;" type="button" (click)="handleReject($event)" [disabled]="loading">
+        Từ chối
+      </button>
+    }
+  </div>
+}

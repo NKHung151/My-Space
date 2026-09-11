@@ -1,0 +1,117 @@
+:host {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 12000;
+  pointer-events: none !important;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  display: block;
+}
+
+.app-toast {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: min(25rem, calc(100vw - 2rem));
+  min-height: 3.5rem;
+  padding: 0.8rem 0.85rem;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid #198754;
+  border-radius: 0.85rem;
+  background: var(--bg-panel);
+  color: var(--text-main);
+  box-shadow: 0 1rem 2.8rem rgb(15 23 42 / 20%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none !important;
+  transform: translateY(-0.75rem);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    visibility 0s linear 180ms;
+}
+
+.app-toast--visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+  pointer-events: auto !important;
+}
+
+.app-toast--error {
+  border-left-color: #dc3545;
+}
+
+.app-toast--loading {
+  border-left-color: #0d6efd;
+}
+
+.app-toast__icon {
+  color: #198754;
+  font-size: 1.1rem;
+}
+
+.app-toast--error .app-toast__icon {
+  color: #dc3545;
+}
+
+.app-toast--loading .app-toast__icon {
+  color: #0d6efd;
+  animation: toast-spin 900ms linear infinite;
+}
+
+.app-toast__content {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.app-toast__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.app-toast__message {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.app-toast__message:only-child {
+  color: var(--text-main);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.app-toast__close {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.app-toast__close:hover {
+  background: color-mix(in srgb, var(--text-main) 6%, transparent);
+  color: var(--text-main);
+}
+
+@keyframes toast-spin {
+  to { transform: rotate(360deg); }
+}

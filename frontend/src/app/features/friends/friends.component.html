@@ -1,0 +1,105 @@
+<div class="container-fluid pt-0 pb-4 px-0" style="max-width: 780px; margin: 0 auto;">
+  <div class="sticky-top bg-body pt-4 pb-2 px-3 mb-4" style="z-index: 1020; border-bottom: 1px solid var(--border-color);">
+    <h1 class="h3 fw-bold mb-3 text-center">Bạn bè</h1>
+
+    <ul class="nav nav-underline nav-justified w-100">
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-medium" [class.active]="tab === 'feed'" href="#" (click)="$event.preventDefault(); setTab('feed')">Bảng tin</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-medium" [class.active]="tab === 'friends'" href="#" (click)="$event.preventDefault(); setTab('friends')">Bạn bè</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-medium" [class.active]="tab === 'requests'" href="#" (click)="$event.preventDefault(); setTab('requests')">Lời mời kết bạn</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="px-3">
+
+  @if (loading) {
+    <div class="text-center py-5 text-muted">
+      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+      <span>Đang tải...</span>
+    </div>
+  } @else {
+    @if (tab === 'feed') {
+      @if (posts.length === 0) {
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+          <span>Bạn bè của bạn chưa có bài viết nào.</span>
+        </div>
+      } @else {
+        <div class="d-flex flex-column gap-4">
+          @for (post of posts; track post.id) {
+            <app-post-card [post]="post"></app-post-card>
+          }
+        </div>
+        
+        @if (hasMorePosts) {
+          <div class="text-center mt-4">
+            <button class="btn btn-outline-secondary rounded-pill px-4" (click)="loadMoreFeed()" [disabled]="loadingFeed">
+              @if (loadingFeed) {
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              }
+              Xem thêm
+            </button>
+          </div>
+        }
+      }
+    } @else if (tab === 'friends') {
+      @if (friends.length === 0) {
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-people fs-1 d-block mb-3"></i>
+          <span>Bạn chưa có bạn bè nào.</span>
+        </div>
+      } @else {
+        <div class="row g-3">
+          @for (friend of friends; track friend.id) {
+            <div class="col-12">
+              <div class="card p-3 d-flex flex-row align-items-center gap-3 border-light-subtle shadow-sm rounded-4">
+                <a [routerLink]="['/profile', friend.id]" class="flex-shrink-0" style="cursor: pointer; width: 60px; height: 60px;">
+                  <img [appAssetImage]="friend.avatarUrl" class="rounded-circle border" width="60" height="60" style="object-fit: cover;" alt="">
+                </a>
+                <div class="flex-grow-1" style="min-width: 0;">
+                  <a [routerLink]="['/profile', friend.id]" class="text-decoration-none text-main fw-bold d-block text-truncate fs-6">{{ friend.displayName || friend.username }}</a>
+                  <span class="text-muted small text-truncate d-block">&#64;{{ friend.username }}</span>
+                </div>
+                <div class="flex-shrink-0 ms-auto">
+                  <app-friend-button [userId]="friend.id" size="small"></app-friend-button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    } @else if (tab === 'requests') {
+      @if (requests.length === 0) {
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-envelope fs-1 d-block mb-3"></i>
+          <span>Không có lời mời kết bạn nào.</span>
+        </div>
+      } @else {
+        <div class="row g-3">
+          @for (req of requests; track req.sender.id) {
+            <div class="col-12">
+              <div class="card p-3 d-flex flex-row align-items-center gap-3 border-light-subtle shadow-sm rounded-4">
+                <a [routerLink]="['/profile', req.sender.id]" class="flex-shrink-0" style="cursor: pointer; width: 60px; height: 60px;">
+                  <img [appAssetImage]="req.sender.avatarUrl" class="rounded-circle border" width="60" height="60" style="object-fit: cover;" alt="">
+                </a>
+                <div class="flex-grow-1" style="min-width: 0;">
+                  <a [routerLink]="['/profile', req.sender.id]" class="text-decoration-none text-main fw-bold d-block text-truncate fs-6">{{ req.sender.displayName || req.sender.username }}</a>
+                  <span class="text-muted small text-truncate d-block">&#64;{{ req.sender.username }}</span>
+                </div>
+                <div class="flex-shrink-0 ms-auto">
+                  <app-friend-button [userId]="req.sender.id" size="small"></app-friend-button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+  </div>
+</div>

@@ -1,0 +1,29 @@
+@if (toastData) {
+  <div
+    class="app-toast"
+    [class.app-toast--visible]="isVisible"
+    [class.app-toast--error]="toastData.type === 'error'"
+    [class.app-toast--loading]="toastData.type === 'loading'"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true">
+    <i
+      class="bi app-toast__icon"
+      [ngClass]="{
+        'bi-check-circle-fill': toastData.type === 'success',
+        'bi-exclamation-circle-fill': toastData.type === 'error',
+        'bi-arrow-repeat': toastData.type === 'loading'
+      }"
+      aria-hidden="true">
+    </i>
+    <span class="app-toast__content">
+      @if (toastData.title) {
+        <strong class="app-toast__title">{{ toastData.title }}</strong>
+      }
+      <span class="app-toast__message">{{ toastData.message }}</span>
+    </span>
+    <button class="app-toast__close" type="button" aria-label="Đóng thông báo" (click)="dismiss()">
+      <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
+  </div>
+}

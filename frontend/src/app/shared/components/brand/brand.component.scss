@@ -1,0 +1,27 @@
+:host {
+  display: inline-flex;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--text-main);
+  text-decoration: none;
+}
+
+.brand__mark {
+  flex: 0 0 auto;
+  filter: drop-shadow(0 2px 4px rgb(15 23 42 / 14%));
+}
+
+.brand__name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+
+.brand--compact .brand__mark {
+  width: 28px;
+  height: 28px;
+}

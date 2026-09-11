@@ -1,0 +1,98 @@
+@if (modalService.isOpen()) {
+  <div class="search-modal-backdrop show" (click)="close()">
+    <div class="search-modal-box" (click)="$event.stopPropagation()">
+      <div class="search-modal-header">
+        <i class="bi bi-search"></i>
+        <input
+          #searchInput
+          type="text"
+          class="search-modal-input"
+          placeholder="Tìm kiếm bài viết, tác giả và danh mục..."
+          [value]="query()"
+          (input)="onInput($any($event.target).value)"
+          (keydown.enter)="onEnter()"
+        />
+        @if (hasQuery()) {
+          <button type="button" class="search-modal-close" (click)="clear()" aria-label="Xóa">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        }
+      </div>
+
+      <div class="search-modal-body">
+        @if (!hasQuery()) {
+          @if (trendingAuthors().length > 0) {
+            <div>
+              <div class="search-section-title">Tác giả nổi bật</div>
+              <div class="search-avatar-scroll">
+                @for (author of trendingAuthors(); track author.id) {
+                  <button type="button" class="search-avatar-item author-tooltip-container position-relative" (click)="goToAuthor(author.id)">
+                    <img
+                      [appAssetImage]="author.avatarUrl"
+                      [alt]="author.displayName"
+                      class="search-avatar-img"
+                    />
+                    <span class="search-avatar-label">{{ author.displayName }}</span>
+                    <app-author-tooltip [user]="author"></app-author-tooltip>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+
+        } @else {
+          <div>
+            @if (searching()) {
+              <div class="search-section-title">Đang tìm kiếm...</div>
+            } @else {
+              @if (results().users.length === 0 && results().posts.length === 0) {
+                <div class="search-empty">Không tìm thấy kết quả phù hợp.</div>
+              } @else {
+                @if (results().users.length > 0) {
+                  <div class="mb-4">
+                    <div class="search-section-title">TÁC GIẢ</div>
+                    <div class="search-avatar-scroll">
+                      @for (author of results().users; track author.id) {
+                        <button type="button" class="search-avatar-item author-tooltip-container position-relative" (click)="goToAuthor(author.id)">
+                          <img [appAssetImage]="author.avatarUrl" [alt]="author.displayName" class="search-avatar-img" />
+                          <span class="search-avatar-label">{{ author.displayName }}</span>
+                          <app-author-tooltip [user]="author"></app-author-tooltip>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
+
+
+                @if (results().posts.length > 0) {
+                  <div class="mb-4">
+                    <div class="search-section-title">BÀI VIẾT</div>
+                    <div class="search-results-list">
+                      @for (post of results().posts; track post.id) {
+                        <button type="button" class="search-result-item" (click)="goToPost(post.id)">
+                          <div class="author-tooltip-container position-relative">
+                            <img [appAssetImage]="post.author.avatarUrl" [alt]="post.author.displayName" class="search-result-avatar rounded-circle border object-fit-cover" />
+                            <app-author-tooltip [user]="$any(post.author)"></app-author-tooltip>
+                          </div>
+                          <div class="search-result-content">
+                            <div class="search-result-title">{{ post.title }}</div>
+                            <div class="search-result-meta">
+                              <span>{{ post.author.displayName }}</span>
+                            </div>
+                          </div>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
+              }
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

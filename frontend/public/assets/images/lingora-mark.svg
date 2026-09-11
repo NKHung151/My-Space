@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Lingora</title>
+  <desc id="desc">A minimal open page and speech bubble monogram</desc>
+  <defs>
+    <linearGradient id="lingoraGradient" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4f6df5"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="58" height="58" rx="16" fill="url(#lingoraGradient)"/>
+  <path d="M15 17.5c0-2 1.7-3.5 3.7-3.2 5.2.8 9.8 3 13.3 6.4v28.7c-3.8-3.6-8.5-5.9-14-6.8-1.7-.3-3-1.7-3-3.4V17.5Z" fill="#fff"/>
+  <path d="M49 17.5c0-2-1.7-3.5-3.7-3.2-5.2.8-9.8 3-13.3 6.4v28.7c3.8-3.6 8.5-5.9 14-6.8 1.7-.3 3-1.7 3-3.4V17.5Z" fill="#fff" fill-opacity=".9"/>
+  <path d="M39.5 26.5h4.8M39.5 32h4.8" stroke="#5b4ee5" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M24.5 43.9 18 50v-8.5l6.5 2.4Z" fill="#fff"/>
+</svg>
