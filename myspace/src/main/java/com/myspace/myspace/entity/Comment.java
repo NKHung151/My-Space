@@ -22,10 +22,10 @@ public class Comment {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(name = "like_count")
+    @Column(name = "like_count", columnDefinition = "int default 0")
     private Integer likeCount = 0;
 
-    @Column(name = "reply_count")
+    @Column(name = "reply_count", columnDefinition = "int default 0")
     private Integer replyCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)

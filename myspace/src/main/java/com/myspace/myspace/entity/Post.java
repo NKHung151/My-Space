@@ -33,7 +33,7 @@ public class Post {
     @Column(name = "cover_image_url")
     private String coverImageUrl;
 
-    @Column(name = "has_video")
+    @Column(name = "has_video", columnDefinition = "boolean default false")
     private Boolean hasVideo = false;
 
     @Column(name = "unaccented_title")
@@ -44,13 +44,13 @@ public class Post {
     @Column(name = "unaccented_tag")
     private String unaccentedTag;
 
-    @Column(name = "view_count")
+    @Column(name = "view_count", columnDefinition = "int default 0")
     private Integer viewCount = 0;
 
-    @Column(name = "like_count")
+    @Column(name = "like_count", columnDefinition = "int default 0")
     private Integer likeCount = 0;
 
-    @Column(name = "comment_count")
+    @Column(name = "comment_count", columnDefinition = "int default 0")
     private Integer commentCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
