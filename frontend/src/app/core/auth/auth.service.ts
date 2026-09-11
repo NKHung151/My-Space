@@ -19,8 +19,6 @@ import { CurrentUser } from './current-user.model';
 })
 export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
-  private readonly accessTokenKey = 'access_token';
-  private readonly refreshTokenKey = 'refresh_token';
   private readonly userInfoKey = 'user_info';
   private accessToken: string | null = null;
   private refreshRequest$?: Observable<AuthSession>;
@@ -31,10 +29,6 @@ export class AuthService {
   constructor(
     private http: HttpClient
   ) {
-    // Remove tokens persisted by older versions. Authentication secrets now live
-    // only in memory (access token) and an HttpOnly cookie (refresh token).
-    localStorage.removeItem(this.accessTokenKey);
-    localStorage.removeItem(this.refreshTokenKey);
     this.loadUserFromStorage();
   }
 
@@ -193,9 +187,6 @@ export class AuthService {
 
   private clearSession(): void {
     this.accessToken = null;
-    // Keep removing legacy keys so upgrades cannot leave reusable tokens behind.
-    localStorage.removeItem(this.accessTokenKey);
-    localStorage.removeItem(this.refreshTokenKey);
     localStorage.removeItem(this.userInfoKey);
     this.currentUserSignal.set(null);
   }

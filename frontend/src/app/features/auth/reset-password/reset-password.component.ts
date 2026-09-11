@@ -17,6 +17,10 @@ import { strongPasswordValidator } from '../../../shared/validators/password.val
 })
 export class ResetPasswordComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
+
   private readonly resendCooldownSeconds = 60;
   private timerId?: number;
 
@@ -34,11 +38,7 @@ export class ResetPasswordComponent implements OnDestroy {
   errorMessage = '';
   resendSecondsRemaining = this.getInitialCooldown();
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly router: Router,
-    private readonly toastService: ToastService
-  ) {
+  constructor() {
     this.startCooldownTimer();
   }
 
@@ -58,8 +58,8 @@ export class ResetPasswordComponent implements OnDestroy {
 
   resendCode(): void {
     const emailControl = this.resetPasswordForm.controls.email;
-    const email = emailControl.value.trim().toLowerCase();
-    emailControl.setValue(email);
+    emailControl.setValue(emailControl.value.trim().toLowerCase());
+    const email = emailControl.value;
     emailControl.markAsTouched();
 
     if (emailControl.invalid || this.resendSecondsRemaining > 0 || this.isResending) {

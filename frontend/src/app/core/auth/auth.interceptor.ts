@@ -5,14 +5,7 @@ import { AuthService } from './auth.service';
 import { AuthModalService } from './auth-modal.service';
 
 const isPublicAuthRequest = (url: string): boolean =>
-  [
-    '/auth/login',
-    '/auth/register',
-    '/auth/refresh',
-    '/auth/logout',
-    '/auth/forgot-password',
-    '/auth/reset-password',
-  ].some(path => url.endsWith(path));
+  /\/auth\/(login|register|refresh|logout|forgot-password|reset-password)$/.test(url);
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthService);

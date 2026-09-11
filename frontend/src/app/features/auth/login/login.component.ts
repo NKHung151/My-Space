@@ -52,14 +52,15 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
     this.route.queryParams.subscribe(params => {
-      if (params['registered'] === 'true') {
-        this.toastService.showSuccess('Đăng ký thành công! Vui lòng đăng nhập.');
-      }
-      if (params['passwordReset'] === 'true') {
-        this.toastService.showSuccess('Đặt lại mật khẩu thành công. Hãy đăng nhập bằng mật khẩu mới.');
-      }
-      if (typeof params['messageKey'] === 'string' && params['messageKey']) {
-        this.toastService.showSuccess('');
+      const messages: Record<string, string> = {
+        registered: 'Đăng ký thành công! Vui lòng đăng nhập.',
+        passwordReset: 'Đặt lại mật khẩu thành công. Hãy đăng nhập bằng mật khẩu mới.'
+      };
+
+      for (const key of Object.keys(messages)) {
+        if (params[key] === 'true') {
+          this.toastService.showSuccess(messages[key]);
+        }
       }
     });
   }

@@ -14,6 +14,8 @@ import { AuthLayoutComponent } from '../../../layouts/auth-layout/auth-layout.co
 })
 export class ForgotPasswordComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   readonly forgotPasswordForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -22,15 +24,10 @@ export class ForgotPasswordComponent {
   isSubmitting = false;
   errorMessage = '';
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly router: Router
-  ) {}
-
   onSubmit(): void {
     const emailControl = this.forgotPasswordForm.controls.email;
-    const email = emailControl.value.trim().toLowerCase();
-    emailControl.setValue(email);
+    emailControl.setValue(emailControl.value.trim().toLowerCase());
+    const email = emailControl.value;
 
     if (this.forgotPasswordForm.invalid) {
       this.forgotPasswordForm.markAllAsTouched();
