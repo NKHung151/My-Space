@@ -40,16 +40,6 @@ public class JwtService {
         return createToken(claims, userDetails.getUsername(), jwtAccessTokenExpiration);
     }
 
-    /**
-     * 2. TẠO REFRESH TOKEN (Thẻ dự phòng)
-     * Thẻ này sống lâu hơn (1 ngày), dùng để xin cấp lại Access Token khi bị hết
-     * hạn.
-     */
-    public String generateRefreshToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        // Truyền thời gian sống của Refresh Token vào
-        return createToken(claims, userDetails.getUsername(), jwtRefreshTokenExpiration);
-    }
 
     /**
      * 3. LÕI TẠO TOKEN

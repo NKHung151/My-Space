@@ -54,7 +54,7 @@ export class AdminUsersComponent implements OnInit {
   });
 
   readonly editForm = this.fb.nonNullable.group({
-    role: 'member' as AdminUserRole,
+    role: 'user' as AdminUserRole,
     active: true,
   });
 
@@ -64,7 +64,7 @@ export class AdminUsersComponent implements OnInit {
     const status = params.get('status');
     this.filterForm.setValue({
       search: params.get('search') ?? '',
-      role: role === 'admin' || role === 'member' ? role : '',
+      role: role === 'admin' || role === 'user' ? role : '',
       status: status === 'active' || status === 'inactive' ? status : '',
     }, { emitEvent: false });
 
@@ -144,7 +144,7 @@ export class AdminUsersComponent implements OnInit {
         const selected = response.data;
         this.selectedUser.set(selected);
         this.editForm.reset({
-          role: selected.role ?? 'member',
+          role: selected.role ?? 'user',
           active: selected.status === 'active',
         }, { emitEvent: false });
         this.configureAccessControls(selected);

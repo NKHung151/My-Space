@@ -40,7 +40,7 @@ export class CommentService {
         displayName: comment.author.display_name || comment.author.username || 'User',
         username: comment.author.username || 'user',
         avatarUrl: comment.author.avatar,
-        role: comment.author.role_id === 1 ? 'admin' : 'member'
+        role: comment.author.role_id === 1 ? 'admin' : 'user'
       } as any, // Cast to any because User model may expect other base fields like createdAt
       // Gọi đệ quy mapComment cho danh sách replies con nếu có
       replies: comment.replies ? comment.replies.map((r: any) => this.mapComment(r)) : []

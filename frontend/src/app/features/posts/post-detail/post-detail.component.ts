@@ -395,7 +395,7 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
         username: currentUser?.username || 'author',
         avatarUrl: currentUser?.avatarUrl ?? null,
         bio: currentUser?.bio ?? null,
-        role: currentUser?.role ?? 'member',
+        role: currentUser?.role ?? 'user',
       },
 
       createdAt: post.createdAt,

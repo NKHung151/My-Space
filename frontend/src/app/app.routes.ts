@@ -5,7 +5,7 @@ import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
 export const routes: Routes = [
   {
     path: '',
-    canActivateChild: [roleGuard(['member', 'guest'])],
+    canActivateChild: [roleGuard(['user', 'guest'])],
     loadComponent: () =>
       import('./layouts/main-layout/main-layout.component').then(
         ({ MainLayoutComponent }) => MainLayoutComponent,
@@ -24,7 +24,7 @@ export const routes: Routes = [
       {
         path: 'settings',
         title: 'Settings - My Space',
-        canActivate: [roleGuard(['member'])],
+        canActivate: [roleGuard(['user'])],
         loadComponent: () =>
           import('./features/settings/settings.component').then(m => m.SettingsComponent),
         data: { contentMaxWidth: '780px' },
@@ -37,7 +37,7 @@ export const routes: Routes = [
       {
         path: 'friends',
         title: 'Bạn bè - My Space',
-        canActivate: [roleGuard(['member'])],
+        canActivate: [roleGuard(['user'])],
         loadComponent: () =>
           import('./features/friends/friends.component').then(m => m.FriendsComponent),
       },
@@ -55,7 +55,7 @@ export const routes: Routes = [
       {
         path: 'profile',
         title: 'Profile - My Space',
-        canActivate: [roleGuard(['member'])],
+        canActivate: [roleGuard(['user'])],
         loadComponent: () =>
           import('./features/profile/profile.component').then(m => m.ProfileComponent),
         data: { contentMaxWidth: '100%' },
@@ -96,7 +96,7 @@ export const routes: Routes = [
   {
     path: 'workspace/create',
     title: 'Create Post - My Space',
-    canActivate: [roleGuard(['member'])],
+    canActivate: [roleGuard(['user'])],
     loadComponent: () =>
       import('./features/workspace/post-editor/post-editor.component').then(m => m.PostEditorComponent),
   },
@@ -108,7 +108,7 @@ export const routes: Routes = [
   {
     path: 'workspace/posts/:id/edit',
     title: 'Edit Post - My Space',
-    canActivate: [roleGuard(['member'])],
+    canActivate: [roleGuard(['user'])],
     loadComponent: () =>
       import('./features/workspace/post-editor/post-editor.component').then(m => m.PostEditorComponent),
   },

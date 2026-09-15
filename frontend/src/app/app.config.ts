@@ -7,8 +7,14 @@ import { AuthService } from './core/auth/auth.service';
 import { errorInterceptor } from './core/http/error.interceptor';
 import { routes } from './app.routes';
 
-const initializeAuthentication = (authService: AuthService) => () =>
-  firstValueFrom(authService.restoreSession());
+const initializeAuthentication = (authService: AuthService) => () => {
+  // Tối ưu hóa: Chỉ gọi API /refresh khi người dùng đã có thông tin trong localStorage
+  // Nếu là khách (Chưa đăng nhập), bỏ qua bước này để App load nhanh gấp đôi!
+  if (authService.currentUser()) {
+    return firstValueFrom(authService.restoreSession());
+  }
+  return Promise.resolve();
+};
 
 export const appConfig: ApplicationConfig = {
   providers: [

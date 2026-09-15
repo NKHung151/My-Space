@@ -17,7 +17,7 @@
         <select class="form-select" formControlName="role">
           <option value="">Tất cả vai trò</option>
           <option value="admin">Quản trị viên</option>
-          <option value="member">Thành viên</option>
+          <option value="user">Người dùng</option>
         </select>
       </label>
       <label>
@@ -88,7 +88,7 @@
                 <td data-label="Email">{{ user.email }}</td>
                 <td data-label="Joined" class="joined-cell">{{ user.createdAt | localizedDate }}</td>
                 <td data-label="Role">
-                  <span class="role-badge role-badge-{{ user.role || 'member' }}">
+                  <span class="role-badge role-badge-{{ user.role || 'user' }}">
                     <i class="bi" [class.bi-shield-check]="user.role === 'admin'"
                       [class.bi-person]="user.role !== 'admin'" aria-hidden="true"></i>
                     {{ user.role === 'admin'  ? 'Quản trị viên' : 'Thành viên' }}
@@ -153,7 +153,7 @@
             <div>
               <strong>{{ userName(user) }}</strong>
               <span>#{{ user.id }} · Đã tham gia {{ user.createdAt | localizedDate }}</span>
-              <span class="role-badge role-badge-{{ user.role || 'member' }}">{{ user.role === 'admin'  ? 'Quản trị viên' : 'Thành viên' }}</span>
+              <span class="role-badge role-badge-{{ user.role || 'user' }}">{{ user.role === 'admin'  ? 'Quản trị viên' : 'Người dùng' }}</span>
             </div>
           </div>
 
@@ -175,7 +175,7 @@
             <h3>Truy cập & tài khoản</h3>
             <label for="editUserRole">Vai trò</label>
             <select id="editUserRole" class="form-select" formControlName="role">
-              <option value="member">Thành viên</option>
+              <option value="user">Người dùng</option>
               <option value="admin">Quản trị viên</option>
             </select>
             <div class="form-text">

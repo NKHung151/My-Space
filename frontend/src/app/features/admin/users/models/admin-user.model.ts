@@ -1,6 +1,6 @@
 import { BaseUser } from '../../../../core/models/base-user.model';
 
-export type AdminUserRole = 'admin' | 'member';
+export type AdminUserRole = 'admin' | 'user';
 export type AdminUserStatus = 'active' | 'inactive' | 'banned';
 
 export interface AdminUser extends BaseUser {
