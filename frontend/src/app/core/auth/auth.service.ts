@@ -116,7 +116,7 @@ export class AuthService {
     if (!this.refreshRequest$) {
       this.refreshRequest$ = this.http
         .post<ApiResponse<AuthSession>>(
-          `${this.apiUrl}/refresh`,
+          `${this.apiUrl}/refresh-token`,
           {},
           { withCredentials: true },
         )

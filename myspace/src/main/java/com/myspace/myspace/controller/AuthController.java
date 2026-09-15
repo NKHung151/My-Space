@@ -39,8 +39,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
+        return generateAuthCookieResponse(response);
+    }
 
-        // Tạo HttpOnly Cookie cho Refresh Token (Bảo mật tối đa, chống XSS)
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody @jakarta.validation.Valid com.myspace.myspace.common.dto.request.RegisterRequest request) {
+        AuthResponse response = authService.register(request);
+        return generateAuthCookieResponse(response);
+    }
+
+    private ResponseEntity<ApiResponse<AuthResponse>> generateAuthCookieResponse(AuthResponse response) {
         ResponseCookie springCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
                 .httpOnly(true)
                 .secure(false) // Đặt true nếu dùng HTTPS
