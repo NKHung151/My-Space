@@ -1,9 +1,9 @@
 package com.myspace.myspace.controller;
 
 import com.myspace.myspace.common.dto.ApiResponse;
-import com.myspace.myspace.common.dto.request.LoginRequest;
-import com.myspace.myspace.common.dto.response.CurrentUserResponse;
-import com.myspace.myspace.common.dto.response.AuthResponse;
+import com.myspace.myspace.dto.request.LoginRequest;
+import com.myspace.myspace.dto.response.CurrentUserResponse;
+import com.myspace.myspace.dto.response.AuthResponse;
 import com.myspace.myspace.entity.RefreshToken;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.security.jwt.JwtService;
@@ -43,7 +43,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody @jakarta.validation.Valid com.myspace.myspace.common.dto.request.RegisterRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return generateAuthCookieResponse(response);
     }

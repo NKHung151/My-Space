@@ -1,4 +1,4 @@
-package com.myspace.myspace.common.dto.response;
+package com.myspace.myspace.dto.response;
 
 import lombok.Builder;
 import lombok.Data;
