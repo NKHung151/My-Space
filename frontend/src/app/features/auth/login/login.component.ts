@@ -40,7 +40,7 @@ export class LoginComponent implements OnInit {
     private toastService: ToastService
   ) {
     this.loginForm = this.fb.group({
-      emailOrUsername: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]]
     });
   }

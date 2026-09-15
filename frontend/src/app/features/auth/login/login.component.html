@@ -13,7 +13,7 @@
 
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
     <div class="mb-3">
-      <label for="loginIdentity" class="form-label small fw-semibold">Email hoặc tên người dùng</label>
+      <label for="loginIdentity" class="form-label small fw-semibold">Email</label>
       <div class="input-group">
         <span class="input-group-text bg-transparent border-end-0 text-muted">
           <i class="bi bi-person" aria-hidden="true"></i>
@@ -21,16 +21,16 @@
         <input
           id="loginIdentity"
           class="form-control border-start-0 py-2"
-          type="text"
-          formControlName="emailOrUsername"
-          [class.is-invalid]="loginForm.get('emailOrUsername')?.touched && loginForm.get('emailOrUsername')?.invalid"
-          [attr.aria-invalid]="loginForm.get('emailOrUsername')?.touched && loginForm.get('emailOrUsername')?.invalid"
+          type="email"
+          formControlName="email"
+          [class.is-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
+          [attr.aria-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
           placeholder="name@example.com"
           autocomplete="username"
           required>
       </div>
-      @if (loginForm.get('emailOrUsername')?.touched && loginForm.get('emailOrUsername')?.invalid) {
-        <div class="text-danger small mt-1" aria-live="polite">Nhập email hoặc tên người dùng của bạn.</div>
+      @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
+        <div class="text-danger small mt-1" aria-live="polite">Vui lòng nhập một địa chỉ email hợp lệ.</div>
       }
     </div>
 
