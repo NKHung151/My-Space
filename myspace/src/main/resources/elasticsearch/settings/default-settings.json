@@ -1,0 +1,11 @@
+{
+  "analysis": {
+    "analyzer": {
+      "standard_vi": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": ["lowercase", "asciifolding"]
+      }
+    }
+  }
+}

@@ -50,10 +50,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             userDetails, null, userDetails.getAuthorities());
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                } else {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT_FAIL: " + username + " != " + userDetails.getUsername());
+                    return;
                 }
             }
         } catch (Exception e) {
             log.error("Error jwt check token:", e);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT_DEBUG: " + e.getMessage() + " | " + e.getClass().getName());
+            return;
         }
 
         filterChain.doFilter(request, response);

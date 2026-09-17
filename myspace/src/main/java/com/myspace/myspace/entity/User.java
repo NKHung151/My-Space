@@ -50,7 +50,7 @@ public class User {
     @Column(name = "reset_otp_expiry")
     private LocalDateTime resetOtpExpiry;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
 

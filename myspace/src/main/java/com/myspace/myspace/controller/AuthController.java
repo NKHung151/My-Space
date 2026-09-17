@@ -37,7 +37,7 @@ public class AuthController {
     private long refreshTokenExpiration;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody @jakarta.validation.Valid LoginRequest request) {
         AuthResponse response = authService.login(request);
         return generateAuthCookieResponse(response);
     }
