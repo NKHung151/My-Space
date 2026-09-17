@@ -356,9 +356,9 @@ export class SettingsComponent implements OnInit {
       },
       error: err => {
         const message = getApiErrorMessage(err, '').toLowerCase();
-        if (message.includes('current password is incorrect')) {
+        if (message.includes('mật khẩu hiện tại không đúng')) {
           this.passwordErrors.set({ current: 'Mật khẩu hiện tại không đúng.' });
-        } else if (message.includes('different from current password')) {
+        } else if (message.includes('khác mật khẩu hiện tại')) {
           this.passwordErrors.set({ new: 'Mật khẩu mới phải khác mật khẩu hiện tại.' });
         } else {
           this.passwordErrors.set({ form: 'Không thể cập nhật mật khẩu. Vui lòng thử lại.' });

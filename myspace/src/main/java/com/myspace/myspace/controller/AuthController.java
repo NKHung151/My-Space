@@ -54,6 +54,20 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Nếu email tồn tại, mã OTP đã được gửi. Vui lòng kiểm tra hộp thư của bạn."));
     }
 
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại."));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Map<String, String>>> changePassword(
+            @RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.ChangePasswordRequest request,
+            Principal principal) {
+        authService.changePassword(principal.getName(), request);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")));
+    }
+
     private ResponseEntity<ApiResponse<AuthResponse>> generateAuthCookieResponse(AuthResponse response) {
         ResponseCookie springCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
                 .httpOnly(true)

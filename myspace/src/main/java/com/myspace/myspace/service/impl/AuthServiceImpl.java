@@ -1,8 +1,10 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.exception.AppException;
+import com.myspace.myspace.dto.request.ChangePasswordRequest;
 import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.request.RegisterRequest;
+import com.myspace.myspace.dto.request.ResetPasswordRequest;
 import com.myspace.myspace.dto.response.AuthResponse;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
 import com.myspace.myspace.entity.RefreshToken;
@@ -128,6 +130,49 @@ public class AuthServiceImpl implements AuthService {
 
         // Send Email
         mailService.sendPasswordResetEmail(user.getEmail(), otp);
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(HttpStatus.BAD_REQUEST, "Mã đặt lại không hợp lệ hoặc đã hết hạn."));
+
+        if (user.getResetOtp() == null || !user.getResetOtp().equals(request.getOtp())) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mã đặt lại không hợp lệ hoặc đã hết hạn.");
+        }
+
+        if (user.getResetOtpExpiry() == null || LocalDateTime.now().isAfter(user.getResetOtpExpiry())) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mã đặt lại không hợp lệ hoặc đã hết hạn.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setResetOtp(null);
+        user.setResetOtpExpiry(null);
+        
+        userRepository.save(user);
+        
+        // Revoke all tokens to force re-login on all devices
+        refreshTokenService.revokeAllUserTokens(user.getId());
+    }
+
+    @Override
+    public void changePassword(String userEmail, ChangePasswordRequest request) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không đúng.");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mật khẩu mới phải khác mật khẩu hiện tại.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // Revoke all tokens so user must log in again with new password
+        refreshTokenService.revokeAllUserTokens(user.getId());
     }
 }
 
