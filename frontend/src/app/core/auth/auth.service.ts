@@ -91,7 +91,6 @@ export class AuthService {
     username: string;
     bio: string;
     avatarMediaId?: string;
-    accentColor?: string;
   }): Observable<CurrentUser> {
     return this.http.patch<ApiResponse<CurrentUser>>(`${this.apiUrl}/me`, payload).pipe(
       map(response => response.data),

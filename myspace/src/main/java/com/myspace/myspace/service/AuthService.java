@@ -4,7 +4,9 @@ import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.request.RegisterRequest;
 import com.myspace.myspace.dto.request.ResetPasswordRequest;
 import com.myspace.myspace.dto.request.ChangePasswordRequest;
+import com.myspace.myspace.dto.request.UpdateProfileRequest;
 import com.myspace.myspace.dto.response.AuthResponse;
+import com.myspace.myspace.dto.response.CurrentUserResponse;
 
 public interface AuthService {
     AuthResponse login(LoginRequest request);
@@ -13,4 +15,5 @@ public interface AuthService {
     void resetPassword(ResetPasswordRequest request);
     void changePassword(String userEmail, ChangePasswordRequest request);
     void logoutAll(String userEmail);
+    CurrentUserResponse updateProfile(String userEmail, UpdateProfileRequest request);
 }

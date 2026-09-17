@@ -12,7 +12,6 @@ public class CurrentUserResponse {
     private String fullName;
     private String displayName;
     private String avatarUrl;
-    private String accentColor;
     private String bio;
     private String role;
 }

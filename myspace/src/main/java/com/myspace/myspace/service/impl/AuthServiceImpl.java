@@ -1,12 +1,15 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.exception.AppException;
-import com.myspace.myspace.dto.request.ChangePasswordRequest;
 import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.request.RegisterRequest;
 import com.myspace.myspace.dto.request.ResetPasswordRequest;
+import com.myspace.myspace.dto.request.ChangePasswordRequest;
+import com.myspace.myspace.dto.request.UpdateProfileRequest;
 import com.myspace.myspace.dto.response.AuthResponse;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
+import java.text.Normalizer;
+import java.util.regex.Pattern;
 import com.myspace.myspace.entity.RefreshToken;
 import com.myspace.myspace.entity.Role;
 import com.myspace.myspace.entity.User;
@@ -60,7 +63,6 @@ public class AuthServiceImpl implements AuthService {
                 .fullName(user.getFullName())
                 .displayName(user.getDisplayName())
                 .avatarUrl(user.getAvatarUrl())
-                .accentColor(user.getAccentColor())
                 .bio(user.getBio())
                 .role(user.getRole().getName())
                 .build();
@@ -104,7 +106,6 @@ public class AuthServiceImpl implements AuthService {
                 .fullName(user.getFullName())
                 .displayName(user.getDisplayName())
                 .avatarUrl(user.getAvatarUrl())
-                .accentColor(user.getAccentColor())
                 .bio(user.getBio())
                 .role(user.getRole().getName())
                 .build();
@@ -182,6 +183,41 @@ public class AuthServiceImpl implements AuthService {
         
         // Xóa toàn bộ Refresh Token của người dùng này khỏi hệ thống
         refreshTokenService.revokeAllUserTokens(user.getId());
+    }
+
+    @Override
+    public CurrentUserResponse updateProfile(String userEmail, UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
+
+        if (!user.getUsername().equals(request.getUsername()) && userRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(HttpStatus.CONFLICT, "Tên người dùng đã được sử dụng!");
+        }
+
+        user.setDisplayName(request.getDisplayName());
+        user.setUsername(request.getUsername());
+        user.setBio(request.getBio());
+
+        if (request.getAvatarMediaId() != null && !request.getAvatarMediaId().trim().isEmpty()) {
+            user.setAvatarUrl(request.getAvatarMediaId());
+        }
+
+        // Tạo tên không dấu để dễ tìm kiếm
+        if (request.getDisplayName() != null) {
+            String temp = Normalizer.normalize(request.getDisplayName(), Normalizer.Form.NFD);
+            Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+            String unaccented = pattern.matcher(temp).replaceAll("").toLowerCase();
+            user.setUnaccentedDisplayName(unaccented);
+        }
+
+        user = userRepository.save(user);
+
+        return CurrentUserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .displayName(user.getDisplayName())
+                .avatarUrl(user.getAvatarUrl())
+                .build();
     }
 }
 

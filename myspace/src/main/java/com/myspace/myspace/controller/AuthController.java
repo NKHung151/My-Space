@@ -74,6 +74,14 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Đã đăng xuất khỏi tất cả các thiết bị."));
     }
 
+    @PatchMapping("/me")
+    public ResponseEntity<ApiResponse<CurrentUserResponse>> updateProfile(
+            @RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.UpdateProfileRequest request,
+            Principal principal) {
+        CurrentUserResponse response = authService.updateProfile(principal.getName(), request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     private ResponseEntity<ApiResponse<AuthResponse>> generateAuthCookieResponse(AuthResponse response) {
         ResponseCookie springCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
                 .httpOnly(true)
@@ -147,7 +155,6 @@ public class AuthController {
                             .fullName(user.getFullName())
                             .displayName(user.getDisplayName())
                             .avatarUrl(user.getAvatarUrl())
-                            .accentColor(user.getAccentColor())
                             .bio(user.getBio())
                             .role(user.getRole().getName())
                             .build();

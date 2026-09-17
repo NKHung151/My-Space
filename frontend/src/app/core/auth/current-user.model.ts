@@ -4,7 +4,6 @@ export type UserRole = 'admin' | 'user';
 
 export interface CurrentUser extends BaseUser {
   email: string;
-  accentColor?: string | null;
   role?: UserRole;
   friendsCount?: number;
 }

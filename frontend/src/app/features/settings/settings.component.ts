@@ -17,9 +17,6 @@ import { finalize, switchMap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
 
-
-
-
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -85,10 +82,7 @@ export class SettingsComponent implements OnInit {
   private cropPointerX = 0;
   private cropPointerY = 0;
 
-  // Handle (Username) Modal
-  showHandleModal = signal(false);
-  handleOption = 'current';
-  customHandle = '';
+
 
   // --- Password State ---
   passwordForm = { current: '', new: '', confirm: '' };
@@ -141,8 +135,8 @@ export class SettingsComponent implements OnInit {
     const dName = user.displayName;
     const uName = user.username;
     this.profileForm = {
-      displayName: dName || uName,
-      username: `@${uName.replace(/^@/, '')}`,
+      displayName: user.displayName || user.username,
+      username: user.username,
       bio: user.bio || '',
     };
   }
@@ -176,15 +170,7 @@ export class SettingsComponent implements OnInit {
     return value.trim().replace(/^@/, '');
   }
 
-  updateHandle() {
-    if (this.handleOption === 'custom') {
-      const handle = this.customHandle.trim();
-      this.profileForm.username = handle.startsWith('@') ? handle : `@${handle}`;
-    } else if (this.handleOption === 'suggested') {
-      this.profileForm.username = '@' + this.profileForm.displayName.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase().slice(0, 30);
-    }
-    this.showHandleModal.set(false);
-  }
+
 
   // --- Avatar Logic ---
   onAvatarSelected(event: Event): void {
@@ -395,11 +381,6 @@ export class SettingsComponent implements OnInit {
   togglePasswordVisibility() {
     this.passwordFieldType = this.passwordFieldType === 'password' ? 'text' : 'password';
   }
-
-
-
-
-
 
   updatePreference(key: UserPreferenceKey, event: Event): void {
     const enabled = (event.target as HTMLInputElement).checked;

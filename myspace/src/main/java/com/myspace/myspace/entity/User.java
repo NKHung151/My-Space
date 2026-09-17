@@ -39,9 +39,6 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    @Column(name = "accent_color")
-    private String accentColor;
-
     @Column(columnDefinition = "TEXT")
     private String bio;
 

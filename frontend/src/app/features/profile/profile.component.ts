@@ -45,11 +45,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
   user = signal<CurrentUser | null>(this.authService.currentUser());
   isOwnProfile = signal(true);
 
-  profileForm = {
-    displayName: '',
-    username: '',
-    bio: ''
-  };
+  displayProfile = computed(() => {
+    const u = this.user();
+    if (!u) return { displayName: '', username: '', bio: '' };
+    return {
+      displayName: u.displayName || u.username,
+      username: `@${u.username.replace(/^@/, '')}`,
+      bio: u.bio || ''
+    };
+  });
 
   posts = signal<Post[]>([]);
   page = 1;
@@ -207,7 +211,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     if (ownProfile) {
       this.user.set(currentUser);
-      this.setProfileForm(currentUser);
       this.loadOwnProfile();
       return;
     }
@@ -229,11 +232,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
           displayName: profile.displayName,
           avatarUrl: profile.avatarUrl || undefined,
           bio: profile.bio,
-          accentColor: profile.accentColor,
           role: profile.role,
         };
         this.user.set(user);
-        this.setProfileForm(user);
         this.friendsCount.set(profile.friendsCount || 0);
         this.loadingProfile.set(false);
       },
@@ -276,7 +277,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
       next: user => {
         this.user.set(user);
         this.viewedUserId = String(user.id);
-        this.setProfileForm(user);
         this.loadingProfile.set(false);
 
         // Read counts directly from the getMe() response (no extra API call needed)
@@ -300,19 +300,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     };
   }
 
-  private setProfileForm(user: CurrentUser | User | null): void {
-    if (!user) {
-      return;
-    }
-    const dName = user.displayName;
-    const uName = user.username;
-    
-    this.profileForm = {
-      displayName: dName || uName,
-      username: `@${uName.replace(/^@/, '')}`,
-      bio: user.bio || '',
-    };
-  }
+
 
 
 
