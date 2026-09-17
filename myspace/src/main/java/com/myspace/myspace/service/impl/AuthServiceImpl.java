@@ -121,14 +121,14 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản với email này."));
 
-        // Generate 6-digit OTP
+        // Tạo ngẫu nhiên mã OTP 6 số
         String otp = String.format("%06d", new Random().nextInt(1000000));
         
         user.setResetOtp(otp);
-        user.setResetOtpExpiry(LocalDateTime.now().plusMinutes(5)); // OTP valid for 5 minutes
+        user.setResetOtpExpiry(LocalDateTime.now().plusMinutes(5)); // Mã OTP có hiệu lực trong 5 phút
         userRepository.save(user);
 
-        // Send Email
+        // Gửi Email chứa mã OTP
         mailService.sendPasswordResetEmail(user.getEmail(), otp);
     }
 
@@ -151,7 +151,7 @@ public class AuthServiceImpl implements AuthService {
         
         userRepository.save(user);
         
-        // Revoke all tokens to force re-login on all devices
+        // Thu hồi toàn bộ token để bắt buộc đăng nhập lại trên mọi thiết bị
         refreshTokenService.revokeAllUserTokens(user.getId());
     }
 
@@ -171,7 +171,16 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
-        // Revoke all tokens so user must log in again with new password
+        // Thu hồi toàn bộ token để bắt buộc đăng nhập lại bằng mật khẩu mới
+        refreshTokenService.revokeAllUserTokens(user.getId());
+    }
+
+    @Override
+    public void logoutAll(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
+        
+        // Xóa toàn bộ Refresh Token của người dùng này khỏi hệ thống
         refreshTokenService.revokeAllUserTokens(user.getId());
     }
 }

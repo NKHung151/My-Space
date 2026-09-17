@@ -68,6 +68,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")));
     }
 
+    @PostMapping("/logout-all")
+    public ResponseEntity<ApiResponse<String>> logoutAll(Principal principal) {
+        authService.logoutAll(principal.getName());
+        return ResponseEntity.ok(ApiResponse.success("Đã đăng xuất khỏi tất cả các thiết bị."));
+    }
+
     private ResponseEntity<ApiResponse<AuthResponse>> generateAuthCookieResponse(AuthResponse response) {
         ResponseCookie springCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
                 .httpOnly(true)
