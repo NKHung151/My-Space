@@ -1,26 +1,30 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.dto.request.LoginRequest;
+import com.myspace.myspace.dto.request.RegisterRequest;
 import com.myspace.myspace.dto.response.AuthResponse;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
 import com.myspace.myspace.entity.RefreshToken;
+import com.myspace.myspace.entity.Role;
 import com.myspace.myspace.entity.User;
+import com.myspace.myspace.repository.RoleRepository;
+import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.security.jwt.JwtService;
 import com.myspace.myspace.service.AuthService;
+import com.myspace.myspace.service.MailService;
 import com.myspace.myspace.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import com.myspace.myspace.repository.UserRepository;
-import com.myspace.myspace.repository.RoleRepository;
-import com.myspace.myspace.entity.Role;
-import com.myspace.myspace.common.exception.AppException;
-import org.springframework.http.HttpStatus;
-import com.myspace.myspace.dto.request.RegisterRequest;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -30,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final MailService mailService;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -107,6 +112,22 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken.getToken())
                 .user(userResponse)
                 .build();
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản với email này."));
+
+        // Generate 6-digit OTP
+        String otp = String.format("%06d", new Random().nextInt(1000000));
+        
+        user.setResetOtp(otp);
+        user.setResetOtpExpiry(LocalDateTime.now().plusMinutes(5)); // OTP valid for 5 minutes
+        userRepository.save(user);
+
+        // Send Email
+        mailService.sendPasswordResetEmail(user.getEmail(), otp);
     }
 }
 

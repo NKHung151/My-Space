@@ -48,6 +48,12 @@ public class AuthController {
         return generateAuthCookieResponse(response);
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("Nếu email tồn tại, mã OTP đã được gửi. Vui lòng kiểm tra hộp thư của bạn."));
+    }
+
     private ResponseEntity<ApiResponse<AuthResponse>> generateAuthCookieResponse(AuthResponse response) {
         ResponseCookie springCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
                 .httpOnly(true)
