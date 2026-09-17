@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(indexName = "posts", createIndex = false)
+@Document(indexName = "posts", createIndex = true)
 @Setting(settingPath = "elasticsearch/settings/default-settings.json")
 public class PostDocument {
 

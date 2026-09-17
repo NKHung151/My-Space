@@ -10,7 +10,7 @@ import java.util.List;
  */
 public interface SearchQueryService {
 
-    List<UserDocument> searchUsers(String keyword);
+    List<UserDocument> searchUsers(String keyword, int page, int size);
 
     List<PostDocument> searchPosts(String keyword);
 }

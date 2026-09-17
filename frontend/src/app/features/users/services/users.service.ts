@@ -27,9 +27,9 @@ export class UsersService {
       params = params.set('page', page.toString());
     }
     return this.http
-      .get<ApiResponse<User[]>>(`${environment.apiUrl}/users/recommended`, { params })
-      // Format mới: data là mảng user, meta phân trang nằm ở cùng cấp
-      .pipe(map((res) => ({ items: res.data ?? [], meta: res.meta })));
+      .get<any>(`${environment.apiUrl}/users/recommended`, { params })
+      // Format mới: data là object chứa { data: User[], meta: ... }
+      .pipe(map((res) => ({ items: res.data?.data || res.data || [], meta: res.data?.meta || res.meta })));
   }
 
   updateMe(payload: Partial<User>): Observable<User> {

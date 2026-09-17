@@ -22,8 +22,9 @@ public class SearchQueryServiceImpl implements SearchQueryService {
     private final ElasticsearchClient elasticsearchClient;
 
     @Override
-    public List<UserDocument> searchUsers(String keyword) {
+    public List<UserDocument> searchUsers(String keyword, int page, int size) {
         try {
+            int from = Math.max(0, page * size);
             SearchResponse<UserDocument> response = elasticsearchClient.search(s -> s
                     .index("users")
                     .query(q -> q
@@ -33,7 +34,8 @@ public class SearchQueryServiceImpl implements SearchQueryService {
                                     .fuzziness("AUTO") // Tolerates typos
                             )
                     )
-                    .size(20),
+                    .from(from)
+                    .size(size),
                     UserDocument.class
             );
             return response.hits().hits().stream()

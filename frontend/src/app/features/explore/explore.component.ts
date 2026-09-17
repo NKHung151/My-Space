@@ -150,16 +150,18 @@ export class ExploreComponent implements OnInit, OnDestroy, AfterViewInit {
         
         if (tab === 'top') {
           return forkJoin({
-            posts: this.postsService.list({ q, tag, limit: 10, sort: 'trending' }).pipe(map(res => res.items)),
-            people: this.userService.getRecommended(q, 2, 1).pipe(map(res => res.items))
+            posts: this.postsService.list({ q, tag, limit: 10, sort: 'trending' }).pipe(map(res => res.items), catchError(() => of([]))),
+            people: this.userService.getRecommended(q, 2, 1).pipe(map(res => res.items), catchError(() => of([])))
           }).pipe(map(res => ({ tab, data: res })));
         } else if (tab === 'posts') {
           return this.postsService.list({ q, tag, hasVideo: video ? true : undefined, limit: 20, sort: 'trending', page: 1 }).pipe(
-            map(res => ({ tab, data: res }))
+            map(res => ({ tab, data: res })),
+            catchError(() => of({ tab, data: { items: [], meta: { totalPages: 1 } } }))
           );
         } else if (tab === 'people') {
           return this.userService.getRecommended(q, 20, 1).pipe(
-            map(res => ({ tab, data: res }))
+            map(res => ({ tab, data: res })),
+            catchError(() => of({ tab, data: { items: [], meta: { totalPages: 1 } } }))
           );
         }
         return of(null);
@@ -302,6 +304,7 @@ export class ExploreComponent implements OnInit, OnDestroy, AfterViewInit {
   private handleError(): void {
     this.error = 'Unable to load explore data.';
     this.loading = false;
+    this.hasInitialized = true;
   }
 
   isCurrentTabEmpty(): boolean {

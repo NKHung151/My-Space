@@ -47,20 +47,35 @@ export class FriendsComponent implements OnInit, OnDestroy {
     this.loading = true;
     if (this.tab === 'feed') {
       this.page = 1;
-      this.friendsService.getFeed(this.page, 20).subscribe(res => {
-        this.posts = res.items;
-        this.hasMorePosts = res.meta.page < res.meta.totalPages;
-        this.loading = false;
+      this.friendsService.getFeed(this.page, 20).subscribe({
+        next: (res) => {
+          this.posts = res.items;
+          this.hasMorePosts = res.meta.page < res.meta.totalPages;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        }
       });
     } else if (this.tab === 'friends') {
-      this.friendsService.getFriends().subscribe(res => {
-        this.friends = res;
-        this.loading = false;
+      this.friendsService.getFriends().subscribe({
+        next: (res) => {
+          this.friends = res;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        }
       });
     } else if (this.tab === 'requests') {
-      this.friendsService.getRequests().subscribe(res => {
-        this.requests = res;
-        this.loading = false;
+      this.friendsService.getRequests().subscribe({
+        next: (res) => {
+          this.requests = res;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        }
       });
     }
   }
@@ -69,10 +84,15 @@ export class FriendsComponent implements OnInit, OnDestroy {
     if (this.loadingFeed || !this.hasMorePosts) return;
     this.loadingFeed = true;
     this.page++;
-    this.friendsService.getFeed(this.page, 20).subscribe(res => {
-      this.posts = [...this.posts, ...res.items];
-      this.hasMorePosts = res.meta.page < res.meta.totalPages;
-      this.loadingFeed = false;
+    this.friendsService.getFeed(this.page, 20).subscribe({
+      next: (res) => {
+        this.posts = [...this.posts, ...res.items];
+        this.hasMorePosts = res.meta.page < res.meta.totalPages;
+        this.loadingFeed = false;
+      },
+      error: () => {
+        this.loadingFeed = false;
+      }
     });
   }
 }

@@ -14,7 +14,7 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(indexName = "users", createIndex = false)
+@Document(indexName = "users", createIndex = true)
 @Setting(settingPath = "elasticsearch/settings/default-settings.json")
 public class UserDocument {
 

@@ -60,7 +60,7 @@
 <div id="exploreResultsContainer" class="explore-results-list pb-5 mt-4" [style.opacity]="loading ? 0.3 : 1" style="transition: opacity 0.15s ease-in-out">
   
   <!-- SKELETON LOADING -->
-  @if (loading && isCurrentTabEmpty()) {
+  @if (loading && !hasInitialized) {
     <div class="px-2">
       <div class="skeleton-line mb-3 w-50" style="height: 24px; border-radius: 4px;"></div>
       <div class="d-flex align-items-center mb-4">
@@ -82,7 +82,7 @@
 
   <!-- TOP TAB -->
   @if (tab === 'top') {
-    @if (topPosts.length === 0 && featuredPeople.length === 0 && hasInitialized) {
+    @if (!loading && topPosts.length === 0 && featuredPeople.length === 0 && hasInitialized) {
       <div class="text-center py-5 text-muted">
         <i class="bi bi-search fs-1 d-block mb-2"></i>
         <span>Không tìm thấy kết quả phù hợp.</span>
@@ -132,7 +132,7 @@
       }
     </div>
 
-    @if (posts.length === 0 && hasInitialized) {
+    @if (!loading && posts.length === 0 && hasInitialized) {
       <div class="text-center py-5 text-muted">Không tìm thấy bài viết nào</div>
     }
     @for (post of posts; track post.id) {
@@ -142,7 +142,7 @@
 
   <!-- PEOPLE TAB -->
   @if (tab === 'people') {
-    @if (people.length === 0 && hasInitialized) {
+    @if (!loading && people.length === 0 && hasInitialized) {
       <div class="text-center py-5 text-muted">Không có tác giả phù hợp với tìm kiếm của bạn.</div>
     }
     @for (person of people; track person.id) {
