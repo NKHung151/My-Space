@@ -10,11 +10,18 @@ import java.util.Map;
 import java.util.Set;
 import java.time.Duration;
 
+import lombok.extern.slf4j.Slf4j;
+import com.myspace.myspace.repository.PostRepository;
+import com.myspace.myspace.service.search.SearchIndexService;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ViewCountServiceImpl implements ViewCountService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final PostRepository postRepository;
+    private final SearchIndexService searchIndexService;
     
     private static final String VIEW_KEY_PREFIX = "post:views:";
     private static final String TRACK_KEY_PREFIX = "view:track:post:";
@@ -83,5 +90,43 @@ public class ViewCountServiceImpl implements ViewCountService {
     public void deleteViewCount(Long postId) {
         String key = VIEW_KEY_PREFIX + postId;
         redisTemplate.delete(key);
+    }
+
+    // Run every 5 minutes (300000 ms)
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 300000)
+    @org.springframework.transaction.annotation.Transactional
+    public void syncViewCountsToDatabase() {
+        log.info("Starting view count sync from Redis to MySQL...");
+        
+        Map<Long, Long> redisViewCounts = getAllRedisViewCounts();
+        
+        if (redisViewCounts.isEmpty()) {
+            return;
+        }
+
+        int updatedCount = 0;
+        for (Map.Entry<Long, Long> entry : redisViewCounts.entrySet()) {
+            Long postId = entry.getKey();
+            Long viewsToAdd = entry.getValue();
+
+            com.myspace.myspace.entity.Post post = postRepository.findById(postId).orElse(null);
+            if (post != null) {
+                // Update MySQL
+                post.setViewCount(post.getViewCount() + viewsToAdd.intValue());
+                postRepository.save(post);
+                
+                // Update Elasticsearch
+                searchIndexService.indexPost(post);
+                
+                // Clear from Redis
+                deleteViewCount(postId);
+                updatedCount++;
+            } else {
+                // If post was deleted, still clean up redis
+                deleteViewCount(postId);
+            }
+        }
+        
+        log.info("Successfully synced {} post(s) view counts to MySQL.", updatedCount);
     }
 }

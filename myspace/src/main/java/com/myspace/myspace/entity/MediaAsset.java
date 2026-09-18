@@ -35,11 +35,18 @@ public class MediaAsset {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
+    @Column(name = "status")
+    private String status = "TEMPORARY"; // TEMPORARY, ATTACHED
+
+    @Column(name = "post_id")
+    private Long postId;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (status == null) status = "TEMPORARY";
     }
 }

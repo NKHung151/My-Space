@@ -33,6 +33,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.myspace.myspace.repository.MediaAssetRepository;
+
 @Service
 @RequiredArgsConstructor
 public class AuthorPostServiceImpl implements AuthorPostService {
@@ -42,6 +44,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     private final PostLikeRepository postLikeRepository;
     private final SearchIndexService searchIndexService;
     private final UploadService uploadService;
+    private final MediaAssetRepository mediaAssetRepository;
 
     @Override
     @Transactional
@@ -60,8 +63,8 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         if (request.isPublish()) {
             post.setPublishedAt(LocalDateTime.now());
         }
-
         Post saved = postRepository.save(post);
+        updateMediaStatus(saved.getContent(), saved.getCoverImageUrl(), saved.getId());
         searchIndexService.indexPost(saved);
         PostDetailResponse response = PostMapper.toDetailResponse(saved);
         response.setLiked(false);
@@ -123,8 +126,8 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         
         if (request.getHasVideo() != null)     post.setHasVideo(request.getHasVideo());
         if (request.getTag() != null)          post.setTag(request.getTag());
-
         Post updated = postRepository.save(post);
+        updateMediaStatus(updated.getContent(), updated.getCoverImageUrl(), updated.getId());
         searchIndexService.indexPost(updated);
         PostDetailResponse response = PostMapper.toDetailResponse(updated);
         Long currentUserId = getCurrentUserId();
@@ -178,6 +181,25 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         List<Long> postIds = items.stream().map(PostResponse::getId).collect(Collectors.toList());
         List<Long> likedPostIds = postLikeRepository.findLikedPostIds(currentUserId, postIds);
         items.forEach(item -> item.setLiked(likedPostIds.contains(item.getId())));
+    }
+
+    private void updateMediaStatus(String content, String coverImageUrl, Long postId) {
+        Set<String> urls = new HashSet<>();
+        if (coverImageUrl != null && coverImageUrl.contains("res.cloudinary.com")) {
+            urls.add(coverImageUrl);
+        }
+        if (content != null) {
+            org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(content);
+            doc.select("img, video, audio").forEach(element -> {
+                String src = element.attr("src");
+                if (src.contains("res.cloudinary.com")) {
+                    urls.add(src);
+                }
+            });
+        }
+        if (!urls.isEmpty()) {
+            mediaAssetRepository.updateStatusAndPostIdByUrls("ATTACHED", postId, new java.util.ArrayList<>(urls));
+        }
     }
 
     private Set<String> extractCloudinaryUrls(String content) {
