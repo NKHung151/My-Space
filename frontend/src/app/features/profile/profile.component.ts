@@ -84,11 +84,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     );
   });
 
-
-
   ngOnInit() {
-
-
     this.routeSubscription = this.route.paramMap.subscribe(params => {
       this.loadProfile(params.get('id'));
     });
@@ -188,7 +184,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   deletePost(post: Post): void {
-    this.postsService.deleteAuthorPostPermanently(post.id).subscribe({
+    this.postsService.deleteAuthorPost(post.id).subscribe({
       next: () => {
         this.posts.update(posts => posts.filter(p => p.id !== post.id));
         this.publicPostsCount.update(count => count - 1);

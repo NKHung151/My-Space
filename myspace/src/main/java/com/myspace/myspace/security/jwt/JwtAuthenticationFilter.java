@@ -51,14 +51,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 } else {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT_FAIL: " + username + " != " + userDetails.getUsername());
-                    return;
+                    log.warn("JWT_FAIL: {} != {}", username, userDetails.getUsername());
                 }
             }
         } catch (Exception e) {
-            log.error("Error jwt check token:", e);
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT_DEBUG: " + e.getMessage() + " | " + e.getClass().getName());
-            return;
+            log.warn("Invalid JWT Token (maybe expired): {}", e.getMessage());
+            // Bỏ qua lỗi và coi như Khách (Guest) - Spring Security sẽ tự lo việc chặn nếu route yêu cầu đăng nhập
         }
 
         filterChain.doFilter(request, response);

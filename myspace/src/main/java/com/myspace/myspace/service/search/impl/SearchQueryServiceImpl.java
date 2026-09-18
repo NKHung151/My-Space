@@ -48,18 +48,31 @@ public class SearchQueryServiceImpl implements SearchQueryService {
     }
 
     @Override
-    public List<PostDocument> searchPosts(String keyword) {
+    public List<PostDocument> searchPosts(String keyword, int page, int size, String tag, Boolean hasVideo) {
         try {
+            int from = Math.max(0, page * size);
             SearchResponse<PostDocument> response = elasticsearchClient.search(s -> s
                     .index("posts")
                     .query(q -> q
-                            .multiMatch(m -> m
-                                    .query(keyword)
-                                    .fields("title^2", "tag", "excerpt") // Boost title matches
-                                    .fuzziness("AUTO")
-                            )
+                            .bool(b -> {
+                                b.must(m -> m
+                                    .multiMatch(mm -> mm
+                                            .query(keyword)
+                                            .fields("title^2", "tag", "excerpt")
+                                            .fuzziness("AUTO")
+                                    )
+                                );
+                                if (tag != null && !tag.isEmpty()) {
+                                    b.filter(f -> f.term(t -> t.field("tag.keyword").value(tag)));
+                                }
+                                if (hasVideo != null) {
+                                    b.filter(f -> f.term(t -> t.field("hasVideo").value(hasVideo)));
+                                }
+                                return b;
+                            })
                     )
-                    .size(20),
+                    .from(from)
+                    .size(size),
                     PostDocument.class
             );
             return response.hits().hits().stream()

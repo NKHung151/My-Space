@@ -1,79 +1,53 @@
 import { User } from '../../users/models/user.model';
 
-/**
- * Post and AuthorPost models.
- */
-
-
-export interface AuthorPost {
-  id: string;
-  authorId: string;
-  tag: string | null;
-  viewCount: number;
-  publishedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  title: string | null;
-  slug: string | null;
-  content: string | null;
-}
-
-export interface PublicPost extends AuthorPost {
-  author: {
-    id: string;
-    username: string;
-    displayName: string | null;
-    avatarUrl: string | null;
-    bio: string | null;
-  };
-  likeCount: number;
-  commentCount: number;
-}
-
-export interface CreatePostPayload {
-  title: string;
-  tag?: string;
-  content: string;
-}
-
-export type UpdatePostPayload = Partial<CreatePostPayload>;
-
-export interface PostListParams {
-  search?: string;
-  authorId?: string;
-  tag?: string;
-  page?: number;
-  limit?: number;
-}
-
-
-
-export interface Post {
-  id: string;
-  authorId: string;
-  tag: string | null;
-  title: string;
-  contentHtml: string;
-  excerpt?: string;
-  slug?: string;
-  coverImageUrl?: string | null;
-  coverVideoUrl?: string | null;
-  viewCount: number; 
-  likeCount?: number;
-  commentCount?: number;
-  liked?: boolean;
-  isLiking?: boolean; 
-  author: User;
-
-  createdAt: string;
+// ─── Kết quả phân trang chung ───────────────────────────────────────────────
+export interface PageMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface PaginatedResult<T> {
   items: T[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  meta: PageMeta;
 }
+
+// ─── Model bài viết (dùng cho cả danh sách lẫn chi tiết) ─────────────────────
+// List API (PostResponse): content = null/undefined
+// Detail API (PostDetailResponse): content = string
+export interface Post {
+  id: number;
+  authorId: number;
+  title: string;
+  slug: string | null;
+  excerpt: string | null;
+  content?: string | null;          // Chỉ có trong detail API
+  coverImageUrl?: string | null;
+  hasVideo?: boolean;
+  tag: string | null;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  author: User;
+  publishedAt?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;        // Chỉ có trong detail API
+
+  // Trạng thái UI (không có trong DB)
+  liked?: boolean;
+  isLiking?: boolean;
+}
+
+// ─── Payload tạo / cập nhật bài viết ─────────────────────────────────────────
+export interface CreatePostPayload {
+  title: string;
+  excerpt?: string;
+  content: string;
+  coverImageUrl?: string;
+  hasVideo?: boolean;
+  tag?: string;
+  publish?: boolean;
+}
+
+export type UpdatePostPayload = Partial<CreatePostPayload>;

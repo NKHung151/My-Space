@@ -56,7 +56,16 @@ public class PostDocument {
 
     @Field(type = FieldType.Integer)
     private Integer likeCount;
+    
+    @Field(type = FieldType.Integer)
+    private Integer commentCount;
+
+    @Field(type = FieldType.Boolean)
+    private Boolean hasVideo;
 
     @Field(type = FieldType.Date)
     private LocalDateTime publishedAt;
+    
+    @Field(type = FieldType.Date)
+    private LocalDateTime createdAt;
 }

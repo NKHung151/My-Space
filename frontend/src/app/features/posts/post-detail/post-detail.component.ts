@@ -5,7 +5,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin, switchMap, Subscription } from 'rxjs';
 import { FeedPostsService } from '../services/feed-posts.service';
-import { AuthorPost, Post } from '../models/post.model';
+import { Post } from '../models/post.model';
 import { AuthorPostsService } from '../services/author-posts.service';
 
 import { Title } from '@angular/platform-browser';
@@ -64,10 +64,6 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
   // Các tín hiệu (signals) lưu trữ trạng thái dữ liệu của component
   
   // post (Signal): Dữ liệu chi tiết bài viết hiện tại.
-  // - id: map từ posts.id
-  // - viewCount: map từ posts.view_count
-  // - likeCount: map từ posts.like_count
-  // - liked: map từ bảng post_likes (kiểm tra xem user hiện tại đã like chưa)
   post = signal<Post | null>(null);
 
 
@@ -277,7 +273,7 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
     return {
       title: currentPost.title,
       safeContentHtml: this.sanitizer.bypassSecurityTrustHtml(
-        preparePostDetailHtml(currentPost.contentHtml || ''),
+        preparePostDetailHtml(currentPost.content || ''),
       )
     };
   });
@@ -373,23 +369,17 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
     });
   }
 
-  private toPreviewPost(post: AuthorPost): Post {
+  private toPreviewPost(post: Post): Post {
     const currentUser = this.authService.currentUser();
 
     return {
-      id: post.id,
-      authorId: post.authorId,
-      tag: post.tag ?? null,
+      ...post,
       title: post.title || 'Untitled',
-      slug: post.slug || '',
-      contentHtml: post.content || '',
-      
-      viewCount: post.viewCount,
       likeCount: 0,
       commentCount: 0,
       liked: false,
       author: {
-        id: currentUser?.id ?? post.authorId,
+        id: String(currentUser?.id ?? post.authorId),
         displayName: currentUser?.displayName || currentUser?.username || 'Author',
         email: currentUser?.email,
         username: currentUser?.username || 'author',
@@ -397,8 +387,6 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
         bio: currentUser?.bio ?? null,
         role: currentUser?.role ?? 'user',
       },
-
-      createdAt: post.createdAt,
     };
   }
 

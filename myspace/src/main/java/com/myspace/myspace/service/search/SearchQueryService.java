@@ -12,5 +12,5 @@ public interface SearchQueryService {
 
     List<UserDocument> searchUsers(String keyword, int page, int size);
 
-    List<PostDocument> searchPosts(String keyword);
+    List<PostDocument> searchPosts(String keyword, int page, int size, String tag, Boolean hasVideo);
 }

@@ -10,7 +10,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { AuthorPost, CreatePostPayload } from '../../posts/models/post.model';
+import { CreatePostPayload, Post } from '../../posts/models/post.model';
 import { EditorMediaType } from '../models/editor-upload.model';
 import { AuthorPostsService } from '../../posts/services/author-posts.service';
 import { EditorUploadsService } from '../services/editor-uploads.service';
@@ -51,7 +51,7 @@ export class PostEditorComponent implements OnInit, OnDestroy {
   textContent = '';
   mediaAttachments: Array<{ type: EditorMediaType; url: string }> = [];
 
-  createdPost: AuthorPost | null = null;
+  createdPost: Post | null = null;
   isSaving = false;
   uploadingType: EditorMediaType | null = null;
   autosaveState: 'idle' | 'saving' | 'saved' = 'idle';
@@ -268,7 +268,7 @@ export class PostEditorComponent implements OnInit, OnDestroy {
       next: (post) => {
         this.isSaving = false;
         this.createdPost = post;
-        this.currentPostId = post.id;
+        this.currentPostId = String(post.id);
         this.autosaveState = 'saved';
         this.removeAutosaveSnapshot();
         

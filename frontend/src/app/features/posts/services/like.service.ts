@@ -37,28 +37,20 @@ export class LikeService {
    * 
    * RxJS: Sử dụng operator `map` để lấy thuộc tính `data` từ API wrapper.
    */
-  togglePostLike(postId: string, isCurrentlyLiked: boolean): Observable<LikeToggleResponse> {
-    if (isCurrentlyLiked) {
-      return this.http
-        .delete<ApiResponse<LikeToggleResponse>>(
-          `${environment.apiUrl}/posts/${postId}/like`
-        )
-        .pipe(map((res) => res.data));
-    }
-    return this.http
-      .post<ApiResponse<LikeToggleResponse>>(
-        `${environment.apiUrl}/posts/${postId}/like`,
-        {}
-      )
-      .pipe(map((res) => res.data));
+  togglePostLike(postId: number | string, isCurrentlyLiked: boolean): Observable<LikeToggleResponse> {
+    const url = `${environment.apiUrl}/posts/${postId}/like`;
+    const req = isCurrentlyLiked
+      ? this.http.delete<ApiResponse<LikeToggleResponse>>(url)
+      : this.http.post<ApiResponse<LikeToggleResponse>>(url, {});
+    return req.pipe(map((res) => res.data));
   }
 
   /**
    * Tiện ích dùng chung để thực hiện Optimistic Update cho bài viết.
    * Cập nhật tín hiệu (Signal) bài viết ngay lập tức trên UI và gọi API ngầm.
    */
-  optimisticTogglePostLike(
-    postSignal: WritableSignal<Post | null>,
+  optimisticTogglePostLike<T extends Post>(
+    postSignal: WritableSignal<T | null>,
     authService: AuthService,
     authModalService: AuthModalService,
     destroyRef?: DestroyRef
@@ -105,19 +97,11 @@ export class LikeService {
    * làm mượt UI đều diễn ra trên Component.
    * DB: API này gọi vào BE để check và cập nhật trên bảng `comment_likes`.
    */
-  toggleCommentLike(postId: string, commentId: string, isCurrentlyLiked: boolean): Observable<LikeToggleResponse> {
-    if (isCurrentlyLiked) {
-      return this.http
-        .delete<ApiResponse<LikeToggleResponse>>(
-          `${environment.apiUrl}/posts/${postId}/comments/${commentId}/like`
-        )
-        .pipe(map((res) => res.data));
-    }
-    return this.http
-      .post<ApiResponse<LikeToggleResponse>>(
-        `${environment.apiUrl}/posts/${postId}/comments/${commentId}/like`,
-        {}
-      )
-      .pipe(map((res) => res.data));
+  toggleCommentLike(postId: number | string, commentId: number | string, isCurrentlyLiked: boolean): Observable<LikeToggleResponse> {
+    const url = `${environment.apiUrl}/posts/${postId}/comments/${commentId}/like`;
+    const req = isCurrentlyLiked
+      ? this.http.delete<ApiResponse<LikeToggleResponse>>(url)
+      : this.http.post<ApiResponse<LikeToggleResponse>>(url, {});
+    return req.pipe(map((res) => res.data));
   }
 }

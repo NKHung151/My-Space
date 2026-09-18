@@ -12,6 +12,7 @@ public class PublicUserResponse {
     private String avatarUrl;
     private String bio;
     private String role;
+    // Module Friends/Users sẽ populate 2 field này; module Posts để mặc định false/0
     private boolean isFriend;
     private Long friendsCount;
 }
