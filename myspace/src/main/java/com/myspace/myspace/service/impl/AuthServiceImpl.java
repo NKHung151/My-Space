@@ -20,6 +20,7 @@ import com.myspace.myspace.security.jwt.JwtService;
 import com.myspace.myspace.service.AuthService;
 import com.myspace.myspace.service.MailService;
 import com.myspace.myspace.service.RefreshTokenService;
+import com.myspace.myspace.service.UploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UploadService uploadService;
 
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -199,6 +201,9 @@ public class AuthServiceImpl implements AuthService {
         user.setBio(request.getBio());
 
         if (request.getAvatarMediaId() != null && !request.getAvatarMediaId().trim().isEmpty()) {
+            if (user.getAvatarUrl() != null && user.getAvatarUrl().contains("res.cloudinary.com")) {
+                uploadService.deleteEditorMedia(user.getAvatarUrl(), user.getId());
+            }
             user.setAvatarUrl(request.getAvatarMediaId());
         }
 

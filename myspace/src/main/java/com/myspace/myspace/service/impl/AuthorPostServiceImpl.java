@@ -11,6 +11,7 @@ import com.myspace.myspace.mapper.PostMapper;
 import com.myspace.myspace.repository.PostRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.AuthorPostService;
+import com.myspace.myspace.service.UploadService;
 import com.myspace.myspace.service.search.SearchIndexService;
 import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.repository.PostLikeRepository;
@@ -25,7 +26,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +41,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     private final UserRepository userRepository;
     private final PostLikeRepository postLikeRepository;
     private final SearchIndexService searchIndexService;
+    private final UploadService uploadService;
 
     @Override
     @Transactional
@@ -96,8 +102,25 @@ public class AuthorPostServiceImpl implements AuthorPostService {
 
         if (request.getTitle() != null)        post.setTitle(request.getTitle());
         if (request.getExcerpt() != null)      post.setExcerpt(request.getExcerpt());
-        if (request.getContent() != null)      post.setContent(request.getContent());
-        if (request.getCoverImageUrl() != null) post.setCoverImageUrl(request.getCoverImageUrl());
+        
+        if (request.getContent() != null && !request.getContent().equals(post.getContent())) {
+            Set<String> oldUrls = extractCloudinaryUrls(post.getContent());
+            Set<String> newUrls = extractCloudinaryUrls(request.getContent());
+            for (String oldUrl : oldUrls) {
+                if (!newUrls.contains(oldUrl)) {
+                    uploadService.deleteEditorMedia(oldUrl, authorId);
+                }
+            }
+            post.setContent(request.getContent());
+        }
+        
+        if (request.getCoverImageUrl() != null && !request.getCoverImageUrl().equals(post.getCoverImageUrl())) {
+            if (post.getCoverImageUrl() != null && post.getCoverImageUrl().contains("res.cloudinary.com")) {
+                uploadService.deleteEditorMedia(post.getCoverImageUrl(), authorId);
+            }
+            post.setCoverImageUrl(request.getCoverImageUrl());
+        }
+        
         if (request.getHasVideo() != null)     post.setHasVideo(request.getHasVideo());
         if (request.getTag() != null)          post.setTag(request.getTag());
 
@@ -118,6 +141,21 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     public void deletePost(Long authorId, Long postId) {
         Post post = postRepository.findByIdAndAuthorId(postId, authorId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
+                
+        // Extract and delete Cloudinary media
+        if (post.getCoverImageUrl() != null && post.getCoverImageUrl().contains("res.cloudinary.com")) {
+            uploadService.deleteEditorMedia(post.getCoverImageUrl(), authorId);
+        }
+        
+        if (post.getContent() != null) {
+            Pattern pattern = Pattern.compile("https?://res\\.cloudinary\\.com/[^\"'\\s]+");
+            Matcher matcher = pattern.matcher(post.getContent());
+            while (matcher.find()) {
+                String mediaUrl = matcher.group();
+                uploadService.deleteEditorMedia(mediaUrl, authorId);
+            }
+        }
+        
         postRepository.delete(post);
         searchIndexService.removePost(postId);
     }
@@ -140,5 +178,17 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         List<Long> postIds = items.stream().map(PostResponse::getId).collect(Collectors.toList());
         List<Long> likedPostIds = postLikeRepository.findLikedPostIds(currentUserId, postIds);
         items.forEach(item -> item.setLiked(likedPostIds.contains(item.getId())));
+    }
+
+    private Set<String> extractCloudinaryUrls(String content) {
+        Set<String> urls = new HashSet<>();
+        if (content != null) {
+            Pattern pattern = Pattern.compile("https?://res\\.cloudinary\\.com/[^\"'\\s]+");
+            Matcher matcher = pattern.matcher(content);
+            while (matcher.find()) {
+                urls.add(matcher.group());
+            }
+        }
+        return urls;
     }
 }

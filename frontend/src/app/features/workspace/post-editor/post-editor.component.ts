@@ -214,8 +214,13 @@ export class PostEditorComponent implements OnInit, OnDestroy {
   }
 
   removeMedia(index: number): void {
+    const media = this.mediaAttachments[index];
     this.mediaAttachments.splice(index, 1);
     this.scheduleAutosave();
+    
+    this.uploadsService.deleteEditorMedia(media.url).subscribe({
+      error: (err) => console.error('Failed to delete media', err)
+    });
   }
 
   goToMyPosts(): void {

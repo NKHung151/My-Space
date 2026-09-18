@@ -303,7 +303,7 @@ export class SettingsComponent implements OnInit {
         displayName: this.profileForm.displayName.trim(),
         username: this.normalizeUsername(this.profileForm.username),
         bio: this.profileForm.bio.trim(),
-        avatarMediaId: upload.mediaId
+        avatarMediaId: upload.url
       })),
       finalize(() => this.uploadingAvatar.set(false)),
     ).subscribe({

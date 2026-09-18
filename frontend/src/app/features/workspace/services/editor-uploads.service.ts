@@ -16,7 +16,7 @@ export class EditorUploadsService {
     formData.append('file', file);
 
     return this.http
-      .post<ApiItemResponse<UploadResponse>>(`${this.baseUrl}/uploads/editor-${mediaType}`, formData)
+      .post<ApiItemResponse<UploadResponse>>(`${this.baseUrl}/uploads/media`, formData)
       .pipe(map((response) => response.data));
   }
 
