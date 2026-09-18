@@ -214,14 +214,16 @@ export class CommentSectionComponent implements OnInit, OnChanges {
         this.isSubmitting.set(false);
         this.cancelReply(target.id);
         
-        // Cập nhật State UI cục bộ (Mutate array theo kiểu đơn giản):
+        // Cập nhật State UI cục bộ (Mutate array):
         this.comments.update(prev => {
           const arr = [...prev];
           const parentId = target.parentId || target.id;
-          const parent = arr.find(c => c.id === parentId);
-          if (parent) {
-            if (!parent.replies) parent.replies = [];
-            parent.replies.push(newComment);
+          const parentIdx = arr.findIndex(c => c.id === parentId);
+          if (parentIdx > -1) {
+            // Cần tạo object mới (immutable) để Angular nhận diện thay đổi thay vì push trực tiếp
+            const p = { ...arr[parentIdx] };
+            p.replies = p.replies ? [...p.replies, newComment] : [newComment];
+            arr[parentIdx] = p;
           }
           return arr;
         });
@@ -328,9 +330,13 @@ export class CommentSectionComponent implements OnInit, OnChanges {
       this.comments.update(prev => {
         const arr = [...prev];
         if (parent) {
-          const p = arr.find(c => c.id === parent.id);
-          if (p && p.replies) {
-            p.replies = p.replies.filter(r => r.id !== comment.id);
+          const pIdx = arr.findIndex(c => c.id === parent.id);
+          if (pIdx > -1) {
+            const p = { ...arr[pIdx] };
+            if (p.replies) {
+              p.replies = p.replies.filter(r => r.id !== comment.id);
+            }
+            arr[pIdx] = p;
           }
           return arr;
         }
@@ -380,18 +386,34 @@ export class CommentSectionComponent implements OnInit, OnChanges {
       next: (updatedComment) => {
         this.isSubmitting.set(false);
         this.cancelEdit(comment.id);
-        // Cập nhật lại UI sau khi sửa thành công bằng cách Object.assign
+        // Cập nhật lại UI sau khi sửa thành công bằng cách tạo object mới (Immutable)
         this.comments.update(prev => {
           const arr = [...prev];
           if (parent) {
-            const p = arr.find(c => c.id === parent.id);
-            if (p && p.replies) {
-              const r = p.replies.find(x => x.id === comment.id);
-              if (r) Object.assign(r, updatedComment);
+            const pIdx = arr.findIndex(c => c.id === parent.id);
+            if (pIdx > -1) {
+              const p = { ...arr[pIdx] };
+              if (p.replies) {
+                const rIdx = p.replies.findIndex(x => x.id === comment.id);
+                if (rIdx > -1) {
+                  p.replies = [...p.replies];
+                  p.replies[rIdx] = { ...p.replies[rIdx], ...updatedComment };
+                }
+              }
+              arr[pIdx] = p;
             }
           } else {
-            const r = arr.find(c => c.id === comment.id);
-            if (r) Object.assign(r, updatedComment);
+            const rIdx = arr.findIndex(c => c.id === comment.id);
+            if (rIdx > -1) {
+              // Phải giữ lại array replies cũ vì API cập nhật có thể không trả về replies
+              arr[rIdx] = { 
+                ...arr[rIdx], 
+                ...updatedComment,
+                replies: arr[rIdx].replies,
+                likeCount: arr[rIdx].likeCount !== undefined ? arr[rIdx].likeCount : updatedComment.likeCount,
+                liked: arr[rIdx].liked !== undefined ? arr[rIdx].liked : updatedComment.liked
+              };
+            }
           }
           return arr;
         });

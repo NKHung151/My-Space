@@ -57,7 +57,9 @@ public class CommentServiceImpl implements CommentService {
                 })
                 .collect(Collectors.toList());
 
-        return new PageResponse<>(items, new PageResponse.Meta(commentPage.getTotalElements(), page, limit, commentPage.getTotalPages()));
+        long totalComments = commentRepository.countByPostId(postId);
+
+        return new PageResponse<>(items, new PageResponse.Meta(totalComments, page, limit, commentPage.getTotalPages()));
     }
 
     @Override
@@ -81,20 +83,22 @@ public class CommentServiceImpl implements CommentService {
         comment.setAuthor(author);
         comment.setContent(request.getContent());
 
-        if (request.getParentId() != null) {
-            Comment parent = commentRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new RuntimeException("Parent comment not found"));
+        // FLAT-THREAD LOGIC
+        // Dù là reply cho root hay reply cho 1 reply khác, parent luôn là root comment
+        if (request.getParentId() != null || request.getReplyToCommentId() != null) {
+            Long targetId = request.getReplyToCommentId() != null ? request.getReplyToCommentId() : request.getParentId();
+            Comment target = commentRepository.findById(targetId)
+                    .orElseThrow(() -> new RuntimeException("Target comment not found"));
+
+            Comment parent = target.getParent() != null ? target.getParent() : target;
             comment.setParent(parent);
             
             // Cập nhật số lượng câu trả lời của bình luận cha
             parent.setReplyCount(parent.getReplyCount() + 1);
             commentRepository.save(parent);
-        }
 
-        if (request.getReplyToCommentId() != null) {
-            Comment replyTo = commentRepository.findById(request.getReplyToCommentId())
-                    .orElseThrow(() -> new RuntimeException("ReplyTo comment not found"));
-            comment.setReplyToComment(replyTo);
+            // Gán replyToComment
+            comment.setReplyToComment(target);
         }
 
         Comment savedComment = commentRepository.save(comment);
@@ -134,28 +138,37 @@ public class CommentServiceImpl implements CommentService {
 
         // Chuẩn bị cập nhật các bộ đếm
         Post post = comment.getPost();
-        
-        // Tính toán số lượng bình luận sẽ bị xóa (Bình luận này + tất cả câu trả lời của nó)
         long commentsToDelete = 1; 
-        if (comment.getParent() == null) {
-            commentsToDelete += commentRepository.countByParentId(comment.getId());
-        } else {
-            // Giảm số lượng câu trả lời của bình luận cha
+
+        // 1. Xử lý các bình luận đang "reply" trực tiếp vào bình luận này (để tránh lỗi FK reply_to_comment_id)
+        List<Comment> referencingComments = commentRepository.findByReplyToCommentId(comment.getId());
+        if (!referencingComments.isEmpty()) {
+            for (Comment ref : referencingComments) {
+                ref.setReplyToComment(null);
+            }
+            commentRepository.saveAll(referencingComments);
+        }
+
+        // 2. Lấy tất cả các bình luận con (nếu có, ví dụ do lỗi dữ liệu cũ hoặc là root comment)
+        List<Comment> children = commentRepository.findByParentIdOrderByCreatedAtAsc(comment.getId());
+        if (!children.isEmpty()) {
+            commentsToDelete += children.size();
+            // Xóa tất cả các bình luận con
+            commentRepository.deleteAll(children);
+        }
+
+        // 3. Giảm số lượng câu trả lời của bình luận cha (nếu đang xóa một reply)
+        if (comment.getParent() != null) {
             Comment parent = comment.getParent();
             parent.setReplyCount(Math.max(0, parent.getReplyCount() - 1));
             commentRepository.save(parent);
         }
 
+        // 4. Cập nhật số đếm của bài viết
         post.setCommentCount(Math.max(0, (int) (post.getCommentCount() - commentsToDelete)));
         postRepository.save(post);
 
-        // Spring Data JPA không tự động xóa theo tầng (CascadeType.REMOVE) do cấu hình Entity,
-        // Nên ta phải tự động xóa các bình luận con trước khi xóa bình luận cha.
-        if (comment.getParent() == null) {
-            List<Comment> replies = commentRepository.findByParentIdOrderByCreatedAtAsc(commentId);
-            commentRepository.deleteAll(replies);
-        }
-
+        // 5. Xóa bình luận mục tiêu
         commentRepository.delete(comment);
     }
 }

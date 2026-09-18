@@ -46,11 +46,10 @@ export class FeedPostsService {
       .get<ApiResponse<Post>>(`${this.baseUrl}/${id}`)
       .pipe(map((res) => res.data));
   }
-
-  /**
-   * Ghi nhận lượt xem khi người dùng đọc >= 50% bài viết.
-   * Backend tự kiểm tra chống spam qua Redis.
-   */
+  
+  //  Ghi nhận lượt xem khi người dùng đọc >= 50% bài viết.
+  //  Backend tự kiểm tra chống spam qua Redis.
+   
   trackView(id: number): Observable<void> {
     return this.http
       .post<ApiResponse<void>>(`${this.baseUrl}/${id}/view`, {})

@@ -24,4 +24,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     
     // Đếm số lượng câu trả lời của một bình luận cha
     long countByParentId(Long parentId);
+    
+    // Đếm tổng số bình luận của một bài viết
+    long countByPostId(Long postId);
+
+    // Tìm các bình luận đang trả lời cho một bình luận cụ thể
+    List<Comment> findByReplyToCommentId(Long replyToCommentId);
 }

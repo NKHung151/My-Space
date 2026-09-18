@@ -17,18 +17,10 @@ export class CommentService {
         `${environment.apiUrl}/posts/${postId}/comments`,
         { params }
       )
-      .pipe(map((res) => {
-        const data = res.data;
-        return {
-          items: data?.items || [],
-          meta: {
-            total: data?.meta?.totalElements ?? 0,
-            page: data?.meta?.currentPage ?? page,
-            limit: data?.meta?.pageSize ?? limit,
-            totalPages: data?.meta?.totalPages ?? 1,
-          },
-        };
-      }));
+      .pipe(map((res) => ({
+        items: res.data?.data ?? [],
+        meta: res.data?.meta ?? { total: 0, page: 1, limit: 20, totalPages: 0 },
+      })));
   }
 
   // Lấy danh sách các câu trả lời (replies) của một bình luận
