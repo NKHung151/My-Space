@@ -24,9 +24,10 @@ public class PublicPostController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) Boolean hasVideo,
+            @RequestParam(required = false) Long authorId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit) {
-        PageResponse<PostResponse> posts = publicPostService.getPublicPosts(q, tag, hasVideo, page, limit);
+        PageResponse<PostResponse> posts = publicPostService.getPublicPosts(q, tag, hasVideo, authorId, page, limit);
         return ResponseEntity.ok(ApiResponse.success(posts));
     }
 

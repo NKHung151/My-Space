@@ -31,7 +31,7 @@ public class PublicPostServiceImpl implements PublicPostService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<PostResponse> getPublicPosts(String q, String tag, Boolean hasVideo, int page, int limit) {
+    public PageResponse<PostResponse> getPublicPosts(String q, String tag, Boolean hasVideo, Long authorId, int page, int limit) {
         Pageable pageable = PageRequest.of(Math.max(page - 1, 0), limit, Sort.by(Sort.Direction.DESC, "viewCount", "createdAt"));
 
         if (q != null && !q.isBlank()) {
@@ -42,7 +42,7 @@ public class PublicPostServiceImpl implements PublicPostService {
         }
 
         // Lấy từ MySQL khi không có từ khóa tìm kiếm
-        Page<Post> postsPage = postRepository.findPublicPosts(tag, hasVideo, pageable);
+        Page<Post> postsPage = postRepository.findPublicPosts(tag, hasVideo, authorId, pageable);
         List<PostResponse> items = postsPage.getContent().stream().map(PostMapper::toResponse).collect(Collectors.toList());
         return new PageResponse<>(items, new PageResponse.Meta(postsPage.getTotalElements(), page, limit, postsPage.getTotalPages()));
     }
