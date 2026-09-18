@@ -45,7 +45,7 @@
               @if (isCommentEdited(comment)) {
                 <span class="fst-italic me-1">Đã chỉnh sửa</span>
               }
-              {{ comment.created_at | localizedDate:'dateTime' }}
+              {{ comment.createdAt | localizedDate:'dateTime' }}
             </span>
           </div>
           <div class="mb-1 text-secondary comment-content-text">
@@ -120,7 +120,7 @@
                       @if (isCommentEdited(reply)) {
                         <span class="fst-italic me-1">Đã chỉnh sửa</span>
                       }
-                      {{ reply.created_at | localizedDate:'dateTime' }}
+                      {{ reply.createdAt | localizedDate:'dateTime' }}
                     </span>
                   </div>
                   <div class="mb-1 text-secondary comment-content-text" style="font-size: 0.95rem;">
@@ -134,8 +134,9 @@
                       </div>
                     } @else {
                       <div [class.comment-clamped]="!isExpanded(reply.id) && reply.content.length > 300" style="word-break: break-word;">
-                        @if (reply.reply_to_username) {
-                          <span class="text-primary fw-semibold me-1">{{ reply.reply_to_username }}</span>
+                        @if (reply.replyToUsername) {
+                          <i class="bi bi-caret-right-fill text-muted mx-1" style="font-size: 0.75rem"></i>
+                          <span class="text-primary fw-semibold me-1">{{ reply.replyToUsername }}</span>
                         }
                         <span style="white-space: pre-wrap;">{{ reply.content }}</span>
                       </div>

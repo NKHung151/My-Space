@@ -19,5 +19,4 @@ Thumbs.db
 .idea/
 .vscode/
 *.iml
-*Postman.md
-*postman.md
+*.md

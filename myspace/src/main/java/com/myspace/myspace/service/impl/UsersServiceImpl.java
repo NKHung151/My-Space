@@ -4,7 +4,6 @@ import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.document.UserDocument;
 import com.myspace.myspace.dto.response.PublicUserResponse;
 import com.myspace.myspace.entity.User;
-import com.myspace.myspace.repository.FriendshipRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.UsersService;
 import com.myspace.myspace.service.search.SearchQueryService;
@@ -33,8 +32,9 @@ public class UsersServiceImpl implements UsersService {
         if (query != null && !query.trim().isEmpty()) {
             // Use Elasticsearch
             String cleanQuery = query.trim().startsWith("@") ? query.trim().substring(1) : query.trim();
-            List<UserDocument> searchResults = searchQueryService.searchUsers(cleanQuery, pageable.getPageNumber(), limit);
-            
+            List<UserDocument> searchResults = searchQueryService.searchUsers(cleanQuery, pageable.getPageNumber(),
+                    limit);
+
             List<PublicUserResponse> items = searchResults.stream()
                     .filter(doc -> currentUserId == null || !doc.getId().equals(currentUserId.toString()))
                     .map(doc -> {
@@ -54,7 +54,7 @@ public class UsersServiceImpl implements UsersService {
         } else {
             // Use MySQL for default recommendations
             Page<User> usersPage = userRepository.findAll(pageable);
-            
+
             List<PublicUserResponse> items = usersPage.getContent().stream()
                     .filter(user -> currentUserId == null || !user.getId().equals(currentUserId))
                     .map(user -> {
@@ -69,8 +69,9 @@ public class UsersServiceImpl implements UsersService {
                                 .friendsCount(0L)
                                 .build();
                     }).collect(Collectors.toList());
-                    
-            return new PageResponse<>(items, new PageResponse.Meta(usersPage.getTotalElements(), page, limit, usersPage.getTotalPages()));
+
+            return new PageResponse<>(items,
+                    new PageResponse.Meta(usersPage.getTotalElements(), page, limit, usersPage.getTotalPages()));
         }
     }
 

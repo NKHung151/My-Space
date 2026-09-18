@@ -2,19 +2,17 @@ import { User } from '../../users/models/user.model';
 
 export interface Comment {
   id: string;
-  post_id: string;
-  user_id: string;
+  postId: string;
   
-  parent_id: string | null; 
-  reply_to_comment_id: string | null;
+  parentId: string | null; 
+  replyToCommentId: string | null;
   
-  reply_to_user_id: string | null;
-  reply_to_username: string | null;
+  replyToUserId: string | null;
+  replyToUsername: string | null;
   
   content: string;
-  status: string;
-  created_at: string;
-  updated_at?: string;
+  createdAt: string;
+  updatedAt?: string;
   
   author: User;
   replies?: Comment[];

@@ -25,6 +25,7 @@ export interface Post {
   content?: string | null;          // Chỉ có trong detail API
   coverImageUrl?: string | null;
   hasVideo?: boolean;
+  coverVideoUrl?: string | null;
   tag: string | null;
   viewCount: number;
   likeCount: number;

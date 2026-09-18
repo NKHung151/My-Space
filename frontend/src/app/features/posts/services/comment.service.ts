@@ -6,30 +6,10 @@ import { ApiResponse } from '../../../core/http/api-response.model';
 import { PaginatedResult } from '../models/post.model';
 import { Comment } from '../models/comment.model';
 
-/**
- * CommentService — Tương tác API cho bình luận bài viết.
- * Tất cả field author trong response từ BE dùng camelCase (avatarUrl, displayName, role).
- */
 @Injectable({ providedIn: 'root' })
 export class CommentService {
   private readonly http = inject(HttpClient);
 
-  /** Map raw JSON từ BE sang Comment model */
-  private mapComment(raw: any): Comment {
-    return {
-      ...raw,
-      author: {
-        id: raw.author.id,
-        displayName: raw.author.displayName || raw.author.username || 'User',
-        username: raw.author.username || 'user',
-        avatarUrl: raw.author.avatarUrl ?? null,
-        role: raw.author.role ?? 'user',
-      } as any,
-      replies: raw.replies ? raw.replies.map((r: any) => this.mapComment(r)) : [],
-    };
-  }
-
-  /** Lấy danh sách bình luận gốc của bài viết (có phân trang) */
   getCommentsByPost(postId: string, page = 1, limit = 20): Observable<PaginatedResult<Comment>> {
     const params = new HttpParams().set('page', page).set('limit', limit);
     return this.http
@@ -38,46 +18,55 @@ export class CommentService {
         { params }
       )
       .pipe(map((res) => {
-        const items: any[] = Array.isArray(res.data) ? res.data : [];
-        const meta = (res as any).meta;
+        const data = res.data;
         return {
-          items: items.map((c) => this.mapComment(c)),
+          items: data?.items || [],
           meta: {
-            total: meta?.total ?? 0,
-            page: meta?.page ?? page,
-            limit: meta?.limit ?? limit,
-            totalPages: meta?.totalPages ?? 1,
+            total: data?.meta?.totalElements ?? 0,
+            page: data?.meta?.currentPage ?? page,
+            limit: data?.meta?.pageSize ?? limit,
+            totalPages: data?.meta?.totalPages ?? 1,
           },
         };
       }));
   }
 
-  /** Tạo bình luận mới (hoặc reply nếu truyền replyToCommentId) */
-  createComment(postId: string, content: string, replyToCommentId?: string | number): Observable<Comment> {
+  // Lấy danh sách các câu trả lời (replies) của một bình luận
+  getReplies(commentId: string): Observable<Comment[]> {
+    return this.http
+      .get<ApiResponse<Comment[]>>(`${environment.apiUrl}/comments/${commentId}/replies`)
+      .pipe(map(res => res.data || []));
+  }
+
+  // Tạo bình luận mới (hoặc reply nếu truyền replyToCommentId/parentId)
+  createComment(postId: string, content: string, parentId?: string | number, replyToCommentId?: string | number): Observable<Comment> {
     const payload: Record<string, any> = { content };
+    if (parentId != null) {
+      payload['parentId'] = Number(parentId);
+    }
     if (replyToCommentId != null) {
-      payload['replyToCommentId'] = String(replyToCommentId);
+      payload['replyToCommentId'] = Number(replyToCommentId);
     }
     return this.http
-      .post<ApiResponse<any>>(`${environment.apiUrl}/posts/${postId}/comments`, payload)
-      .pipe(map((res) => this.mapComment(res.data)));
+      .post<ApiResponse<Comment>>(`${environment.apiUrl}/posts/${postId}/comments`, payload)
+      .pipe(map((res) => res.data));
   }
 
-  /** Sửa nội dung bình luận */
-  updateComment(postId: string, commentId: string, content: string): Observable<Comment> {
+  // Sửa nội dung bình luận
+  updateComment(commentId: string, content: string): Observable<Comment> {
     return this.http
-      .patch<ApiResponse<any>>(
-        `${environment.apiUrl}/posts/${postId}/comments/${commentId}`,
+      .patch<ApiResponse<Comment>>(
+        `${environment.apiUrl}/comments/${commentId}`,
         { content }
       )
-      .pipe(map((res) => this.mapComment(res.data)));
+      .pipe(map((res) => res.data));
   }
 
-  /** Xóa bình luận */
-  deleteComment(postId: string, commentId: string): Observable<void> {
+  // Xóa bình luận
+  deleteComment(commentId: string): Observable<void> {
     return this.http
       .delete<ApiResponse<void>>(
-        `${environment.apiUrl}/posts/${postId}/comments/${commentId}`
+        `${environment.apiUrl}/comments/${commentId}`
       )
       .pipe(map(() => undefined));
   }

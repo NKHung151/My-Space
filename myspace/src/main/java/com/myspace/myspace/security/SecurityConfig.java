@@ -61,7 +61,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/refresh-token", "/api/auth/logout", "/api/users", "/api/users/**", "/api/posts", "/api/posts/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/**", "/api/posts/**", "/api/comments/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/posts/*/view").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/refresh-token", "/api/auth/logout").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

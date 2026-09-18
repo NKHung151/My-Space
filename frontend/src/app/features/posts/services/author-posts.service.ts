@@ -5,16 +5,16 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/http/api-response.model';
 import { CreatePostPayload, PaginatedResult, Post, UpdatePostPayload } from '../models/post.model';
 
-/**
- * AuthorPostsService — Quản lý bài viết của tác giả đã đăng nhập (CRUD).
- * Yêu cầu Authorization header (được tự động đính kèm bởi AuthInterceptor).
- */
+
+//  AuthorPostsService — Quản lý bài viết của tác giả đã đăng nhập (CRUD).
+//  Yêu cầu Authorization header (được tự động đính kèm bởi AuthInterceptor).
+
 @Injectable({ providedIn: 'root' })
 export class AuthorPostsService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/author/posts`;
 
-  /** Lấy danh sách bài viết của chính tác giả (có phân trang) */
+  // Lấy danh sách bài viết của chính tác giả (có phân trang)
   listMyPosts(page = 1, limit = 10): Observable<PaginatedResult<Post>> {
     const params = new HttpParams().set('page', page).set('limit', limit);
     return this.http
@@ -25,14 +25,14 @@ export class AuthorPostsService {
       })));
   }
 
-  /** Lấy chi tiết một bài viết của tác giả (bao gồm bản nháp) */
+  // Lấy chi tiết một bài viết của tác giả
   getAuthorPost(postId: string | number): Observable<Post> {
     return this.http
       .get<ApiResponse<Post>>(`${this.baseUrl}/${postId}`)
       .pipe(map((res) => res.data));
   }
 
-  /** Tạo bài viết mới */
+  // Tạo bài viết mới
   createAuthorPost(payload: CreatePostPayload): Observable<Post> {
     return this.http
       .post<ApiResponse<Post>>(this.baseUrl, payload)

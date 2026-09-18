@@ -214,20 +214,14 @@ export class CommentSectionComponent implements OnInit, OnChanges {
         this.isSubmitting.set(false);
         this.cancelReply(target.id);
         
-        // Cập nhật State UI cục bộ (Mutate array):
+        // Cập nhật State UI cục bộ (Mutate array theo kiểu đơn giản):
         this.comments.update(prev => {
           const arr = [...prev];
-          // Nếu `target` là một reply, parentId của nó sẽ là ID của Root comment.
-          // Ngược lại, nếu `target` chính là Root, lấy ID của nó.
-          const parentId = target.parent_id || target.id;
-          
-          // Tìm index của Root comment trong danh sách
-          const parentIdx = arr.findIndex(c => c.id === parentId);
-          if (parentIdx > -1) {
-            arr[parentIdx] = { ...arr[parentIdx] };
-            if (!arr[parentIdx].replies) arr[parentIdx].replies = [];
-            // Push reply mới vào đúng mảng `rootComment.replies[]`
-            arr[parentIdx].replies.push(newComment);
+          const parentId = target.parentId || target.id;
+          const parent = arr.find(c => c.id === parentId);
+          if (parent) {
+            if (!parent.replies) parent.replies = [];
+            parent.replies.push(newComment);
           }
           return arr;
         });
@@ -323,7 +317,7 @@ export class CommentSectionComponent implements OnInit, OnChanges {
     if (!target) return;
     const { comment, parent } = target;
     
-    this.commentService.deleteComment(this.postId.toString(), comment.id).pipe(
+    this.commentService.deleteComment(comment.id).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.cancelDelete();
@@ -332,26 +326,21 @@ export class CommentSectionComponent implements OnInit, OnChanges {
       let deletedCount = 1;
       
       this.comments.update(prev => {
-        // Tương tự submitReply, nếu xóa reply thì phải vào trong array replies của cha để filter loại bỏ nó
+        const arr = [...prev];
         if (parent) {
-          const arr = [...prev];
-          const parentIdx = arr.findIndex(c => c.id === parent.id);
-          if (parentIdx > -1) {
-            arr[parentIdx] = { ...arr[parentIdx] };
-            if (arr[parentIdx].replies) {
-              arr[parentIdx].replies = arr[parentIdx].replies.filter((r: Comment) => r.id !== comment.id);
-            }
+          const p = arr.find(c => c.id === parent.id);
+          if (p && p.replies) {
+            p.replies = p.replies.filter(r => r.id !== comment.id);
           }
           return arr;
         }
-        // Nếu xóa root comment thì filter trực tiếp trên mảng ngoài cùng
-        // Đồng thời đếm số lượng replies bị xóa theo
-        const targetRoot = prev.find(c => c.id === comment.id);
+        
+        // Nếu xóa root comment thì đếm số lượng replies bị xóa theo
+        const targetRoot = arr.find(c => c.id === comment.id);
         if (targetRoot && targetRoot.replies) {
           deletedCount += targetRoot.replies.length;
         }
-        
-        return prev.filter(c => c.id !== comment.id);
+        return arr.filter(c => c.id !== comment.id);
       });
       this.totalComments.update(t => t - deletedCount);
     });
@@ -385,39 +374,24 @@ export class CommentSectionComponent implements OnInit, OnChanges {
       return;
     }
     this.isSubmitting.set(true);
-    this.commentService.updateComment(this.postId.toString(), comment.id, content).pipe(
+    this.commentService.updateComment(comment.id, content).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (updatedComment) => {
         this.isSubmitting.set(false);
         this.cancelEdit(comment.id);
-        // Cập nhật lại UI sau khi sửa thành công bằng cách thay thế đối tượng comment trong mảng
+        // Cập nhật lại UI sau khi sửa thành công bằng cách Object.assign
         this.comments.update(prev => {
-          if (parent) {
-            const arr = [...prev];
-            const pIdx = arr.findIndex(c => c.id === parent.id);
-            if (pIdx > -1) {
-              arr[pIdx] = { ...arr[pIdx] };
-              if (arr[pIdx].replies) {
-                const rIdx = arr[pIdx].replies.findIndex((r: Comment) => r.id === comment.id);
-                if (rIdx > -1) {
-                  arr[pIdx].replies = [...arr[pIdx].replies];
-                  arr[pIdx].replies[rIdx] = { ...arr[pIdx].replies[rIdx], ...updatedComment };
-                }
-              }
-            }
-            return arr;
-          }
           const arr = [...prev];
-          const idx = arr.findIndex(c => c.id === comment.id);
-          if (idx > -1) {
-            arr[idx] = { 
-              ...arr[idx], 
-              ...updatedComment,
-              replies: arr[idx].replies, 
-              likeCount: arr[idx].likeCount !== undefined ? arr[idx].likeCount : updatedComment.likeCount,
-              liked: arr[idx].liked !== undefined ? arr[idx].liked : updatedComment.liked
-            };
+          if (parent) {
+            const p = arr.find(c => c.id === parent.id);
+            if (p && p.replies) {
+              const r = p.replies.find(x => x.id === comment.id);
+              if (r) Object.assign(r, updatedComment);
+            }
+          } else {
+            const r = arr.find(c => c.id === comment.id);
+            if (r) Object.assign(r, updatedComment);
           }
           return arr;
         });
@@ -430,13 +404,13 @@ export class CommentSectionComponent implements OnInit, OnChanges {
   }
 
   isPostAuthor(comment: Comment): boolean {
-    const authorId = comment.author?.id || comment.user_id;
+    const authorId = comment.author?.id;
     return String(authorId) === String(this.postAuthorId);
   }
 
   isCommentEdited(comment: Comment): boolean {
-    if (!comment.updated_at || !comment.created_at) return false;
-    return comment.updated_at !== comment.created_at;
+    if (!comment.updatedAt || !comment.createdAt) return false;
+    return comment.updatedAt !== comment.createdAt;
   }
 
   canDelete(comment: Comment): boolean {
