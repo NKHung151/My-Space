@@ -8,6 +8,7 @@ import {
   AdminUsersFilters,
   UpdateAdminUserRequest,
 } from '../models/admin-user.model';
+import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class AdminUsersService {
@@ -15,7 +16,7 @@ export class AdminUsersService {
 
   constructor(private readonly http: HttpClient) {}
 
-  getUsers(filters: AdminUsersFilters): Observable<ApiResponse<AdminUser[]>> {
+  getUsers(filters: AdminUsersFilters): Observable<{ items: AdminUser[]; meta: any }> {
     let params = new HttpParams()
       .set('page', filters.page)
       .set('limit', filters.limit);
@@ -30,7 +31,15 @@ export class AdminUsersService {
       params = params.set('status', filters.status);
     }
 
-    return this.http.get<ApiResponse<AdminUser[]>>(this.apiUrl, { params });
+    return this.http.get<ApiResponse<any>>(this.apiUrl, { params }).pipe(
+      map(res => {
+        const pageData = res.data;
+        return {
+          items: Array.isArray(pageData?.data) ? pageData.data : (pageData || []),
+          meta: pageData?.meta || res.meta || { page: 1, totalPages: 1 }
+        };
+      })
+    );
   }
 
   getUser(userId: string): Observable<ApiResponse<AdminUser>> {

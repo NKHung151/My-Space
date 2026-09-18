@@ -95,7 +95,7 @@ export class AdminUsersComponent implements OnInit {
       limit: this.pageSize,
     }).subscribe({
       next: response => {
-        this.users.set(response.data);
+        this.users.set(response.items);
         if (response.meta) {
           this.pagination.set(response.meta);
         }

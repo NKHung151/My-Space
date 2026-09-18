@@ -20,8 +20,14 @@ export class FriendsService {
     let params = new HttpParams();
     if (page) params = params.set('page', page);
     if (limit) params = params.set('limit', limit);
-    return this.http.get<ApiResponse<Post[]>>(`${this.baseUrl}/feed`, { params })
-      .pipe(map(response => ({ items: Array.isArray(response.data) ? response.data : [], meta: response.meta })));
+    return this.http.get<ApiResponse<any>>(`${this.baseUrl}/feed`, { params })
+      .pipe(map(response => {
+        const pageData = response.data;
+        return { 
+          items: Array.isArray(pageData?.data) ? pageData.data : [], 
+          meta: pageData?.meta || { page: 1, totalPages: 1 } 
+        };
+      }));
   }
 
   getFriends(): Observable<FriendUser[]> {
@@ -46,32 +52,34 @@ export class FriendsService {
   }
 
   private fetchFriendStatus(userId: string) {
-    this.http.get<ApiItemResponse<{ status: FriendshipStatus }>>(`${this.baseUrl}/status/${userId}`)
+    this.http.get<ApiItemResponse<{ status: string }>>(`${this.baseUrl}/status/${userId}`)
       .pipe(catchError(() => of({ data: { status: 'none' as FriendshipStatus } })))
       .subscribe(res => {
         if (this.statusCache.has(userId)) {
-          this.statusCache.get(userId)!.next(res.data.status);
+          // Normalize BE uppercase (PENDING_SENT) to FE lowercase (pending_sent)
+          const normalized = (res.data?.status ?? 'none').toLowerCase() as FriendshipStatus;
+          this.statusCache.get(userId)!.next(normalized);
         }
       });
   }
 
   sendRequest(userId: string | number): Observable<any> {
     const idStr = String(userId);
-    return this.http.post(`${this.baseUrl}/request/${idStr}`, {}).pipe(
+    return this.http.post(`${this.baseUrl}/requests/${idStr}`, {}).pipe(
       tap(() => this.updateStatus(idStr, 'pending_sent'))
     );
   }
 
   acceptRequest(userId: string | number): Observable<any> {
     const idStr = String(userId);
-    return this.http.post(`${this.baseUrl}/accept/${idStr}`, {}).pipe(
+    return this.http.post(`${this.baseUrl}/requests/${idStr}/accept`, {}).pipe(
       tap(() => this.updateStatus(idStr, 'friends'))
     );
   }
 
   rejectRequest(userId: string | number): Observable<any> {
     const idStr = String(userId);
-    return this.http.post(`${this.baseUrl}/reject/${idStr}`, {}).pipe(
+    return this.http.post(`${this.baseUrl}/requests/${idStr}/reject`, {}).pipe(
       tap(() => this.updateStatus(idStr, 'none'))
     );
   }

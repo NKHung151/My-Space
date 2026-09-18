@@ -65,7 +65,7 @@ export class AdminPostsComponent implements OnInit, OnDestroy {
       limit: this.pagination().limit,
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: response => {
-        this.posts.set(response.data);
+        this.posts.set(response.items);
         if (response.meta) this.pagination.set(response.meta);
         this.loading.set(false);
       },

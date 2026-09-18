@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FriendsService } from '../../services/friends.service';
 import { FriendshipStatus } from '../../models/friend.model';
@@ -19,6 +19,7 @@ export class FriendButtonComponent implements OnInit, OnDestroy {
 
   private friendsService = inject(FriendsService);
   private authService = inject(AuthService);
+  private ngZone = inject(NgZone);
 
   status: FriendshipStatus = 'none';
   loading = false;
@@ -31,8 +32,10 @@ export class FriendButtonComponent implements OnInit, OnDestroy {
     this.isSelf = String(this.authService.currentUser()?.id) === String(this.userId);
     if (!this.isSelf) {
       this.statusSub = this.friendsService.getFriendStatus(this.userId).subscribe(status => {
-        this.status = status;
-        this.loading = false;
+        this.ngZone.run(() => {
+          this.status = status;
+          this.loading = false;
+        });
       });
     }
   }
@@ -46,22 +49,27 @@ export class FriendButtonComponent implements OnInit, OnDestroy {
     event.preventDefault();
     if (this.loading || this.isSelf) return;
 
-    this.loading = true;
+    this.ngZone.run(() => { this.loading = true; });
+    
     if (this.status === 'none') {
       this.friendsService.sendRequest(this.userId).subscribe({
-        error: () => this.loading = false
+        next: () => this.ngZone.run(() => { this.loading = false; }),
+        error: () => this.ngZone.run(() => { this.loading = false; })
       });
     } else if (this.status === 'pending_sent') {
       this.friendsService.removeFriend(this.userId).subscribe({
-        error: () => this.loading = false
+        next: () => this.ngZone.run(() => { this.loading = false; }),
+        error: () => this.ngZone.run(() => { this.loading = false; })
       });
     } else if (this.status === 'pending_received') {
       this.friendsService.acceptRequest(this.userId).subscribe({
-        error: () => this.loading = false
+        next: () => this.ngZone.run(() => { this.loading = false; }),
+        error: () => this.ngZone.run(() => { this.loading = false; })
       });
     } else if (this.status === 'friends') {
       this.friendsService.removeFriend(this.userId).subscribe({
-        error: () => this.loading = false
+        next: () => this.ngZone.run(() => { this.loading = false; }),
+        error: () => this.ngZone.run(() => { this.loading = false; })
       });
     }
   }
@@ -71,9 +79,10 @@ export class FriendButtonComponent implements OnInit, OnDestroy {
     event.preventDefault();
     if (this.loading || this.isSelf) return;
     
-    this.loading = true;
+    this.ngZone.run(() => { this.loading = true; });
     this.friendsService.rejectRequest(this.userId).subscribe({
-      error: () => this.loading = false
+      next: () => this.ngZone.run(() => { this.loading = false; }),
+      error: () => this.ngZone.run(() => { this.loading = false; })
     });
   }
 

@@ -19,4 +19,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query(value = "SELECT tag as tag, count(*) as count FROM posts WHERE tag IS NOT NULL GROUP BY tag ORDER BY count DESC LIMIT :limit", nativeQuery = true)
     List<Object[]> getPopularTags(@Param("limit") int limit);
+
+    @Query("SELECT p FROM Post p INNER JOIN Friendship f ON p.author.id = f.friend.id WHERE f.user.id = :userId")
+    Page<Post> findPostsByFriendship(@Param("userId") Long userId, Pageable pageable);
 }
