@@ -10,6 +10,7 @@ import com.myspace.myspace.entity.Post;
 import com.myspace.myspace.mapper.PostMapper;
 import com.myspace.myspace.repository.PostRepository;
 import com.myspace.myspace.service.PublicPostService;
+import com.myspace.myspace.service.ViewCountService;
 import com.myspace.myspace.service.search.SearchQueryService;
 import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.repository.PostLikeRepository;
@@ -33,6 +34,7 @@ public class PublicPostServiceImpl implements PublicPostService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
     private final SearchQueryService searchQueryService;
+    private final ViewCountService viewCountService;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,6 +46,7 @@ public class PublicPostServiceImpl implements PublicPostService {
             List<PostDocument> docs = searchQueryService.searchPosts(q.trim(), pageable.getPageNumber(), limit, tag, hasVideo);
             List<PostResponse> items = docs.stream().map(this::mapDocToResponse).collect(Collectors.toList());
             populateLikedStatus(items);
+            populateRealtimeViewCounts(items);
             return new PageResponse<>(items, new PageResponse.Meta((long) items.size(), page, limit, 1));
         }
 
@@ -51,6 +54,7 @@ public class PublicPostServiceImpl implements PublicPostService {
         Page<Post> postsPage = postRepository.findPublicPosts(tag, hasVideo, authorId, pageable);
         List<PostResponse> items = postsPage.getContent().stream().map(PostMapper::toResponse).collect(Collectors.toList());
         populateLikedStatus(items);
+        populateRealtimeViewCounts(items);
         return new PageResponse<>(items, new PageResponse.Meta(postsPage.getTotalElements(), page, limit, postsPage.getTotalPages()));
     }
 
@@ -66,6 +70,11 @@ public class PublicPostServiceImpl implements PublicPostService {
         } else {
             response.setLiked(false);
         }
+        
+        // Add real-time views from Redis
+        Long redisViews = viewCountService.getRedisViewCount(id);
+        response.setViewCount(response.getViewCount() + redisViews.intValue());
+        
         return response;
     }
 
@@ -78,12 +87,10 @@ public class PublicPostServiceImpl implements PublicPostService {
     }
 
     @Override
-    @Transactional
-    public void increaseViewCount(Long id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-        post.setViewCount(post.getViewCount() + 1);
-        postRepository.save(post);
+    public void increaseViewCount(Long id, String viewerId) {
+        // Only verify post exists, then increment in Redis
+        postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
+        viewCountService.incrementViewCount(id, viewerId);
     }
 
     /** Map PostDocument (Elasticsearch) → PostResponse. */
@@ -130,5 +137,14 @@ public class PublicPostServiceImpl implements PublicPostService {
         List<Long> postIds = items.stream().map(PostResponse::getId).collect(Collectors.toList());
         List<Long> likedPostIds = postLikeRepository.findLikedPostIds(currentUserId, postIds);
         items.forEach(item -> item.setLiked(likedPostIds.contains(item.getId())));
+    }
+
+    private void populateRealtimeViewCounts(List<PostResponse> items) {
+        for (PostResponse item : items) {
+            Long redisViews = viewCountService.getRedisViewCount(item.getId());
+            if (redisViews > 0) {
+                item.setViewCount(item.getViewCount() + redisViews.intValue());
+            }
+        }
     }
 }

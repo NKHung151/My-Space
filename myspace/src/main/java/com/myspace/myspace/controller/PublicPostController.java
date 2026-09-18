@@ -10,6 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.myspace.myspace.security.custom.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 
 @RestController
@@ -45,8 +49,23 @@ public class PublicPostController {
     }
 
     @PostMapping("/{id}/view")
-    public ResponseEntity<ApiResponse<Void>> increaseViewCount(@PathVariable Long id) {
-        publicPostService.increaseViewCount(id);
+    public ResponseEntity<ApiResponse<Void>> increaseViewCount(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest request) {
+            
+        String viewerId = "";
+        if (userDetails != null && userDetails.getUser() != null) {
+            viewerId = "user:" + userDetails.getUser().getId();
+        } else {
+            String ip = request.getHeader("X-Forwarded-For");
+            if (ip == null || ip.isEmpty()) {
+                ip = request.getRemoteAddr();
+            }
+            viewerId = "ip:" + ip;
+        }
+        
+        publicPostService.increaseViewCount(id, viewerId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

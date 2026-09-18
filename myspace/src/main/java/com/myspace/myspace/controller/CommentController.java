@@ -13,8 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -28,28 +26,26 @@ public class CommentController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         Long userId = userDetails != null ? userDetails.getUser().getId() : null;
-        
+
         PageResponse<CommentResponse> comments = commentService.getCommentsByPost(postId, page, limit, userId);
         return ResponseEntity.ok(ApiResponse.success(comments));
     }
-
-
 
     @PostMapping("/posts/{postId}/comments")
     public ResponseEntity<ApiResponse<CommentResponse>> createComment(
             @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         // Đảm bảo user đã đăng nhập
         if (userDetails == null) {
             throw new RuntimeException("Unauthorized");
         }
-        
+
         Long userId = userDetails.getUser().getId();
-        
+
         CommentResponse comment = commentService.createComment(postId, userId, request);
         return ResponseEntity.ok(ApiResponse.success(comment));
     }
@@ -59,13 +55,13 @@ public class CommentController {
             @PathVariable Long commentId,
             @Valid @RequestBody UpdateCommentRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         if (userDetails == null) {
             throw new RuntimeException("Unauthorized");
         }
 
         Long userId = userDetails.getUser().getId();
-        
+
         CommentResponse comment = commentService.updateComment(commentId, userId, request);
         return ResponseEntity.ok(ApiResponse.success(comment));
     }
@@ -74,13 +70,13 @@ public class CommentController {
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @PathVariable Long commentId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         if (userDetails == null) {
             throw new RuntimeException("Unauthorized");
         }
 
         Long userId = userDetails.getUser().getId();
-        
+
         commentService.deleteComment(commentId, userId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }

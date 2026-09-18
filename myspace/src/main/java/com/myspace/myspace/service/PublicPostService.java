@@ -11,5 +11,5 @@ public interface PublicPostService {
     PageResponse<PostResponse> getPublicPosts(String q, String tag, Boolean hasVideo, Long authorId, int page, int limit);
     PostDetailResponse getPublicPost(Long id);
     List<TagResponse> getPopularTags(int limit);
-    void increaseViewCount(Long id);
+    void increaseViewCount(Long id, String viewerId);
 }

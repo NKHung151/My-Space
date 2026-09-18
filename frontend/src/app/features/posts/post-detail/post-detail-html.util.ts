@@ -85,44 +85,25 @@ export function preparePostDetailHtml(html: string): string {
         for (let i = toInsertAfterWrapper.length - 1; i >= 0; i--) {
           wrapper.after(toInsertAfterWrapper[i]);
         }
+      }
+      
+      const firstBr = caption.querySelector('br');
+      if (firstBr) {
+        const newP = document.createElement('p');
+        let sibling = firstBr.nextSibling;
+        while (sibling) {
+          const next = sibling.nextSibling;
+          newP.appendChild(sibling);
+          sibling = next;
+        }
+        firstBr.remove();
+        if (newP.childNodes.length > 0) {
+          wrapper.after(newP);
+        }
+      }
 
-        const firstBr = caption.querySelector('br');
-        if (firstBr) {
-          const newP = document.createElement('p');
-          let sibling = firstBr.nextSibling;
-          while (sibling) {
-            const next = sibling.nextSibling;
-            newP.appendChild(sibling);
-            sibling = next;
-          }
-          firstBr.remove();
-          if (newP.childNodes.length > 0) {
-            wrapper.after(newP);
-          }
-        }
-
-        if (!caption.textContent?.trim()) {
-          caption.remove();
-        }
-      } else {
-        const firstBr = caption.querySelector('br');
-        if (firstBr) {
-          const newP = document.createElement('p');
-          let sibling = firstBr.nextSibling;
-          while (sibling) {
-            const next = sibling.nextSibling;
-            newP.appendChild(sibling);
-            sibling = next;
-          }
-          firstBr.remove();
-          if (newP.childNodes.length > 0) {
-            wrapper.after(newP);
-          }
-        }
-
-        if (!caption.textContent?.trim()) {
-          caption.remove();
-        }
+      if (!caption.textContent?.trim()) {
+        caption.remove();
       }
     }
   });
