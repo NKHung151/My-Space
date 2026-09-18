@@ -10,6 +10,7 @@ import com.myspace.myspace.entity.User;
 import com.myspace.myspace.mapper.CommentMapper;
 import com.myspace.myspace.repository.CommentRepository;
 import com.myspace.myspace.repository.PostRepository;
+import com.myspace.myspace.repository.CommentLikeRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.CommentService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentLikeRepository commentLikeRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -59,15 +61,39 @@ public class CommentServiceImpl implements CommentService {
 
         long totalComments = commentRepository.countByPostId(postId);
 
+        // Populate Liked Status
+        if (currentUserId != null && !items.isEmpty()) {
+            List<Long> allCommentIds = new java.util.ArrayList<>();
+            for (CommentResponse item : items) {
+                allCommentIds.add(item.getId());
+                if (item.getReplies() != null) {
+                    allCommentIds.addAll(item.getReplies().stream().map(CommentResponse::getId).collect(Collectors.toList()));
+                }
+            }
+            List<Long> likedCommentIds = commentLikeRepository.findLikedCommentIds(currentUserId, allCommentIds);
+            for (CommentResponse item : items) {
+                item.setLiked(likedCommentIds.contains(item.getId()));
+                if (item.getReplies() != null) {
+                    item.getReplies().forEach(reply -> reply.setLiked(likedCommentIds.contains(reply.getId())));
+                }
+            }
+        }
+
         return new PageResponse<>(items, new PageResponse.Meta(totalComments, page, limit, commentPage.getTotalPages()));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CommentResponse> getReplies(Long commentId, Long currentUserId, String currentUserRole) {
-        return commentRepository.findByParentIdOrderByCreatedAtAsc(commentId).stream()
+        List<CommentResponse> items = commentRepository.findByParentIdOrderByCreatedAtAsc(commentId).stream()
                 .map(comment -> CommentMapper.toResponse(comment, currentUserId, currentUserRole))
                 .collect(Collectors.toList());
+        if (currentUserId != null && !items.isEmpty()) {
+            List<Long> allCommentIds = items.stream().map(CommentResponse::getId).collect(Collectors.toList());
+            List<Long> likedCommentIds = commentLikeRepository.findLikedCommentIds(currentUserId, allCommentIds);
+            items.forEach(item -> item.setLiked(likedCommentIds.contains(item.getId())));
+        }
+        return items;
     }
 
     @Override

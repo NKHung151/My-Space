@@ -12,7 +12,11 @@ import com.myspace.myspace.repository.PostRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.AuthorPostService;
 import com.myspace.myspace.service.search.SearchIndexService;
+import com.myspace.myspace.security.custom.CustomUserDetails;
+import com.myspace.myspace.repository.PostLikeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +34,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final PostLikeRepository postLikeRepository;
     private final SearchIndexService searchIndexService;
 
     @Override
@@ -52,7 +57,9 @@ public class AuthorPostServiceImpl implements AuthorPostService {
 
         Post saved = postRepository.save(post);
         searchIndexService.indexPost(saved);
-        return PostMapper.toDetailResponse(saved);
+        PostDetailResponse response = PostMapper.toDetailResponse(saved);
+        response.setLiked(false);
+        return response;
     }
 
     @Override
@@ -62,6 +69,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         Page<Post> posts = postRepository.findByAuthorId(authorId, pageable);
 
         List<PostResponse> items = posts.getContent().stream().map(PostMapper::toResponse).collect(Collectors.toList());
+        populateLikedStatus(items);
         return new PageResponse<>(items, new PageResponse.Meta(posts.getTotalElements(), page, limit, posts.getTotalPages()));
     }
 
@@ -70,7 +78,14 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     public PostDetailResponse getMyPost(Long authorId, Long postId) {
         Post post = postRepository.findByIdAndAuthorId(postId, authorId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
-        return PostMapper.toDetailResponse(post);
+        PostDetailResponse response = PostMapper.toDetailResponse(post);
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId != null) {
+            response.setLiked(postLikeRepository.existsByPostIdAndUserId(postId, currentUserId));
+        } else {
+            response.setLiked(false);
+        }
+        return response;
     }
 
     @Override
@@ -88,7 +103,14 @@ public class AuthorPostServiceImpl implements AuthorPostService {
 
         Post updated = postRepository.save(post);
         searchIndexService.indexPost(updated);
-        return PostMapper.toDetailResponse(updated);
+        PostDetailResponse response = PostMapper.toDetailResponse(updated);
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId != null) {
+            response.setLiked(postLikeRepository.existsByPostIdAndUserId(postId, currentUserId));
+        } else {
+            response.setLiked(false);
+        }
+        return response;
     }
 
     @Override
@@ -98,5 +120,25 @@ public class AuthorPostServiceImpl implements AuthorPostService {
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         postRepository.delete(post);
         searchIndexService.removePost(postId);
+    }
+
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails) {
+            return ((CustomUserDetails) auth.getPrincipal()).getUser().getId();
+        }
+        return null;
+    }
+
+    private void populateLikedStatus(List<PostResponse> items) {
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null || items.isEmpty()) {
+            items.forEach(item -> item.setLiked(false));
+            return;
+        }
+
+        List<Long> postIds = items.stream().map(PostResponse::getId).collect(Collectors.toList());
+        List<Long> likedPostIds = postLikeRepository.findLikedPostIds(currentUserId, postIds);
+        items.forEach(item -> item.setLiked(likedPostIds.contains(item.getId())));
     }
 }

@@ -11,7 +11,11 @@ import com.myspace.myspace.mapper.PostMapper;
 import com.myspace.myspace.repository.PostRepository;
 import com.myspace.myspace.service.PublicPostService;
 import com.myspace.myspace.service.search.SearchQueryService;
+import com.myspace.myspace.security.custom.CustomUserDetails;
+import com.myspace.myspace.repository.PostLikeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 public class PublicPostServiceImpl implements PublicPostService {
 
     private final PostRepository postRepository;
+    private final PostLikeRepository postLikeRepository;
     private final SearchQueryService searchQueryService;
 
     @Override
@@ -38,12 +43,14 @@ public class PublicPostServiceImpl implements PublicPostService {
             // Tìm kiếm qua Elasticsearch
             List<PostDocument> docs = searchQueryService.searchPosts(q.trim(), pageable.getPageNumber(), limit, tag, hasVideo);
             List<PostResponse> items = docs.stream().map(this::mapDocToResponse).collect(Collectors.toList());
+            populateLikedStatus(items);
             return new PageResponse<>(items, new PageResponse.Meta((long) items.size(), page, limit, 1));
         }
 
         // Lấy từ MySQL khi không có từ khóa tìm kiếm
         Page<Post> postsPage = postRepository.findPublicPosts(tag, hasVideo, authorId, pageable);
         List<PostResponse> items = postsPage.getContent().stream().map(PostMapper::toResponse).collect(Collectors.toList());
+        populateLikedStatus(items);
         return new PageResponse<>(items, new PageResponse.Meta(postsPage.getTotalElements(), page, limit, postsPage.getTotalPages()));
     }
 
@@ -52,7 +59,14 @@ public class PublicPostServiceImpl implements PublicPostService {
     public PostDetailResponse getPublicPost(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
-        return PostMapper.toDetailResponse(post);
+        PostDetailResponse response = PostMapper.toDetailResponse(post);
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId != null) {
+            response.setLiked(postLikeRepository.existsByPostIdAndUserId(id, currentUserId));
+        } else {
+            response.setLiked(false);
+        }
+        return response;
     }
 
     @Override
@@ -96,5 +110,25 @@ public class PublicPostServiceImpl implements PublicPostService {
                 .publishedAt(doc.getPublishedAt())
                 .createdAt(doc.getCreatedAt())
                 .build();
+    }
+
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails) {
+            return ((CustomUserDetails) auth.getPrincipal()).getUser().getId();
+        }
+        return null;
+    }
+
+    private void populateLikedStatus(List<PostResponse> items) {
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null || items.isEmpty()) {
+            items.forEach(item -> item.setLiked(false));
+            return;
+        }
+
+        List<Long> postIds = items.stream().map(PostResponse::getId).collect(Collectors.toList());
+        List<Long> likedPostIds = postLikeRepository.findLikedPostIds(currentUserId, postIds);
+        items.forEach(item -> item.setLiked(likedPostIds.contains(item.getId())));
     }
 }

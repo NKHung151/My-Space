@@ -18,6 +18,7 @@ public class PostResponse {
     private Integer viewCount;
     private Integer likeCount;
     private Integer commentCount;
+    private Boolean liked;
     private PublicUserResponse author;
     private LocalDateTime publishedAt;
     private LocalDateTime createdAt;
