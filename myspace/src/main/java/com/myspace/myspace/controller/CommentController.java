@@ -30,23 +30,12 @@ public class CommentController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
         Long userId = userDetails != null ? userDetails.getUser().getId() : null;
-        String role = userDetails != null ? userDetails.getUser().getRole().getName() : null;
         
-        PageResponse<CommentResponse> comments = commentService.getCommentsByPost(postId, page, limit, userId, role);
+        PageResponse<CommentResponse> comments = commentService.getCommentsByPost(postId, page, limit, userId);
         return ResponseEntity.ok(ApiResponse.success(comments));
     }
 
-    @GetMapping("/comments/{commentId}/replies")
-    public ResponseEntity<ApiResponse<List<CommentResponse>>> getReplies(
-            @PathVariable Long commentId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
-        Long userId = userDetails != null ? userDetails.getUser().getId() : null;
-        String role = userDetails != null ? userDetails.getUser().getRole().getName() : null;
-        
-        List<CommentResponse> replies = commentService.getReplies(commentId, userId, role);
-        return ResponseEntity.ok(ApiResponse.success(replies));
-    }
+
 
     @PostMapping("/posts/{postId}/comments")
     public ResponseEntity<ApiResponse<CommentResponse>> createComment(
@@ -60,9 +49,8 @@ public class CommentController {
         }
         
         Long userId = userDetails.getUser().getId();
-        String role = userDetails.getUser().getRole().getName();
         
-        CommentResponse comment = commentService.createComment(postId, userId, request, role);
+        CommentResponse comment = commentService.createComment(postId, userId, request);
         return ResponseEntity.ok(ApiResponse.success(comment));
     }
 
@@ -77,9 +65,8 @@ public class CommentController {
         }
 
         Long userId = userDetails.getUser().getId();
-        String role = userDetails.getUser().getRole().getName();
         
-        CommentResponse comment = commentService.updateComment(commentId, userId, request, role);
+        CommentResponse comment = commentService.updateComment(commentId, userId, request);
         return ResponseEntity.ok(ApiResponse.success(comment));
     }
 
@@ -93,9 +80,8 @@ public class CommentController {
         }
 
         Long userId = userDetails.getUser().getId();
-        String role = userDetails.getUser().getRole().getName();
         
-        commentService.deleteComment(commentId, userId, role);
+        commentService.deleteComment(commentId, userId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

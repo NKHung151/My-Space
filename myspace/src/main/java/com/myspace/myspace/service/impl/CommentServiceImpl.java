@@ -34,7 +34,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<CommentResponse> getCommentsByPost(Long postId, int page, int limit, Long currentUserId, String currentUserRole) {
+    public PageResponse<CommentResponse> getCommentsByPost(Long postId, int page, int limit, Long currentUserId) {
         Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, limit);
         Page<Comment> commentPage = commentRepository.findByPostIdAndParentIsNullOrderByCreatedAtDesc(postId, pageable);
 
@@ -50,10 +50,10 @@ public class CommentServiceImpl implements CommentService {
 
         List<CommentResponse> items = rootComments.stream()
                 .map(comment -> {
-                    CommentResponse response = CommentMapper.toResponse(comment, currentUserId, currentUserRole);
+                    CommentResponse response = CommentMapper.toResponse(comment, currentUserId);
                     List<Comment> replies = repliesByParentId.getOrDefault(comment.getId(), List.of());
                     response.setReplies(replies.stream()
-                            .map(reply -> CommentMapper.toResponse(reply, currentUserId, currentUserRole))
+                            .map(reply -> CommentMapper.toResponse(reply, currentUserId))
                             .collect(Collectors.toList()));
                     return response;
                 })
@@ -83,22 +83,8 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<CommentResponse> getReplies(Long commentId, Long currentUserId, String currentUserRole) {
-        List<CommentResponse> items = commentRepository.findByParentIdOrderByCreatedAtAsc(commentId).stream()
-                .map(comment -> CommentMapper.toResponse(comment, currentUserId, currentUserRole))
-                .collect(Collectors.toList());
-        if (currentUserId != null && !items.isEmpty()) {
-            List<Long> allCommentIds = items.stream().map(CommentResponse::getId).collect(Collectors.toList());
-            List<Long> likedCommentIds = commentLikeRepository.findLikedCommentIds(currentUserId, allCommentIds);
-            items.forEach(item -> item.setLiked(likedCommentIds.contains(item.getId())));
-        }
-        return items;
-    }
-
-    @Override
     @Transactional
-    public CommentResponse createComment(Long postId, Long authorId, CreateCommentRequest request, String currentUserRole) {
+    public CommentResponse createComment(Long postId, Long authorId, CreateCommentRequest request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         User author = userRepository.findById(authorId)
@@ -133,32 +119,31 @@ public class CommentServiceImpl implements CommentService {
         post.setCommentCount(post.getCommentCount() + 1);
         postRepository.save(post);
 
-        return CommentMapper.toResponse(savedComment, authorId, currentUserRole);
+        return CommentMapper.toResponse(savedComment, authorId);
     }
 
     @Override
     @Transactional
-    public CommentResponse updateComment(Long commentId, Long authorId, UpdateCommentRequest request, String currentUserRole) {
+    public CommentResponse updateComment(Long commentId, Long authorId, UpdateCommentRequest request) {
         Comment comment = commentRepository.findByIdAndAuthorId(commentId, authorId)
                 .orElseThrow(() -> new RuntimeException("Comment not found or you don't have permission"));
 
         comment.setContent(request.getContent());
         Comment updatedComment = commentRepository.save(comment);
         
-        return CommentMapper.toResponse(updatedComment, authorId, currentUserRole);
+        return CommentMapper.toResponse(updatedComment, authorId);
     }
 
     @Override
     @Transactional
-    public void deleteComment(Long commentId, Long userId, String userRole) {
+    public void deleteComment(Long commentId, Long userId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
 
         boolean isAuthor = comment.getAuthor().getId().equals(userId);
         boolean isPostAuthor = comment.getPost().getAuthor().getId().equals(userId);
-        boolean isAdmin = "admin".equalsIgnoreCase(userRole);
 
-        if (!isAuthor && !isPostAuthor && !isAdmin) {
+        if (!isAuthor && !isPostAuthor) {
             throw new RuntimeException("You do not have permission to delete this comment");
         }
 
@@ -179,6 +164,10 @@ public class CommentServiceImpl implements CommentService {
         List<Comment> children = commentRepository.findByParentIdOrderByCreatedAtAsc(comment.getId());
         if (!children.isEmpty()) {
             commentsToDelete += children.size();
+            // Xóa tất cả các like của các bình luận con TRƯỚC KHI xóa
+            List<Long> childIds = children.stream().map(Comment::getId).collect(Collectors.toList());
+            commentLikeRepository.deleteByCommentIdIn(childIds);
+            
             // Xóa tất cả các bình luận con
             commentRepository.deleteAll(children);
         }
@@ -194,7 +183,8 @@ public class CommentServiceImpl implements CommentService {
         post.setCommentCount(Math.max(0, (int) (post.getCommentCount() - commentsToDelete)));
         postRepository.save(post);
 
-        // 5. Xóa bình luận mục tiêu
+        // 5. Xóa likes của bình luận mục tiêu và sau đó xóa bình luận
+        commentLikeRepository.deleteByCommentId(comment.getId());
         commentRepository.delete(comment);
     }
 }

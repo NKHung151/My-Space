@@ -8,7 +8,7 @@ import com.myspace.myspace.entity.User;
 public final class CommentMapper {
     private CommentMapper() {}
 
-    public static CommentResponse toResponse(Comment comment, Long currentUserId, String currentUserRole) {
+    public static CommentResponse toResponse(Comment comment, Long currentUserId) {
         if (comment == null) return null;
 
         User author = comment.getAuthor();
@@ -30,14 +30,12 @@ public final class CommentMapper {
         // 1. Tác giả có thể sửa bình luận của chính mình.
         // 2. Tác giả có thể xóa bình luận của chính mình.
         // 3. Chủ bài viết có thể xóa bất kỳ bình luận nào trên bài viết của họ.
-        // 4. Admin có thể xóa bất kỳ bình luận nào.
         boolean isAuthor = currentUserId != null && currentUserId.equals(author.getId());
         boolean isPostAuthor = currentUserId != null && currentUserId.equals(comment.getPost().getAuthor().getId());
-        boolean isAdmin = "admin".equalsIgnoreCase(currentUserRole);
 
         CommentResponse.CommentPermissions permissions = CommentResponse.CommentPermissions.builder()
                 .canEdit(isAuthor)
-                .canDelete(isAuthor || isPostAuthor || isAdmin)
+                .canDelete(isAuthor || isPostAuthor)
                 .build();
 
         return CommentResponse.builder()
@@ -52,7 +50,7 @@ public final class CommentMapper {
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
                 .likeCount(comment.getLikeCount())
-                .liked(false) // TODO: Sẽ được xử lý trong Module Likes (Thích)
+                .liked(false)
                 .permissions(permissions)
                 .build();
     }

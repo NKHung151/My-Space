@@ -11,6 +11,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
 import { BrandComponent } from '../../../shared/components/brand/brand.component';
+import { SearchModalService } from '../../../features/search/search-modal.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -22,6 +23,7 @@ import { BrandComponent } from '../../../shared/components/brand/brand.component
 export class SidebarComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  readonly searchModalService = inject(SearchModalService);
   readonly moreMenuOpen = signal(false);
   readonly isAuthenticated = computed(
     () => Boolean(this.authService.currentUser() && this.authService.getToken()),

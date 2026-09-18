@@ -1,13 +1,5 @@
 import { environment } from '../../../../environments/environment';
 
-/**
- * Hàm chuẩn bị chuỗi HTML của bài viết trước khi hiển thị cho người xem
- * Mục đích: 
- * - Loại bỏ các thành phần điều khiển (toolbar) thừa do editor sinh ra.
- * - Chuẩn hóa URL đường dẫn ảnh/media /uploads/ thành đường dẫn tuyệt đối backend.
- * - Parse (phân tích) và chuẩn hóa lại cấu trúc các khối code (code block) 
- *   để chúng hiển thị đúng định dạng có số thứ tự dòng.
- */
 export function preparePostDetailHtml(html: string): string {
   if (!html || typeof document === 'undefined') {
     return html;
@@ -311,19 +303,12 @@ function removeLegacyCodeControls(codeBody: HTMLElement): void {
   }
 }
 
-/** 
- * Chuẩn hóa text để so sánh (xóa khoảng trắng và một số ký tự mũi tên đặc biệt) 
- */
 function normalizeLegacyControlText(value: string): string {
   return value
     .replace(/\s+/g, '')
     .replace(/[▼⌄⌫]/g, '');
 }
 
-/**
- * Trích xuất đoạn mã thực tế từ cấu trúc DOM bên trong của khối code.
- * Do editor có thể lưu HTML ở nhiều dạng phức tạp, hàm này cố gắng bóc tách nội dung thô (raw).
- */
 function extractCodeSource(codeBody: HTMLElement): string {
   const codeElement = codeBody.querySelector(':scope > code');
   // Nếu không có thẻ code ở trong, trả về nguyên dạng serialize của nội dung hiện tại
@@ -346,10 +331,7 @@ function extractCodeSource(codeBody: HTMLElement): string {
   return serializeCodeNodes(codeElement);
 }
 
-/**
- * Đọc qua một node DOM (đệ quy) và trả về text đơn thuần,
- * xử lý việc ngắt dòng (BR, DIV, P) để mã hiển thị đúng format.
- */
+
 function serializeCodeNodes(node: Node): string {
   // Trả về nguyên text nếu là TEXT_NODE
   if (node.nodeType === Node.TEXT_NODE) {

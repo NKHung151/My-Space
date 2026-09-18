@@ -5,6 +5,13 @@
       <app-brand link="/home" style="pointer-events: none;" />
     </div>
 
+    <div class="d-none d-lg-block px-3 pb-3">
+      <div class="sidebar-search-box w-100" (click)="searchModalService.open()">
+        <i class="bi bi-search"></i>
+        <input type="text" readonly placeholder="Tìm kiếm My Space..." (focus)="searchModalService.open()">
+      </div>
+    </div>
+
     <nav class="app-nav">
       <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
         class="app-nav-item" (click)="onHomeClick()">

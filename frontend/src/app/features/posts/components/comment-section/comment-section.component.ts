@@ -239,48 +239,14 @@ export class CommentSectionComponent implements OnInit, OnChanges {
     });
   }
 
-  /**
-   * ═══════════════════════════════════════════════════════════════════════════
-   * CƠ CHẾ OPTIMISTIC UPDATE (khi like/unlike comment)
-   * ═══════════════════════════════════════════════════════════════════════════
-   * 1. Lập tức đổi UI (liked = !liked, likeCount ± 1) TRƯỚC KHI gọi API.
-   * 2. Gọi API thay đổi dữ liệu trong table `comment_likes`
-   * 3. Thành công → cập nhật lại likeCount chính xác từ DB.
-   * 4. Thất bại → Rollback UI về trạng thái cũ.
-   */
   toggleLike(comment: Comment): void {
-    if (comment.isLiking) return;
-
-    if (!this.authService.isAuthenticated()) {
-      this.authModalService.open();
-      return;
-    }
-
-    const previousLiked = comment.liked === true;  // guard: undefined → false
-    const previousLikeCount = comment.likeCount ?? 0;
-    const nextLiked = !previousLiked;
-    const nextLikeCount = nextLiked ? previousLikeCount + 1 : Math.max(0, previousLikeCount - 1);
-
-    // FE optimistic: thay đổi trước
-    comment.liked = nextLiked;
-    comment.likeCount = nextLikeCount;
-    comment.isLiking = true;
-
-    // Thay đổi comment_likes table phía BE
-    this.likeService.toggleCommentLike(this.postId, comment.id, previousLiked).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (res) => {
-        comment.liked = res.liked;
-        comment.likeCount = res.likeCount;
-        comment.isLiking = false;
-      },
-      error: () => {
-        comment.liked = previousLiked;
-        comment.likeCount = previousLikeCount;
-        comment.isLiking = false;
-      }
-    });
+    this.likeService.optimisticToggleCommentLike(
+      comment,
+      this.postId,
+      this.authService,
+      this.authModalService,
+      this.destroyRef
+    );
   }
 
   // Xóa bình luận
@@ -301,35 +267,40 @@ export class CommentSectionComponent implements OnInit, OnChanges {
     
     this.commentService.deleteComment(comment.id).pipe(
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => {
-      this.cancelDelete();
-      this.toastService.showSuccess('Đã xóa bình luận');
-      
-      let deletedCount = 1;
-      
-      this.comments.update(prev => {
-        const arr = [...prev];
-        if (parent) {
-          const pIdx = arr.findIndex(c => c.id === parent.id);
-          if (pIdx > -1) {
-            const p = { ...arr[pIdx] };
-            if (p.replies) {
-              p.replies = p.replies.filter(r => r.id !== comment.id);
-            }
-            arr[pIdx] = p;
-          }
-          return arr;
-        }
+    ).subscribe({
+      next: () => {
+        this.cancelDelete();
+        this.toastService.showSuccess('Đã xóa bình luận');
         
-        // Nếu xóa root comment thì đếm số lượng replies bị xóa theo
-        const targetRoot = arr.find(c => c.id === comment.id);
-        if (targetRoot && targetRoot.replies) {
-          deletedCount += targetRoot.replies.length;
-        }
-        return arr.filter(c => c.id !== comment.id);
-      });
-      this.totalComments.update(t => t - deletedCount);
-      this.commentCountChange.emit(-deletedCount);
+        let deletedCount = 1;
+        
+        this.comments.update(prev => {
+          const arr = [...prev];
+          if (parent) {
+            const pIdx = arr.findIndex(c => c.id === parent.id);
+            if (pIdx > -1) {
+              const p = { ...arr[pIdx] };
+              if (p.replies) {
+                p.replies = p.replies.filter(r => r.id !== comment.id);
+              }
+              arr[pIdx] = p;
+            }
+            return arr;
+          }
+          
+          // Nếu xóa root comment thì đếm số lượng replies bị xóa theo
+          const targetRoot = arr.find(c => c.id === comment.id);
+          if (targetRoot && targetRoot.replies) {
+            deletedCount += targetRoot.replies.length;
+          }
+          return arr.filter(c => c.id !== comment.id);
+        });
+        this.totalComments.update(t => t - deletedCount);
+        this.commentCountChange.emit(-deletedCount);
+      },
+      error: () => {
+        this.cancelDelete();
+      }
     });
   }
 
@@ -413,7 +384,10 @@ export class CommentSectionComponent implements OnInit, OnChanges {
 
   isCommentEdited(comment: Comment): boolean {
     if (!comment.updatedAt || !comment.createdAt) return false;
-    return comment.updatedAt !== comment.createdAt;
+    const diff = Math.abs(new Date(comment.updatedAt).getTime() - new Date(comment.createdAt).getTime());
+    // Xem như đã chỉnh sửa nếu thời gian chênh lệch lớn hơn 1 giây (1000ms)
+    // để tránh lỗi nanosecond khác biệt khi Java gọi LocalDateTime.now() 2 lần.
+    return diff > 1000;
   }
 
   canDelete(comment: Comment): boolean {

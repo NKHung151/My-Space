@@ -23,19 +23,11 @@ export class CommentService {
       })));
   }
 
-  // Lấy danh sách các câu trả lời (replies) của một bình luận
-  getReplies(commentId: string): Observable<Comment[]> {
-    return this.http
-      .get<ApiResponse<Comment[]>>(`${environment.apiUrl}/comments/${commentId}/replies`)
-      .pipe(map(res => res.data || []));
-  }
 
-  // Tạo bình luận mới (hoặc reply nếu truyền replyToCommentId/parentId)
-  createComment(postId: string, content: string, parentId?: string | number, replyToCommentId?: string | number): Observable<Comment> {
+
+  // Tạo bình luận mới (hoặc reply nếu truyền replyToCommentId)
+  createComment(postId: string, content: string, replyToCommentId?: string | number): Observable<Comment> {
     const payload: Record<string, any> = { content };
-    if (parentId != null) {
-      payload['parentId'] = Number(parentId);
-    }
     if (replyToCommentId != null) {
       payload['replyToCommentId'] = Number(replyToCommentId);
     }

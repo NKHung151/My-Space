@@ -8,9 +8,8 @@ import com.myspace.myspace.dto.response.CommentResponse;
 import java.util.List;
 
 public interface CommentService {
-    PageResponse<CommentResponse> getCommentsByPost(Long postId, int page, int limit, Long currentUserId, String currentUserRole);
-    List<CommentResponse> getReplies(Long commentId, Long currentUserId, String currentUserRole);
-    CommentResponse createComment(Long postId, Long authorId, CreateCommentRequest request, String currentUserRole);
-    CommentResponse updateComment(Long commentId, Long authorId, UpdateCommentRequest request, String currentUserRole);
-    void deleteComment(Long commentId, Long userId, String userRole);
+    PageResponse<CommentResponse> getCommentsByPost(Long postId, int page, int limit, Long currentUserId);
+    CommentResponse createComment(Long postId, Long authorId, CreateCommentRequest request);
+    CommentResponse updateComment(Long commentId, Long authorId, UpdateCommentRequest request);
+    void deleteComment(Long commentId, Long userId);
 }
