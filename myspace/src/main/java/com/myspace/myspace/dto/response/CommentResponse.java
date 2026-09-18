@@ -16,7 +16,7 @@ public class CommentResponse {
     private Long parentId;
     private Long replyToCommentId;
     private Long replyToUserId;
-    private String replyToUsername;
+    private String replyToDisplayName;
 
     private String content;
     private LocalDateTime createdAt;

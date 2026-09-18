@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, inject, signal, HostListener, DestroyRef } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, inject, signal, HostListener, DestroyRef, Output, EventEmitter } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -27,6 +27,8 @@ import { AutosizeDirective } from '../../../../shared/directives/autosize.direct
 export class CommentSectionComponent implements OnInit, OnChanges {
   @Input({ required: true }) postId!: string;
   @Input({ required: true }) postAuthorId!: string;
+
+  @Output() commentCountChange = new EventEmitter<number>();
 
   private commentService = inject(CommentService);
   private likeService = inject(LikeService);
@@ -187,6 +189,7 @@ export class CommentSectionComponent implements OnInit, OnChanges {
         // Đẩy comment mới lên đầu mảng
         this.comments.update(prev => [newComment, ...prev]);
         this.totalComments.update(t => t + 1);
+        this.commentCountChange.emit(1);
       },
       error: () => {
         this.isSubmitting.set(false);
@@ -228,6 +231,7 @@ export class CommentSectionComponent implements OnInit, OnChanges {
           return arr;
         });
         this.totalComments.update(t => t + 1);
+        this.commentCountChange.emit(1);
       },
       error: () => {
         this.isSubmitting.set(false);
@@ -290,30 +294,6 @@ export class CommentSectionComponent implements OnInit, OnChanges {
     document.body.classList.remove('modal-open');
   }
 
-  /**
-   * ═══════════════════════════════════════════════════════════════════════════
-   * HÀNH ĐỘNG: USER XÁC NHẬN "XÓA" BÌNH LUẬN (confirmDelete)
-   * ═══════════════════════════════════════════════════════════════════════════
-   * Điều gì xảy ra khi user bấm nút đỏ "Xóa" trên Modal?
-   * 
-   * 1. GỌI API: Gửi DELETE request lên BE (`/comments/:id`).
-   * 2. XỬ LÝ BE (như đã nói ở CommentsService):
-   *    - DB xóa comment (nếu là comment cha thì DB tự xóa luôn các reply con nhờ CASCADE).
-   *    - BE trừ `comment_count` của post.
-   * 3. XỬ LÝ FE (Sau khi API báo thành công):
-   *    - Tắt Modal (`cancelDelete`).
-   *    - Hiện thông báo Toast xanh "Đã xóa bình luận".
-   *    - CẬP NHẬT GIAO DIỆN KHÔNG CẦN TẢI LẠI TRANG (Mutate Array):
-   *      + TRƯỜNG HỢP XÓA COMMENT CON (REPLY): 
-   *        -> Tìm thằng Root Comment (parent) của nó.
-   *        -> Lọc (filter) bỏ comment bị xóa ra khỏi mảng `replies` của thằng Root.
-   *      + TRƯỜNG HỢP XÓA COMMENT CHA (ROOT):
-   *        -> Lọc (filter) bỏ comment đó ra khỏi mảng `comments` gốc ngoài cùng.
-   *        -> Kéo theo việc toàn bộ mảng `replies` con của nó biến mất khỏi UI.
-   *    - Giảm tổng số `totalComments` trên giao diện đi 1 (Lưu ý: FE cũng bị chung 
-   *      tình trạng với BE là chỉ trừ 1, mặc dù nếu xoá cha thì mất thêm cả chục cái con).
-   * ═══════════════════════════════════════════════════════════════════════════
-   */
   confirmDelete(): void {
     const target = this.commentToDelete();
     if (!target) return;
@@ -349,6 +329,7 @@ export class CommentSectionComponent implements OnInit, OnChanges {
         return arr.filter(c => c.id !== comment.id);
       });
       this.totalComments.update(t => t - deletedCount);
+      this.commentCountChange.emit(-deletedCount);
     });
   }
 

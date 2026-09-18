@@ -134,9 +134,9 @@
                       </div>
                     } @else {
                       <div [class.comment-clamped]="!isExpanded(reply.id) && reply.content.length > 300" style="word-break: break-word;">
-                        @if (reply.replyToUsername) {
+                        @if (reply.replyToDisplayName && reply.author.id != reply.replyToUserId) {
                           <i class="bi bi-caret-right-fill text-muted mx-1" style="font-size: 0.75rem"></i>
-                          <span class="text-primary fw-semibold me-1">{{ reply.replyToUsername }}</span>
+                          <span class="text-primary fw-semibold me-1">{{ reply.replyToDisplayName }}</span>
                         }
                         <span style="white-space: pre-wrap;">{{ reply.content }}</span>
                       </div>

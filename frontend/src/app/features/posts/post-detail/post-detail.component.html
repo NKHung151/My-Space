@@ -28,7 +28,7 @@
     </app-post-card>
 
     @if (!authorPreview()) {
-      <app-comment-section [postId]="'' + p.id" [postAuthorId]="'' + p.author.id"></app-comment-section>
+      <app-comment-section [postId]="'' + p.id" [postAuthorId]="'' + p.author.id" (commentCountChange)="onCommentCountChange($event)"></app-comment-section>
     }
   </div>
 }

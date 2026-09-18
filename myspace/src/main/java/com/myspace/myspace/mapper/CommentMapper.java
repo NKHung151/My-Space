@@ -20,10 +20,10 @@ public final class CommentMapper {
                 .build();
 
         Long replyToUserId = null;
-        String replyToUsername = null;
+        String replyToDisplayName = null;
         if (comment.getReplyToComment() != null) {
             replyToUserId = comment.getReplyToComment().getAuthor().getId();
-            replyToUsername = comment.getReplyToComment().getAuthor().getUsername();
+            replyToDisplayName = comment.getReplyToComment().getAuthor().getDisplayName();
         }
 
         // Logic phân quyền (Permissions logic): 
@@ -47,7 +47,7 @@ public final class CommentMapper {
                 .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
                 .replyToCommentId(comment.getReplyToComment() != null ? comment.getReplyToComment().getId() : null)
                 .replyToUserId(replyToUserId)
-                .replyToUsername(replyToUsername)
+                .replyToDisplayName(replyToDisplayName)
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())

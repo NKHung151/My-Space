@@ -440,5 +440,11 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
     );
   }
 
+  onCommentCountChange(delta: number): void {
+    this.post.update(p => {
+      if (!p) return p;
+      return { ...p, commentCount: Math.max(0, p.commentCount + delta) };
+    });
+  }
 
 }

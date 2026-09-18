@@ -8,7 +8,7 @@ export interface Comment {
   replyToCommentId: string | null;
   
   replyToUserId: string | null;
-  replyToUsername: string | null;
+  replyToDisplayName: string | null;
   
   content: string;
   createdAt: string;
