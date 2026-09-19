@@ -39,7 +39,7 @@ public class PublicPostServiceImpl implements PublicPostService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> getPublicPosts(String q, String tag, Boolean hasVideo, Long authorId, int page, int limit) {
-        Pageable pageable = PageRequest.of(Math.max(page - 1, 0), limit, Sort.by(Sort.Direction.DESC, "viewCount", "createdAt"));
+        Pageable pageable = PageRequest.of(Math.max(page - 1, 0), limit, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         if (q != null && !q.isBlank()) {
             // Tìm kiếm qua Elasticsearch

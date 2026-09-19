@@ -56,11 +56,10 @@
           <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill" style="font-size: 0.85rem;">#{{ tagLabel() }}</span>
         </div>
       }
-      <div class="post-excerpt mb-2" style="font-size: 0.95rem; line-height: 1.5; white-space: pre-line;">
-
-        {{ excerpt() }}
-        <span class="fw-bold cursor-pointer ms-1" style="color: var(--text-muted); font-size: 0.9em;">... Xem thêm</span>
-      </div>
+      @if (safeExcerpt()) {
+        <div class="post-excerpt mb-2 text-main" style="font-size: 0.95rem; line-height: 1.5;" [innerHTML]="safeExcerpt()">
+        </div>
+      }
 
       @if (post.hasVideo && post.coverImageUrl) {
         <div class="post-media mt-2 w-100 position-relative rounded overflow-hidden" style="background: #000; display: flex; justify-content: center; min-height: 250px;">

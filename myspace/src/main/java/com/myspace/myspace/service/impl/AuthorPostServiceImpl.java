@@ -88,12 +88,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         Post post = postRepository.findByIdAndAuthorId(postId, authorId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         PostDetailResponse response = PostMapper.toDetailResponse(post);
-        Long currentUserId = getCurrentUserId();
-        if (currentUserId != null) {
-            response.setLiked(postLikeRepository.existsByPostIdAndUserId(postId, currentUserId));
-        } else {
-            response.setLiked(false);
-        }
+        response.setLiked(postLikeRepository.existsByPostIdAndUserId(postId, authorId));
         return response;
     }
 
@@ -144,21 +139,14 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     public void deletePost(Long authorId, Long postId) {
         Post post = postRepository.findByIdAndAuthorId(postId, authorId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
-                
-        // Extract and delete Cloudinary media
+
+        // Xóa tất cả media Cloudinary liên quan
+        Set<String> urls = extractCloudinaryUrls(post.getContent());
         if (post.getCoverImageUrl() != null && post.getCoverImageUrl().contains("res.cloudinary.com")) {
-            uploadService.deleteEditorMedia(post.getCoverImageUrl(), authorId);
+            urls.add(post.getCoverImageUrl());
         }
-        
-        if (post.getContent() != null) {
-            Pattern pattern = Pattern.compile("https?://res\\.cloudinary\\.com/[^\"'\\s]+");
-            Matcher matcher = pattern.matcher(post.getContent());
-            while (matcher.find()) {
-                String mediaUrl = matcher.group();
-                uploadService.deleteEditorMedia(mediaUrl, authorId);
-            }
-        }
-        
+        urls.forEach(url -> uploadService.deleteEditorMedia(url, authorId));
+
         postRepository.delete(post);
         searchIndexService.removePost(postId);
     }

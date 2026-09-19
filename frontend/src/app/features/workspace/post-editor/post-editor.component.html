@@ -7,7 +7,7 @@
           <i class="bi bi-x-lg"></i>
         </a>
         <h5 class="m-0 fw-bold">Tạo bài viết</h5>
-        <button class="btn btn-accent rounded-pill px-4 fw-bold" [disabled]="isSaving || (!textContent.trim() && mediaAttachments.length === 0)" (click)="saveAndSubmit()">
+        <button class="btn btn-accent rounded-pill px-4 fw-bold" [disabled]="isSaving || isEmpty" (click)="saveAndSubmit()">
           {{ saveStateLabel }}
         </button>
       </header>
@@ -28,24 +28,13 @@
                placeholder="Chủ đề (ví dụ: tech)" [ngModel]="draft.tag" (ngModelChange)="updateTag($event)" maxlength="30">
       </div>
 
-      <!-- Content Textarea -->
-      <textarea #postTextarea class="form-control border-0 shadow-none px-0 mb-3 fs-5" rows="3" 
-                placeholder="Bạn đang nghĩ gì?" [(ngModel)]="textContent" (input)="onTextContentChange()" style="resize: none; line-height: 1.5;"></textarea>
-
-      <!-- Media Preview Area -->
-      <div class="media-preview-container d-flex flex-column gap-2 mb-3">
-        @for (media of mediaAttachments; track media.url; let i = $index) {
-          <div class="position-relative">
-            <button class="btn btn-dark btn-sm rounded-circle position-absolute top-0 end-0 m-2 z-1 shadow" (click)="removeMedia(i)" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-              <i class="bi bi-x fs-5"></i>
-            </button>
-            @if (media.type === 'image') {
-              <img [src]="media.url" class="img-fluid rounded-3 border w-100 object-fit-cover" style="max-height: 400px;">
-            } @else {
-              <video [src]="media.url" class="w-100 rounded-3 border" style="max-height: 400px; background: #000;" controls></video>
-            }
-          </div>
-        }
+      <!-- Content Editor -->
+      <div #postEditor class="editor-content form-control border-0 shadow-none px-0 mb-3 fs-5" 
+           contenteditable="true" 
+           data-placeholder="Bạn đang nghĩ gì?" 
+           (input)="onContentChange()" 
+           (paste)="onPaste($event)" 
+           style="min-height: 100px; outline: none; line-height: 1.5; white-space: pre-wrap;">
       </div>
 
       <!-- Media Upload Controls -->
@@ -53,8 +42,8 @@
         <span class="fw-bold text-muted fs-6">Thêm vào bài viết</span>
         <div class="d-flex gap-1">
           <!-- Hidden file inputs -->
-          <input type="file" #imageInput hidden accept="image/*" (change)="uploadMedia('image', $event)">
-          <input type="file" #videoInput hidden accept="video/*" (change)="uploadMedia('video', $event)">
+          <input type="file" #imageInput hidden accept="image/*" (change)="onFileSelected('image', $event)">
+          <input type="file" #videoInput hidden accept="video/*" (change)="onFileSelected('video', $event)">
           
           <button class="btn btn-light rounded-circle text-success d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;" title="Thêm ảnh" (click)="imageInput.click()">
             <i class="bi bi-images fs-4"></i>

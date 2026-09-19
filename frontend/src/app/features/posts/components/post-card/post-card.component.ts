@@ -105,9 +105,14 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
     return this._post().tag || '';
   });
   
-  // Lấy đoạn trích (excerpt) đã được Backend tạo sẵn
-  readonly excerpt = computed(() => {
-    return this._post().excerpt || '';
+  /** Excerpt HTML an toàn: chứa <!--TRUNCATED--> thì gắn nút Xem thêm. */
+  readonly safeExcerpt = computed(() => {
+    const raw = this._post().excerpt || '';
+    if (!raw) return null;
+    const html = raw.includes('<!--TRUNCATED-->')
+      ? raw.replace('<!--TRUNCATED-->', '') + ' <span class="fw-bold cursor-pointer ms-1" style="color: var(--text-muted); font-size: 0.9em;">... Xem thêm</span>'
+      : raw;
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
   isYoutubeEmbed(url: string | null): boolean {
