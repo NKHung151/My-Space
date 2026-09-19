@@ -12,14 +12,8 @@ import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe'
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
 
 import { LocalizedDatePipe } from '../../../../shared/pipes/localized-date.pipe';
+import { FeedPostsService } from '../../services/feed-posts.service';
 
-/**
- * PostCardComponent - Component tái sử dụng hiển thị thẻ bài viết tóm tắt
- * 
- * Component này nhận đầu vào là một object Post và render ra giao diện thẻ (card).
- * Bao gồm ảnh bìa, tiêu đề, tác giả, đoạn trích ngắn (excerpt),
- * cùng các thống kê cơ bản như lượt thích, lượt xem, lượt bình luận.
- */
 @Component({
   selector: 'app-post-card',
   standalone: true,
@@ -33,23 +27,12 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly authModalService = inject(AuthModalService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly postService = inject(FeedPostsService);
+  private readonly elementRef = inject(ElementRef);
 
   // Signal chứa dữ liệu bài viết hiện tại của card
   private _post = signal<Post>({} as Post);
   
-  /** 
-   * @Input post: Nhận dữ liệu bài viết từ component cha (Feed, Trang cá nhân, Bảng tin bạn bè...).
-   * Thông qua setter để cập nhật signal `_post`.
-   * 
-   * Giải thích từng field trong object `post` được hiển thị ở đâu trong UI và lấy từ DB như thế nào:
-   * - `post.title`: Tiêu đề bài viết.
-   * - `post.coverImageUrl`: Ảnh bìa của bài viết (được BE parse tự động từ nội dung HTML của `post_translations.content` để trích xuất thẻ <img> đầu tiên).
-   * - `post.viewCount`: Số lượt xem, map trực tiếp từ cột `posts.view_count` trong cơ sở dữ liệu.
-   * - `post.likeCount`: Số lượt thích, map trực tiếp từ cột `posts.like_count`.
-   * - `post.commentCount`: Số lượng bình luận, map trực tiếp từ cột `posts.comment_count`.
-   * - `post.author.name`: Tên tác giả hiển thị. Lấy từ bảng `users`, cụ thể là lấy `users.display_name` nếu có, nếu không sẽ fallback về `users.username`.
-   * - `post.author.avatarUrl`: Ảnh đại diện của tác giả. Map từ cột `users.avatar` trong DB.
-   */
   @Input({ required: true })
   set post(value: Post) {
     this._post.set(value);
@@ -68,9 +51,14 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
   @ViewChild('videoEl') videoElRef?: ElementRef<HTMLVideoElement>;
 
   private videoObserver?: IntersectionObserver;
+  private viewObserver?: IntersectionObserver;
+  private viewTracked = false;
 
   // Sử dụng IntersectionObserver để tự động phát video thu nhỏ khi lướt tới
+  // và tính lượt xem (view count) khi người dùng thấy bài viết trên feed
   ngAfterViewInit(): void {
+    this.setupViewTracking();
+    
     const videoEl = this.videoElRef?.nativeElement;
     if (!videoEl) return;
 
@@ -86,9 +74,30 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
     );
     this.videoObserver.observe(videoEl);
   }
+  
+  private setupViewTracking(): void {
+    if (this.isDetailMode || this.viewTracked || typeof IntersectionObserver === 'undefined') return;
+    
+    this.viewObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !this.viewTracked) {
+          this.viewTracked = true;
+          this.viewObserver?.disconnect();
+          
+          this.postService.trackView(this.post.id).subscribe({
+            next: () => {},
+            error: () => {}
+          });
+        }
+      },
+      { threshold: 0.5 } // Kích hoạt khi thấy 50% card
+    );
+    this.viewObserver.observe(this.elementRef.nativeElement);
+  }
 
   ngOnDestroy(): void {
     this.videoObserver?.disconnect(); // Dọn dẹp listener
+    this.viewObserver?.disconnect();
   }
 
   // Dịch tên danh mục bài viết
@@ -111,14 +120,6 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
-
-  /**
-   * Xử lý hành động Like bài viết tại thẻ card
-   * 
-   * Áp dụng Optimistic Update giống PostDetailComponent.
-   * Thay đổi trạng thái thích (liked) và số lượt (likeCount) ngay lập tức trên frontend
-   * để tạo cảm giác phản hồi nhanh, sau đó gọi API. Nếu lỗi thì tự rollback.
-   */
   toggleLike(event: Event) {
     event.preventDefault();   // Ngăn thẻ link điều hướng
     event.stopPropagation();  // Ngăn chặn sự kiện nổi bọt lên các thẻ cha
