@@ -21,4 +21,8 @@ export class ChatService {
       params: { page, size }
     });
   }
+
+  getUnreadCounts(): Observable<ApiResponse<Record<number, number>>> {
+    return this.http.get<ApiResponse<Record<number, number>>>(`${this.apiUrl}/unread-counts`);
+  }
 }

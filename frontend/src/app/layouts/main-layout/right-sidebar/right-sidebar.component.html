@@ -65,9 +65,14 @@
                   <div class="online-indicator"></div>
                 }
               </div>
-              <span class="text-dark fw-medium text-truncate" style="font-size: 0.9rem;">
+              <span class="text-dark fw-medium text-truncate flex-grow-1" style="font-size: 0.9rem;">
                 {{ personDisplayName(person) }}
               </span>
+              @if (chatManager.unreadCounts()[person.id]) {
+                <span class="badge bg-danger rounded-pill" style="font-size: 0.7rem; padding: 0.35em 0.5em;">
+                  {{ chatManager.unreadCounts()[person.id] > 9 ? '9+' : chatManager.unreadCounts()[person.id] }}
+                </span>
+              }
             </div>
           }
         </div>

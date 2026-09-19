@@ -4,6 +4,7 @@ import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.dto.request.MessageRequest;
 import com.myspace.myspace.dto.request.MessageActionRequest;
+import com.myspace.myspace.dto.request.MarkReadRequest;
 import com.myspace.myspace.dto.response.MessageResponse;
 import com.myspace.myspace.dto.response.MessageBroadcastResult;
 import com.myspace.myspace.entity.User;
@@ -46,6 +47,23 @@ public class ChatController {
             @RequestParam(defaultValue = "20") int size) {
         PageResponse<MessageResponse> messages = messageService.getConversationMessages(conversationId, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(messages));
+    }
+
+    @GetMapping("/unread-counts")
+    public ResponseEntity<ApiResponse<java.util.Map<Long, Long>>> getUnreadCounts(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(messageService.getUnreadCounts(userDetails.getUser().getId())));
+    }
+
+    @MessageMapping("/chat.markRead")
+    public void markAsRead(@Payload MarkReadRequest request, SimpMessageHeaderAccessor headerAccessor) {
+        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) headerAccessor.getUser();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        Long receiverId = userDetails.getUser().getId();
+        
+        messageService.markAsRead(request.getTargetUserId(), receiverId);
+        
+        // Broadcast the update back to the user's sessions to sync unread counts
+        messagingTemplate.convertAndSendToUser(userDetails.getUsername(), "/queue/unread.sync", request);
     }
 
     @MessageMapping("/chat.sendMessage")

@@ -17,4 +17,5 @@ public class MessageResponse {
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
     private boolean isEdited;
+    private Boolean isRead;
 }

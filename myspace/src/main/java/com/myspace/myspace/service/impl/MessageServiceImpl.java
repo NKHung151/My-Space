@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -156,6 +157,24 @@ public class MessageServiceImpl implements MessageService {
                 .updatedAt(message.getUpdatedAt())
                 .deletedAt(message.getDeletedAt())
                 .isEdited(message.getUpdatedAt() != null)
+                .isRead(message.getIsRead())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Map<Long, Long> getUnreadCounts(Long userId) {
+        List<Object[]> results = messageRepository.countUnreadMessagesGroupedBySender(userId);
+        java.util.Map<Long, Long> unreadCounts = new java.util.HashMap<>();
+        for (Object[] result : results) {
+            unreadCounts.put((Long) result[0], (Long) result[1]);
+        }
+        return unreadCounts;
+    }
+
+    @Override
+    @Transactional
+    public void markAsRead(Long senderId, Long receiverId) {
+        messageRepository.markMessagesAsRead(receiverId, senderId);
     }
 }

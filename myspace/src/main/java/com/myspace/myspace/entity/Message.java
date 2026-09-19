@@ -46,6 +46,9 @@ public class Message {
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "is_read", nullable = false)
+    private Boolean isRead = false;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 

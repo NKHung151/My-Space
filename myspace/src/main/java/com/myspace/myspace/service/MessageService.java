@@ -13,4 +13,6 @@ public interface MessageService {
     MessageBroadcastResult editMessage(Long messageId, Long senderId, String newContent);
     MessageBroadcastResult deleteMessage(Long messageId, Long senderId);
     MessageBroadcastResult saveCallSystemMessage(Long callId);
+    java.util.Map<Long, Long> getUnreadCounts(Long userId);
+    void markAsRead(Long senderId, Long receiverId);
 }

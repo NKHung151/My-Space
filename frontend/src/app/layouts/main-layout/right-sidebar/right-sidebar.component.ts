@@ -107,6 +107,8 @@ export class RightSidebarComponent implements OnDestroy {
       },
       error: () => {}
     });
+    
+    this.chatManager.loadUnreadCounts();
 
     this.friendsService.getRequests().subscribe({
       next: (requests) => {
