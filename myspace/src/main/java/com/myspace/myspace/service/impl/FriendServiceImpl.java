@@ -16,6 +16,7 @@ import com.myspace.myspace.repository.PostRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.FriendService;
 import com.myspace.myspace.service.ViewCountService;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +38,7 @@ public class FriendServiceImpl implements FriendService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
     private final ViewCountService viewCountService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
@@ -63,6 +65,19 @@ public class FriendServiceImpl implements FriendService {
         request.setReceiver(receiver);
         request.setStatus("pending");
         friendRequestRepository.save(request);
+
+        // Push real-time notification to the receiver
+        FriendRequestResponse response = FriendRequestResponse.builder()
+                .id(request.getId())
+                .status(request.getStatus())
+                .createdAt(request.getCreatedAt())
+                .sender(PostMapper.toPublicUser(sender))
+                .build();
+        messagingTemplate.convertAndSendToUser(
+                targetUserId.toString(),
+                "/queue/friend-requests",
+                response
+        );
     }
 
     @Override
