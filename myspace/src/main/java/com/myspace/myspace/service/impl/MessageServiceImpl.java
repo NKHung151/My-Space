@@ -132,7 +132,8 @@ public class MessageServiceImpl implements MessageService {
         message.setType(Message.MessageType.CALL);
         message.setCall(call);
 
-        String content = call.getStatus().name() + "|" + call.getEndReason().name();
+        String prefix = Boolean.TRUE.equals(call.getIsVideo()) ? "VIDEO|" : "AUDIO|";
+        String content = prefix + call.getStatus().name() + "|" + call.getEndReason().name();
         if (call.getDurationSeconds() != null) {
             content += "|" + call.getDurationSeconds();
         }

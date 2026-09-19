@@ -1,17 +1,30 @@
 @if (activeCall()) {
-  <!-- Thẻ Audio để phát âm thanh từ Remote Stream (ẩn) -->
-  <audio #remoteAudio autoplay [srcObject]="webrtcService.remoteStream()"></audio>
-
   <div class="call-modal-overlay d-flex align-items-center justify-content-center">
-    <div class="call-modal-content bg-dark text-white rounded-4 p-4 shadow-lg d-flex flex-column align-items-center position-relative" style="width: 320px; min-height: 400px;">
+    <div class="call-modal-content bg-dark text-white shadow-lg position-relative d-flex flex-column" 
+         [class.video-mode]="activeCall()?.isVideo && activeCall()?.status === 'ACCEPTED'"
+         [class.audio-mode]="!activeCall()?.isVideo || activeCall()?.status !== 'ACCEPTED'">
       
-      <!-- Tiêu đề trạng thái -->
-      <div class="text-center mt-3 mb-4">
-        <h5 class="fw-bold mb-1">{{ getDisplayName() }}</h5>
+      <!-- Lớp hiển thị luồng Video khi đã kết nối -->
+      @if (activeCall()?.isVideo && activeCall()?.status === 'ACCEPTED') {
+        <video #remoteVideo class="remote-video w-100 h-100 object-fit-cover position-absolute top-0 start-0" 
+               autoplay playsinline [srcObject]="webrtcService.remoteStream()"></video>
+               
+        <video #localVideo class="local-video position-absolute object-fit-cover shadow-sm rounded-3 border border-secondary" 
+               autoplay playsinline muted [srcObject]="webrtcService.localStream()"></video>
+      }
+
+      <!-- Thẻ Audio cho cuộc gọi thoại hoặc nhạc chuông -->
+      @if (!activeCall()?.isVideo) {
+        <audio #remoteAudio autoplay [srcObject]="webrtcService.remoteStream()"></audio>
+      }
+
+      <!-- Phần Overlay/Tiêu đề chung -->
+      <div class="call-header text-center mt-4 w-100 position-relative z-1" [class.video-overlay]="activeCall()?.isVideo && activeCall()?.status === 'ACCEPTED'">
+        <h5 class="fw-bold mb-1 shadow-text">{{ getDisplayName() }}</h5>
         
-        <p class="text-light opacity-75 mb-0" style="font-size: 0.9rem;">
+        <p class="text-light opacity-75 mb-0 shadow-text" style="font-size: 0.9rem;">
           @if (activeCall()?.status === 'RINGING') {
-            @if (activeCall()?.isIncoming) { Cuộc gọi đến... } @else { Đang đổ chuông... }
+            @if (activeCall()?.isIncoming) { Cuộc gọi {{ activeCall()?.isVideo ? 'video' : 'thoại' }} đến... } @else { Đang đổ chuông... }
           } @else if (activeCall()?.status === 'ACCEPTED') {
             {{ duration }}
           } @else {
@@ -20,18 +33,22 @@
         </p>
       </div>
 
-      <!-- Avatar rung -->
-      <div class="avatar-container position-relative mb-5" [class.ringing]="activeCall()?.status === 'RINGING'">
-        <img [appAssetImage]="getAvatarUrl()" class="rounded-circle object-fit-cover shadow-sm" width="120" height="120" alt="Avatar">
-        <!-- Vòng sóng âm thanh xung quanh avatar khi chuông -->
-        @if (activeCall()?.status === 'RINGING') {
-          <div class="ripple"></div>
-          <div class="ripple delay-1"></div>
-        }
-      </div>
+      <!-- Phần Avatar rung (Chỉ hiển thị khi đổ chuông hoặc gọi thoại) -->
+      @if (activeCall()?.status !== 'ACCEPTED' || !activeCall()?.isVideo) {
+        <div class="avatar-container position-relative my-auto mx-auto z-1" [class.ringing]="activeCall()?.status === 'RINGING'">
+          <img [appAssetImage]="getAvatarUrl()" class="rounded-circle object-fit-cover shadow-sm" width="120" height="120" alt="Avatar">
+          @if (activeCall()?.status === 'RINGING') {
+            <div class="ripple"></div>
+            <div class="ripple delay-1"></div>
+          }
+        </div>
+      } @else {
+        <!-- Spacer để đẩy phần điều khiển xuống dưới khi video fullscreen -->
+        <div class="flex-grow-1"></div>
+      }
 
       <!-- Các nút điều khiển -->
-      <div class="d-flex align-items-center gap-4 mt-auto mb-2 w-100 justify-content-center">
+      <div class="call-controls d-flex align-items-center gap-4 mb-4 w-100 justify-content-center z-1" [class.video-overlay]="activeCall()?.isVideo && activeCall()?.status === 'ACCEPTED'">
         
         @if (activeCall()?.status === 'RINGING') {
           @if (activeCall()?.isIncoming) {
@@ -40,7 +57,11 @@
               <i class="bi bi-telephone-x-fill fs-4"></i>
             </button>
             <button class="btn btn-action bg-success text-white rounded-circle shadow" (click)="acceptCall()" style="animation: bounceRinging 1s infinite;">
-              <i class="bi bi-telephone-fill fs-4"></i>
+              @if (activeCall()?.isVideo) {
+                <i class="bi bi-camera-video-fill fs-4"></i>
+              } @else {
+                <i class="bi bi-telephone-fill fs-4"></i>
+              }
             </button>
           } @else {
             <!-- Hủy gọi -->
@@ -49,10 +70,16 @@
             </button>
           }
         } @else if (activeCall()?.status === 'ACCEPTED') {
-          <!-- Mute / End Call -->
+          <!-- Mute / Camera / End Call -->
           <button class="btn btn-action rounded-circle shadow" [class.bg-light]="!isMuted()" [class.text-dark]="!isMuted()" [class.bg-secondary]="isMuted()" [class.text-white]="isMuted()" (click)="toggleMute()">
             <i class="bi" [class.bi-mic-fill]="!isMuted()" [class.bi-mic-mute-fill]="isMuted()" class="fs-4"></i>
           </button>
+          
+          @if (activeCall()?.isVideo) {
+            <button class="btn btn-action rounded-circle shadow" [class.bg-light]="!isCameraOff()" [class.text-dark]="!isCameraOff()" [class.bg-secondary]="isCameraOff()" [class.text-white]="isCameraOff()" (click)="toggleCamera()">
+              <i class="bi" [class.bi-camera-video-fill]="!isCameraOff()" [class.bi-camera-video-off-fill]="isCameraOff()" class="fs-4"></i>
+            </button>
+          }
           
           <button class="btn btn-action bg-danger text-white rounded-circle shadow" (click)="endCall()">
             <i class="bi bi-telephone-x-fill fs-4"></i>

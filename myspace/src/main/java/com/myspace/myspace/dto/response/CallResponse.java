@@ -13,5 +13,6 @@ public class CallResponse {
     private Long calleeId;
     private String status; // RINGING, ACCEPTED, ENDED...
     private String type; // Action type like "incoming", "accepted", "rejected", "ended", "missed"
+    private Boolean isVideo;
     private LocalDateTime createdAt;
 }

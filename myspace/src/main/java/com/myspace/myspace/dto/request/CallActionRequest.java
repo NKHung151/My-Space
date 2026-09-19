@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class CallActionRequest {
     private Long callId;       // Dùng cho accept, reject, end
     private Long receiverId;   // Dùng cho initiate (khi chưa có callId)
+    private Boolean isVideo;   // Xác định gọi video hay gọi thoại
 }

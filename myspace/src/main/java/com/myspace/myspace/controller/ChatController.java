@@ -7,7 +7,6 @@ import com.myspace.myspace.dto.request.MessageActionRequest;
 import com.myspace.myspace.dto.request.MarkReadRequest;
 import com.myspace.myspace.dto.response.MessageResponse;
 import com.myspace.myspace.dto.response.MessageBroadcastResult;
-import com.myspace.myspace.entity.User;
 import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.service.MessageService;
 import lombok.RequiredArgsConstructor;

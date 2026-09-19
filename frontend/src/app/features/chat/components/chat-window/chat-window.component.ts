@@ -161,8 +161,9 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
     this.router.navigate(['/profile', id]);
   }
 
-  startCall() {
-    this.webrtcService.initiateCall(this.targetUser.id);
+  startCall(isVideo: boolean = false) {
+    if (!this.targetUser || !this.targetUser.id) return;
+    this.webrtcService.initiateCall(this.targetUser.id, isVideo);
   }
 
   getCallDuration(secondsStr: string): string {

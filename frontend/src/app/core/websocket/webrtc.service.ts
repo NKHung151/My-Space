@@ -1,5 +1,6 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, effect } from '@angular/core';
 import { WebSocketService } from './websocket.service';
+import { AuthService } from '../auth/auth.service';
 
 export interface CallResponse {
   id: number;
@@ -7,6 +8,7 @@ export interface CallResponse {
   calleeId: number;
   status: string;
   type: string;
+  isVideo?: boolean;
   createdAt: string;
 }
 
@@ -23,6 +25,7 @@ export interface ActiveCallState {
   isIncoming: boolean;
   status: 'RINGING' | 'ACCEPTED' | 'ENDED' | 'REJECTED' | 'CANCELLED';
   partnerId: number;
+  isVideo?: boolean;
   partnerInfo?: any; // Dùng để hiển thị thông tin UI (nếu cần)
   startTime?: Date;
 }
@@ -32,6 +35,7 @@ export interface ActiveCallState {
 })
 export class WebRTCService {
   private webSocketService = inject(WebSocketService);
+  private authService = inject(AuthService);
   
   public activeCall = signal<ActiveCallState | null>(null);
   
@@ -47,6 +51,16 @@ export class WebRTCService {
   };
 
   constructor() {
+    effect(() => {
+      if (!this.authService.currentUser()) {
+        if (this.activeCall()) {
+          this.endCall();
+        }
+        this.activeCall.set(null);
+        this.cleanupCall();
+      }
+    }, { allowSignalWrites: true });
+
     this.listenForCalls();
     this.listenForSignals();
   }
@@ -63,7 +77,8 @@ export class WebRTCService {
               callId: call.id,
               isIncoming: true,
               status: 'RINGING',
-              partnerId: call.callerId
+              partnerId: call.callerId,
+              isVideo: call.isVideo
             });
             this.playRingtone();
           }
@@ -75,12 +90,12 @@ export class WebRTCService {
           }
           break;
         case 'accepted':
-          if (state && state.callId === call.id) {
-            this.activeCall.update(s => s ? { ...s, status: 'ACCEPTED', startTime: new Date() } : null);
+          if (state && (state.callId === call.id || state.callId === 0)) {
+            this.activeCall.update(s => s ? { ...s, callId: call.id, status: 'ACCEPTED', startTime: new Date() } : null);
             this.stopRingtone();
             if (!state.isIncoming) {
               // Người gọi nhận được "accepted" => Bắt đầu luồng WebRTC Offer
-              this.startPeerConnection(true);
+              this.startPeerConnection(true, state.isVideo);
             }
           }
           break;
@@ -88,7 +103,7 @@ export class WebRTCService {
         case 'cancelled':
         case 'ended':
         case 'missed':
-          if (state && state.callId === call.id) {
+          if (state && (state.callId === call.id || state.callId === 0)) {
             this.activeCall.set(null);
             this.cleanupCall();
           }
@@ -103,7 +118,7 @@ export class WebRTCService {
       if (!state || state.callId !== signal.callId) return;
 
       if (!this.peerConnection) {
-        await this.startPeerConnection(false); // Tạo connection nếu chưa có
+        await this.startPeerConnection(false, state.isVideo); // Tạo connection nếu chưa có
       }
 
       if (signal.type === 'offer' && signal.sdp) {
@@ -131,22 +146,24 @@ export class WebRTCService {
     });
   }
 
-  public initiateCall(targetId: number) {
+  public initiateCall(calleeId: number, isVideo: boolean = false) {
     if (this.activeCall()) return; // Đang có cuộc gọi khác
-    this.webSocketService.sendMessage('/app/call.initiate', { receiverId: targetId });
+    this.webSocketService.sendMessage('/app/call.initiate', { receiverId: calleeId, isVideo });
     this.activeCall.set({
       callId: 0, // Sẽ được cập nhật khi nhận về từ server
       isIncoming: false,
       status: 'RINGING',
-      partnerId: targetId
+      partnerId: calleeId,
+      isVideo: isVideo
     });
     this.playRingtone();
   }
 
   public acceptCall() {
     const state = this.activeCall();
-    if (!state || !state.isIncoming) return;
+    if (!state) return;
     
+    this.startPeerConnection(false, state.isVideo);
     this.stopRingtone();
     this.webSocketService.sendMessage('/app/call.accept', { callId: state.callId });
     this.activeCall.update(s => s ? { ...s, status: 'ACCEPTED', startTime: new Date() } : null);
@@ -177,11 +194,32 @@ export class WebRTCService {
     this.cleanupCall();
   }
 
+  public toggleCamera() {
+    const stream = this.localStream();
+    if (stream) {
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        return videoTrack.enabled;
+      }
+    }
+    return false;
+  }
+
+  public isCameraOff(): boolean {
+    const stream = this.localStream();
+    if (stream) {
+      const videoTrack = stream.getVideoTracks()[0];
+      return videoTrack ? !videoTrack.enabled : true;
+    }
+    return true;
+  }
+
   // --- WebRTC Logic ---
-  private async startPeerConnection(isCaller: boolean) {
+  private async startPeerConnection(isCaller: boolean, isVideo: boolean = false) {
     try {
-      // Yêu cầu quyền Micro
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      // Yêu cầu quyền Micro & Camera
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: isVideo });
       this.localStream.set(stream);
 
       this.peerConnection = new RTCPeerConnection(this.iceServers);

@@ -20,7 +20,10 @@
     </div>
     
     <div class="d-flex align-items-center gap-2 text-primary ms-2" (click)="$event.stopPropagation()">
-      <button class="btn btn-sm btn-icon border-0 p-1" (click)="startCall()">
+      <button class="btn btn-sm btn-icon border-0 p-1" (click)="startCall(true)" title="Gọi video">
+        <i class="bi bi-camera-video-fill fs-5" style="color: #0084FF;"></i>
+      </button>
+      <button class="btn btn-sm btn-icon border-0 p-1" (click)="startCall(false)" title="Gọi thoại">
         <i class="bi bi-telephone-fill fs-5" style="color: #0084FF;"></i>
       </button>
       <button class="btn btn-sm btn-icon border-0 p-1" (click)="toggleMinimize()">
@@ -80,18 +83,26 @@
                          [style.opacity]="editingMessageId() === msg.id ? 0.5 : 1">
                       
                       @if (msg.type === 'CALL') {
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2" 
+                             style="cursor: pointer;" 
+                             (click)="startCall(msg.content.startsWith('VIDEO'))" 
+                             title="Nhấn để gọi lại">
                           <div class="p-2 rounded-circle" [class.bg-white]="msg.senderId === authService.currentUser()?.id" [class.text-primary]="msg.senderId === authService.currentUser()?.id" [class.bg-primary]="msg.senderId !== authService.currentUser()?.id" [class.text-white]="msg.senderId !== authService.currentUser()?.id">
-                            <i class="bi bi-telephone-fill"></i>
+                            <i class="bi" [class.bi-camera-video-fill]="msg.content.startsWith('VIDEO')" [class.bi-telephone-fill]="!msg.content.startsWith('VIDEO')"></i>
                           </div>
                           <div class="text-nowrap">
                             <div class="fw-bold" style="font-size: 0.9rem;">
-                              @if (msg.content.includes('ENDED')) { Cuộc gọi thoại }
-                              @else if (msg.content.includes('MISSED') || msg.content.includes('NO_ANSWER') || msg.content.includes('CALLEE_REJECT')) { Cuộc gọi nhỡ }
-                              @else { Cuộc gọi thoại }
+                              @if (msg.content.includes('MISSED') || msg.content.includes('NO_ANSWER') || msg.content.includes('CALLEE_REJECT')) { 
+                                Cuộc gọi {{ msg.content.startsWith('VIDEO') ? 'video' : 'thoại' }} nhỡ 
+                              } @else { 
+                                Cuộc gọi {{ msg.content.startsWith('VIDEO') ? 'video' : 'thoại' }} 
+                              }
                             </div>
                             <div style="font-size: 0.75rem; opacity: 0.8;">
-                              @if (msg.content.split('|').length > 2) {
+                              @if (msg.content.split('|').length > 3) {
+                                {{ getCallDuration(msg.content.split('|')[3]) }}
+                              } @else if (msg.content.split('|').length > 2 && !msg.content.startsWith('VIDEO') && !msg.content.startsWith('AUDIO')) {
+                                <!-- Format cũ: STATUS|REASON|DURATION -->
                                 {{ getCallDuration(msg.content.split('|')[2]) }}
                               } @else {
                                 Nhấn để gọi lại

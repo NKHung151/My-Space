@@ -32,8 +32,9 @@ public class CallController {
     public void initiateCall(@Payload CallActionRequest request, SimpMessageHeaderAccessor headerAccessor) {
         Long callerId = getUserId(headerAccessor);
         String callerEmail = getUserEmail(headerAccessor);
+        Boolean isVideo = request.getIsVideo() != null ? request.getIsVideo() : false;
 
-        CallBroadcastResult result = callService.initiateCall(callerId, request.getReceiverId());
+        CallBroadcastResult result = callService.initiateCall(callerId, request.getReceiverId(), isVideo);
 
         // Gửi thông báo đến người nhận
         messagingTemplate.convertAndSendToUser(result.getReceiverEmail(), "/queue/calls", result.getCall());

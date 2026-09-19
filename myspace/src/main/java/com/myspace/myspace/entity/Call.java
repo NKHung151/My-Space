@@ -51,6 +51,9 @@ public class Call {
     @Enumerated(EnumType.STRING)
     private CallEndReason endReason;
 
+    @Column(name = "is_video")
+    private Boolean isVideo = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

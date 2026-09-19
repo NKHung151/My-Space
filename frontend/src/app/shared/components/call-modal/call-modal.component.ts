@@ -71,6 +71,14 @@ export class CallModalComponent implements OnInit {
     return this.webrtcService.isMuted();
   }
 
+  toggleCamera() {
+    this.webrtcService.toggleCamera();
+  }
+
+  isCameraOff() {
+    return this.webrtcService.isCameraOff();
+  }
+
   private startTimer(startTime: Date) {
     this.stopTimer();
     this.timerInterval = setInterval(() => {

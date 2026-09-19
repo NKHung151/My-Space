@@ -1,8 +1,9 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, effect } from '@angular/core';
 import { FriendUser } from '../../friends/models/friend.model';
 import { ChatService } from './chat.service';
 import { WebSocketService } from '../../../core/websocket/websocket.service';
 import { MessageResponse } from '../models/chat.model';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +11,7 @@ import { MessageResponse } from '../models/chat.model';
 export class ChatManagerService {
   private chatService = inject(ChatService);
   private webSocketService = inject(WebSocketService);
+  private authService = inject(AuthService);
 
   private _activeChats = signal<FriendUser[]>([]);
   public activeChats = this._activeChats.asReadonly();
@@ -17,6 +19,15 @@ export class ChatManagerService {
   public unreadCounts = signal<Record<number, number>>({});
 
   constructor() {
+    // Clear chats on logout
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (!user) {
+        this._activeChats.set([]);
+        this.unreadCounts.set({});
+      }
+    }, { allowSignalWrites: true });
+
     // Listen to new messages to increment unread counts
     this.webSocketService.subscribeToTopic('/user/queue/messages', (message: MessageResponse) => {
       // If the message is from someone else and their chat is not open

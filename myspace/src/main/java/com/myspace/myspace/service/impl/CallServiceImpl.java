@@ -25,7 +25,7 @@ public class CallServiceImpl implements CallService {
 
     @Override
     @Transactional
-    public CallBroadcastResult initiateCall(Long callerId, Long calleeId) {
+    public CallBroadcastResult initiateCall(Long callerId, Long calleeId, Boolean isVideo) {
         User caller = userRepository.getReferenceById(callerId);
         User callee = userRepository.findById(calleeId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         
@@ -36,6 +36,7 @@ public class CallServiceImpl implements CallService {
         call.setCaller(caller);
         call.setCallee(callee);
         call.setStatus(Call.CallStatus.RINGING);
+        call.setIsVideo(isVideo);
         call = callRepository.save(call);
 
         return new CallBroadcastResult(mapToResponse(call, "incoming"), callee.getEmail());
@@ -127,6 +128,7 @@ public class CallServiceImpl implements CallService {
                 .calleeId(call.getCallee().getId())
                 .status(call.getStatus().name())
                 .type(actionType)
+                .isVideo(call.getIsVideo())
                 .createdAt(call.getCreatedAt())
                 .build();
     }
