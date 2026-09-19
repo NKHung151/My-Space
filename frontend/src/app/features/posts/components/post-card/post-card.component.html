@@ -74,11 +74,6 @@
             </iframe>
           } @else {
             <video class="w-100" #videoEl [src]="post.coverImageUrl" muted loop playsinline (mouseenter)="videoEl.controls = true" (mouseleave)="videoEl.controls = false" (click)="$event.stopPropagation()" style="max-height: 500px; object-fit: contain;"></video>
-            
-            <!-- Video Play Icon Overlay -->
-            <div class="position-absolute top-50 start-50 translate-middle pointer-events-none" style="opacity: 0.8;">
-              <i class="bi bi-play-circle-fill text-white" style="font-size: 3rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></i>
-            </div>
           }
         </div>
       } @else if (post.coverImageUrl) {
