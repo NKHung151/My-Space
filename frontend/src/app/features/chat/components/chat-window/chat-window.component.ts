@@ -8,6 +8,7 @@ import { MessageResponse } from '../../models/chat.model';
 import { PresenceService } from '../../../../core/services/presence.service';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { WebSocketService } from '../../../../core/websocket/websocket.service';
+import { WebRTCService } from '../../../../core/websocket/webrtc.service';
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
 import { Router } from '@angular/router';
 
@@ -25,8 +26,9 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   private chatManager = inject(ChatManagerService);
   private chatService = inject(ChatService);
   public presenceService = inject(PresenceService);
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
   private webSocketService = inject(WebSocketService);
+  private webrtcService = inject(WebRTCService);
   private router = inject(Router);
 
   messages = signal<MessageResponse[]>([]);
@@ -159,8 +161,19 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
     this.router.navigate(['/profile', id]);
   }
 
-  notImplemented() {
-    alert('Tính năng thoại và video sẽ được làm ở phiên bản sau');
+  startCall() {
+    this.webrtcService.initiateCall(this.targetUser.id);
+  }
+
+  getCallDuration(secondsStr: string): string {
+    const totalSeconds = parseInt(secondsStr, 10);
+    if (isNaN(totalSeconds)) return '';
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    if (m > 0) {
+      return `${m} phút ${s} giây`;
+    }
+    return `${s} giây`;
   }
 
   private scrollToBottom() {

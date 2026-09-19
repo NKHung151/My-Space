@@ -10,11 +10,12 @@ import { BrandComponent } from '../../shared/components/brand/brand.component';
 import { RightSidebarComponent } from './right-sidebar/right-sidebar.component';
 import { ChatWindowComponent } from '../../features/chat/components/chat-window/chat-window.component';
 import { ChatManagerService } from '../../features/chat/services/chat-manager.service';
+import { CallModalComponent } from '../../shared/components/call-modal/call-modal.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, MobileHeaderComponent, BrandComponent, RightSidebarComponent, ChatWindowComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, MobileHeaderComponent, BrandComponent, RightSidebarComponent, ChatWindowComponent, CallModalComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
 })

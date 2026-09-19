@@ -12,4 +12,5 @@ public interface MessageService {
     MessageBroadcastResult saveMessage(Long senderId, Long receiverId, String content);
     MessageBroadcastResult editMessage(Long messageId, Long senderId, String newContent);
     MessageBroadcastResult deleteMessage(Long messageId, Long senderId);
+    MessageBroadcastResult saveCallSystemMessage(Long callId);
 }

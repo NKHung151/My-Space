@@ -3,9 +3,11 @@ package com.myspace.myspace.service.impl;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.dto.response.MessageResponse;
 import com.myspace.myspace.dto.response.MessageBroadcastResult;
+import com.myspace.myspace.entity.Call;
 import com.myspace.myspace.entity.Conversation;
 import com.myspace.myspace.entity.Message;
 import com.myspace.myspace.entity.User;
+import com.myspace.myspace.repository.CallRepository;
 import com.myspace.myspace.repository.ConversationRepository;
 import com.myspace.myspace.repository.MessageRepository;
 import com.myspace.myspace.repository.UserRepository;
@@ -24,9 +26,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
 
-    private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
+    private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final CallRepository callRepository;
 
     @Override
     @Transactional
@@ -115,6 +118,32 @@ public class MessageServiceImpl implements MessageService {
     }
 
 
+
+    @Override
+    @Transactional
+    public MessageBroadcastResult saveCallSystemMessage(Long callId) {
+        Call call = callRepository.findById(callId)
+                .orElseThrow(() -> new IllegalArgumentException("Call not found"));
+
+        Message message = new Message();
+        message.setConversation(call.getConversation());
+        message.setSender(call.getCaller()); // Người gọi là sender
+        message.setType(Message.MessageType.CALL);
+        message.setCall(call);
+
+        String content = call.getStatus().name() + "|" + call.getEndReason().name();
+        if (call.getDurationSeconds() != null) {
+            content += "|" + call.getDurationSeconds();
+        }
+        message.setContent(content);
+
+        message = messageRepository.save(message);
+
+        String receiverEmail = call.getCaller().getId().equals(call.getConversation().getUser1().getId()) ?
+                call.getConversation().getUser2().getEmail() : call.getConversation().getUser1().getEmail();
+
+        return new MessageBroadcastResult(mapToResponse(message), receiverEmail);
+    }
 
     private MessageResponse mapToResponse(Message message) {
         return MessageResponse.builder()

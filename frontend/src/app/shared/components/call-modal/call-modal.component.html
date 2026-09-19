@@ -1,0 +1,65 @@
+@if (activeCall()) {
+  <!-- Thẻ Audio để phát âm thanh từ Remote Stream (ẩn) -->
+  <audio #remoteAudio autoplay [srcObject]="webrtcService.remoteStream()"></audio>
+
+  <div class="call-modal-overlay d-flex align-items-center justify-content-center">
+    <div class="call-modal-content bg-dark text-white rounded-4 p-4 shadow-lg d-flex flex-column align-items-center position-relative" style="width: 320px; min-height: 400px;">
+      
+      <!-- Tiêu đề trạng thái -->
+      <div class="text-center mt-3 mb-4">
+        <h5 class="fw-bold mb-1">{{ getDisplayName() }}</h5>
+        
+        <p class="text-light opacity-75 mb-0" style="font-size: 0.9rem;">
+          @if (activeCall()?.status === 'RINGING') {
+            @if (activeCall()?.isIncoming) { Cuộc gọi đến... } @else { Đang đổ chuông... }
+          } @else if (activeCall()?.status === 'ACCEPTED') {
+            {{ duration }}
+          } @else {
+            Đang kết thúc...
+          }
+        </p>
+      </div>
+
+      <!-- Avatar rung -->
+      <div class="avatar-container position-relative mb-5" [class.ringing]="activeCall()?.status === 'RINGING'">
+        <img [appAssetImage]="getAvatarUrl()" class="rounded-circle object-fit-cover shadow-sm" width="120" height="120" alt="Avatar">
+        <!-- Vòng sóng âm thanh xung quanh avatar khi chuông -->
+        @if (activeCall()?.status === 'RINGING') {
+          <div class="ripple"></div>
+          <div class="ripple delay-1"></div>
+        }
+      </div>
+
+      <!-- Các nút điều khiển -->
+      <div class="d-flex align-items-center gap-4 mt-auto mb-2 w-100 justify-content-center">
+        
+        @if (activeCall()?.status === 'RINGING') {
+          @if (activeCall()?.isIncoming) {
+            <!-- Nghe / Từ chối -->
+            <button class="btn btn-action bg-danger text-white rounded-circle shadow" (click)="rejectCall()">
+              <i class="bi bi-telephone-x-fill fs-4"></i>
+            </button>
+            <button class="btn btn-action bg-success text-white rounded-circle shadow" (click)="acceptCall()" style="animation: bounceRinging 1s infinite;">
+              <i class="bi bi-telephone-fill fs-4"></i>
+            </button>
+          } @else {
+            <!-- Hủy gọi -->
+            <button class="btn btn-action bg-danger text-white rounded-circle shadow" (click)="cancelCall()">
+              <i class="bi bi-telephone-x-fill fs-4"></i>
+            </button>
+          }
+        } @else if (activeCall()?.status === 'ACCEPTED') {
+          <!-- Mute / End Call -->
+          <button class="btn btn-action rounded-circle shadow" [class.bg-light]="!isMuted()" [class.text-dark]="!isMuted()" [class.bg-secondary]="isMuted()" [class.text-white]="isMuted()" (click)="toggleMute()">
+            <i class="bi" [class.bi-mic-fill]="!isMuted()" [class.bi-mic-mute-fill]="isMuted()" class="fs-4"></i>
+          </button>
+          
+          <button class="btn btn-action bg-danger text-white rounded-circle shadow" (click)="endCall()">
+            <i class="bi bi-telephone-x-fill fs-4"></i>
+          </button>
+        }
+
+      </div>
+    </div>
+  </div>
+}
