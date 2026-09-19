@@ -29,7 +29,8 @@ public class FriendRequest {
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
-    private String status; // pending, accepted, rejected
+    @Column(nullable = false)
+    private String status = "PENDING"; // PENDING, ACCEPTED, REJECTED
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

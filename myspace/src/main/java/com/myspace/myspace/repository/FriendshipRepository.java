@@ -1,7 +1,6 @@
 package com.myspace.myspace.repository;
 
 import com.myspace.myspace.entity.Friendship;
-import com.myspace.myspace.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
