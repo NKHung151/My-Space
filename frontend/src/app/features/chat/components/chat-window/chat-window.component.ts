@@ -30,13 +30,17 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
   messages = signal<MessageResponse[]>([]);
-  newMessage = signal<string>('');
+  newMessage = '';
   isMinimized = signal<boolean>(false);
   conversationId: number | null = null;
   currentUser = this.authService.currentUser;
   currentUserId = this.currentUser()?.id;
   
   private messageSubscription: any;
+  private editSubscription: any;
+  private deleteSubscription: any;
+  
+  editingMessageId = signal<number | null>(null);
 
   ngOnInit() {
     // 1. Get or create conversation ID
@@ -62,12 +66,32 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
         }
       }
     );
+
+    // 3. Lắng nghe tin nhắn được sửa
+    this.editSubscription = this.webSocketService.subscribeToTopic(
+      '/user/queue/messages.edit',
+      (message: MessageResponse) => {
+        if (this.conversationId && message.conversationId === this.conversationId) {
+          this.messages.update(msgs => msgs.map(m => m.id === message.id ? message : m));
+        }
+      }
+    );
+
+    // 4. Lắng nghe tin nhắn bị xóa
+    this.deleteSubscription = this.webSocketService.subscribeToTopic(
+      '/user/queue/messages.delete',
+      (message: MessageResponse) => {
+        if (this.conversationId && message.conversationId === this.conversationId) {
+          this.messages.update(msgs => msgs.map(m => m.id === message.id ? message : m));
+        }
+      }
+    );
   }
 
   ngOnDestroy() {
-    if (this.messageSubscription) {
-      this.messageSubscription.unsubscribe();
-    }
+    if (this.messageSubscription) this.messageSubscription.unsubscribe();
+    if (this.editSubscription) this.editSubscription.unsubscribe();
+    if (this.deleteSubscription) this.deleteSubscription.unsubscribe();
   }
 
   loadMessages() {
@@ -84,15 +108,42 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   }
 
   sendMessage() {
-    const content = this.newMessage().trim();
+    const content = this.newMessage.trim();
     if (!content) return;
-    
-    this.webSocketService.sendMessage('/app/chat.sendMessage', {
-      receiverId: this.targetUser.id,
-      content: content
-    });
-    
-    this.newMessage.set(''); // Clear input
+
+    if (this.editingMessageId()) {
+      // Đang trong chế độ sửa tin nhắn
+      this.webSocketService.sendMessage('/app/chat.editMessage', {
+        messageId: this.editingMessageId(),
+        content: content
+      });
+      this.cancelEdit();
+    } else {
+      // Đang trong chế độ gửi tin nhắn mới
+      this.webSocketService.sendMessage('/app/chat.sendMessage', {
+        receiverId: this.targetUser.id,
+        content: content
+      });
+      this.newMessage = ''; // Chỉ clear nếu gửi mới, cancelEdit tự clear
+    }
+  }
+
+  startEdit(msg: MessageResponse) {
+    this.editingMessageId.set(msg.id);
+    this.newMessage = msg.content;
+  }
+
+  cancelEdit() {
+    this.editingMessageId.set(null);
+    this.newMessage = '';
+  }
+
+  deleteMessage(id: number) {
+    if (confirm('Bạn có chắc muốn thu hồi tin nhắn này không?')) {
+      this.webSocketService.sendMessage('/app/chat.deleteMessage', {
+        messageId: id
+      });
+    }
   }
 
   closeChat() {

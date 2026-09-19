@@ -14,4 +14,7 @@ public class MessageResponse {
     private String content;
     private String type;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
+    private boolean isEdited;
 }

@@ -2,6 +2,7 @@ package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.dto.response.MessageResponse;
+import com.myspace.myspace.dto.response.MessageBroadcastResult;
 import com.myspace.myspace.entity.Conversation;
 import com.myspace.myspace.entity.Message;
 import com.myspace.myspace.entity.User;
@@ -14,7 +15,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -54,7 +57,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public MessageResponse saveMessage(Long senderId, Long receiverId, String content) {
+    public MessageBroadcastResult saveMessage(Long senderId, Long receiverId, String content) {
         Conversation conversation = getOrCreateConversation(senderId, receiverId);
         User sender = userRepository.getReferenceById(senderId);
 
@@ -62,10 +65,56 @@ public class MessageServiceImpl implements MessageService {
         message.setConversation(conversation);
         message.setSender(sender);
         message.setContent(content);
-        message.setType(Message.MessageType.TEXT);
         message = messageRepository.save(message);
-        return mapToResponse(message);
+        
+        String receiverEmail = conversation.getUser1().getId().equals(senderId) ? 
+                conversation.getUser2().getEmail() : conversation.getUser1().getEmail();
+                
+        return new MessageBroadcastResult(mapToResponse(message), receiverEmail);
     }
+
+    @Override
+    @Transactional
+    public MessageBroadcastResult editMessage(Long messageId, Long senderId, String newContent) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+                
+        if (!message.getSender().getId().equals(senderId)) {
+            throw new IllegalArgumentException("Not authorized to edit this message");
+        }
+        
+        message.setContent(newContent);
+        message.setUpdatedAt(LocalDateTime.now());
+        message = messageRepository.save(message);
+        
+        Conversation conversation = message.getConversation();
+        String receiverEmail = conversation.getUser1().getId().equals(senderId) ? 
+                conversation.getUser2().getEmail() : conversation.getUser1().getEmail();
+        
+        return new MessageBroadcastResult(mapToResponse(message), receiverEmail);
+    }
+
+    @Override
+    @Transactional
+    public MessageBroadcastResult deleteMessage(Long messageId, Long senderId) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+                
+        if (!message.getSender().getId().equals(senderId)) {
+            throw new IllegalArgumentException("Not authorized to delete this message");
+        }
+        
+        message.setDeletedAt(LocalDateTime.now());
+        message = messageRepository.save(message);
+        
+        Conversation conversation = message.getConversation();
+        String receiverEmail = conversation.getUser1().getId().equals(senderId) ? 
+                conversation.getUser2().getEmail() : conversation.getUser1().getEmail();
+        
+        return new MessageBroadcastResult(mapToResponse(message), receiverEmail);
+    }
+
+
 
     private MessageResponse mapToResponse(Message message) {
         return MessageResponse.builder()
@@ -75,6 +124,9 @@ public class MessageServiceImpl implements MessageService {
                 .content(message.getContent())
                 .type(message.getType().name())
                 .createdAt(message.getCreatedAt())
+                .updatedAt(message.getUpdatedAt())
+                .deletedAt(message.getDeletedAt())
+                .isEdited(message.getUpdatedAt() != null)
                 .build();
     }
 }

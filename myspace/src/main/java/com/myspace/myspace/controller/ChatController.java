@@ -3,7 +3,9 @@ package com.myspace.myspace.controller;
 import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.dto.request.MessageRequest;
+import com.myspace.myspace.dto.request.MessageActionRequest;
 import com.myspace.myspace.dto.response.MessageResponse;
+import com.myspace.myspace.dto.response.MessageBroadcastResult;
 import com.myspace.myspace.entity.User;
 import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.service.MessageService;
@@ -15,6 +17,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,28 +50,57 @@ public class ChatController {
 
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload MessageRequest request, SimpMessageHeaderAccessor headerAccessor) {
-        org.springframework.security.authentication.UsernamePasswordAuthenticationToken auth = 
-            (org.springframework.security.authentication.UsernamePasswordAuthenticationToken) headerAccessor.getUser();
+        UsernamePasswordAuthenticationToken auth = 
+            (UsernamePasswordAuthenticationToken) headerAccessor.getUser();
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
         
         Long senderId = userDetails.getUser().getId();
         String senderEmail = userDetails.getUsername();
         
-        MessageResponse message = messageService.saveMessage(senderId, request.getReceiverId(), request.getContent());
+        MessageBroadcastResult result = messageService.saveMessage(senderId, request.getReceiverId(), request.getContent());
         
         // Send to receiver
-        User receiver = userRepository.findById(request.getReceiverId()).orElseThrow(() -> new IllegalArgumentException("User not found"));
         messagingTemplate.convertAndSendToUser(
-                receiver.getEmail(),
+                result.getReceiverEmail(),
                 "/queue/messages",
-                message
+                result.getMessage()
         );
         
         // Send to sender (to update their other tabs if any, or acknowledge)
         messagingTemplate.convertAndSendToUser(
                 senderEmail,
                 "/queue/messages",
-                message
+                result.getMessage()
         );
+    }
+
+    @MessageMapping("/chat.editMessage")
+    public void editMessage(@Payload MessageActionRequest request, SimpMessageHeaderAccessor headerAccessor) {
+        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) headerAccessor.getUser();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        Long senderId = userDetails.getUser().getId();
+        String senderEmail = userDetails.getUsername();
+
+        MessageBroadcastResult result = messageService.editMessage(request.getMessageId(), senderId, request.getContent());
+
+        // Gửi cho người nhận
+        messagingTemplate.convertAndSendToUser(result.getReceiverEmail(), "/queue/messages.edit", result.getMessage());
+        // Gửi cho chính người gửi (để đồng bộ các tab khác)
+        messagingTemplate.convertAndSendToUser(senderEmail, "/queue/messages.edit", result.getMessage());
+    }
+
+    @MessageMapping("/chat.deleteMessage")
+    public void deleteMessage(@Payload MessageActionRequest request, SimpMessageHeaderAccessor headerAccessor) {
+        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) headerAccessor.getUser();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        Long senderId = userDetails.getUser().getId();
+        String senderEmail = userDetails.getUsername();
+
+        MessageBroadcastResult result = messageService.deleteMessage(request.getMessageId(), senderId);
+
+        // Gửi cho người nhận
+        messagingTemplate.convertAndSendToUser(result.getReceiverEmail(), "/queue/messages.delete", result.getMessage());
+        // Gửi cho chính người gửi (để đồng bộ các tab khác)
+        messagingTemplate.convertAndSendToUser(senderEmail, "/queue/messages.delete", result.getMessage());
     }
 }

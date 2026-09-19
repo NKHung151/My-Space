@@ -1,71 +1,49 @@
 .chat-window {
-  width: 300px;
-  height: 400px;
-  background-color: #fff;
-  border-radius: 8px 8px 0 0;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 320px;
+  height: 420px;
+  background: #fff;
+  border-radius: 12px 12px 0 0;
   display: flex;
   flex-direction: column;
-  pointer-events: auto;
-  transition: height 0.2s ease-in-out;
+  transition: all 0.3s ease;
   overflow: hidden;
+  pointer-events: auto; /* Fix unclickable issue */
 
   &.minimized {
-    height: 48px; // Just enough for header
+    height: 52px;
   }
 }
 
 .chat-header {
-  background-color: #fff;
-  height: 48px;
   cursor: pointer;
-  border-radius: 8px 8px 0 0;
-  
-  &:hover {
-    background-color: #f2f2f2;
-  }
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(5px);
+  z-index: 10;
+}
 
-  .btn-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
-    }
-  }
-
-  .hover-underline-name:hover .hover-underline {
-    text-decoration: underline;
-  }
+.hover-underline-name:hover .name-text {
+  text-decoration: underline;
 }
 
 .chat-body {
-  background-color: #fff;
-  
+  background: #fff;
+  scroll-behavior: smooth;
+
   &::-webkit-scrollbar {
     width: 6px;
   }
+
   &::-webkit-scrollbar-thumb {
-    background: #bcc0c4;
-    border-radius: 4px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
   }
 }
 
 .message-bubble {
-  word-wrap: break-word;
   border-radius: 18px;
   font-size: 0.95rem;
   line-height: 1.4;
+  word-wrap: break-word;
 
   &.sent {
     background-color: #0084FF;
@@ -74,33 +52,30 @@
   }
 
   &.received {
-    background-color: #e4e6eb;
-    color: #050505;
+    background-color: #E4E6EB;
+    color: black;
     border-bottom-left-radius: 4px;
   }
 }
 
-.chat-footer {
-  background-color: #fff;
-  
-  input:focus {
-    outline: none;
-    box-shadow: none;
+.message-container {
+  .message-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
   }
   
-  .bg-light {
-    background-color: #f0f2f5 !important;
+  &:hover .message-actions {
+    opacity: 1;
   }
 }
 
 .online-indicator-small {
+  width: 10px;
+  height: 10px;
+  background-color: #31a24c;
+  border-radius: 50%;
+  border: 2px solid white;
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 10px;
-  height: 10px;
-  background-color: #31A24C;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  z-index: 2;
 }

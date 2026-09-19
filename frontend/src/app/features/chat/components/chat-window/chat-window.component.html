@@ -46,19 +46,51 @@
       </div>
 
       <!-- Messages List -->
-      <div class="d-flex flex-column gap-1">
+      <div class="d-flex flex-column gap-2 pb-2">
         @for (msg of messages(); track msg.id) {
-          <div class="d-flex w-100" [class.justify-content-end]="msg.senderId === currentUserId" [class.justify-content-start]="msg.senderId !== currentUserId">
-            <div class="d-flex gap-2 align-items-end" style="max-width: 75%;">
+          <div class="d-flex w-100 message-container" [class.justify-content-end]="msg.senderId === currentUserId" [class.justify-content-start]="msg.senderId !== currentUserId">
+            <div class="d-flex gap-2 align-items-end" style="max-width: 85%;">
               <!-- Avatar người gửi (bạn bè) -->
               @if (msg.senderId !== currentUserId) {
                 <img [appAssetImage]="personAvatar(targetUser)" alt="Avatar" class="rounded-circle object-fit-cover flex-shrink-0" width="28" height="28">
               }
               
-              <div class="message-bubble px-3 py-2" 
-                   [class.sent]="msg.senderId === currentUserId" 
-                   [class.received]="msg.senderId !== currentUserId">
-                {{ msg.content }}
+              <!-- Khối chứa Bong bóng chat và Giờ -->
+              <div class="message-wrapper d-flex flex-column" [class.align-items-end]="msg.senderId === currentUserId">
+                
+                <div class="d-flex align-items-center gap-2">
+                  <!-- Action menu bên trái bong bóng (nếu là tin nhắn của mình) -->
+                  @if (msg.senderId === currentUserId && !msg.deletedAt && editingMessageId() !== msg.id) {
+                    <div class="message-actions d-flex gap-2 bg-white border rounded-pill px-2 py-1 shadow-sm me-2">
+                      <i class="bi bi-pencil-fill cursor-pointer text-muted hover-primary" style="font-size: 0.85rem;" (click)="startEdit(msg)" title="Sửa tin nhắn"></i>
+                      <i class="bi bi-trash-fill cursor-pointer text-danger hover-danger" style="font-size: 0.85rem;" (click)="deleteMessage(msg.id)" title="Thu hồi"></i>
+                    </div>
+                  }
+
+                  <!-- Nội dung Bong Bóng Chat -->
+                  @if (msg.deletedAt) {
+                    <div class="message-bubble px-3 py-2 text-muted fst-italic border bg-light" 
+                         [class.sent]="msg.senderId === currentUserId" 
+                         [class.received]="msg.senderId !== currentUserId">
+                      Tin nhắn đã bị thu hồi
+                    </div>
+                  } @else {
+                    <div class="message-bubble px-3 py-2" 
+                         [class.sent]="msg.senderId === currentUserId" 
+                         [class.received]="msg.senderId !== currentUserId"
+                         [class.opacity-50]="editingMessageId() === msg.id">
+                      {{ msg.content }}
+                    </div>
+                  }
+                </div>
+                
+                <!-- Timestamp và trạng thái Đã sửa -->
+                <div class="mt-1 text-muted" style="font-size: 0.65rem;">
+                  {{ msg.createdAt | date:'HH:mm' }}
+                  @if (msg.isEdited && !msg.deletedAt) {
+                    <span class="ms-1">(Đã chỉnh sửa)</span>
+                  }
+                </div>
               </div>
 
               <!-- Avatar của mình (người dùng hiện tại) -->
@@ -72,19 +104,33 @@
     </div>
 
     <!-- Footer / Input -->
-    <div class="chat-footer p-2 border-top d-flex align-items-center gap-2">
-      <!-- Input -->
-      <div class="d-flex align-items-center flex-grow-1 rounded-pill bg-light px-3 py-1">
-        <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" 
-               placeholder="Aa" 
-               [(ngModel)]="newMessage" 
-               (keyup.enter)="sendMessage()">
-        <i class="bi bi-emoji-smile fs-5 ms-2 text-primary cursor-pointer"></i>
+    <div class="chat-footer p-2 border-top d-flex flex-column gap-1">
+      @if (editingMessageId()) {
+        <div class="d-flex justify-content-between align-items-center px-2 text-primary" style="font-size: 0.75rem;">
+          <span><i class="bi bi-pencil-fill me-1"></i> Đang chỉnh sửa tin nhắn</span>
+          <i class="bi bi-x-circle cursor-pointer hover-danger" (click)="cancelEdit()" title="Hủy"></i>
+        </div>
+      }
+      
+      <div class="d-flex align-items-center gap-2">
+        <!-- Input -->
+        <div class="d-flex align-items-center flex-grow-1 rounded-pill bg-light px-3 py-1"
+             [class.border]="editingMessageId()" [class.border-primary]="editingMessageId()">
+          <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" 
+                 placeholder="Aa" 
+                 [(ngModel)]="newMessage" 
+                 (keyup.enter)="sendMessage()">
+          <i class="bi bi-emoji-smile fs-5 ms-2 text-primary cursor-pointer"></i>
+        </div>
+        <!-- Send Button -->
+        <button class="btn btn-sm border-0 p-0 text-primary" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+          @if (editingMessageId()) {
+            <i class="bi bi-check-circle-fill fs-4" [style.color]="newMessage.trim() ? '#0084FF' : '#B0B3B8'"></i>
+          } @else {
+            <i class="bi bi-send-fill fs-4" [style.color]="newMessage.trim() ? '#0084FF' : '#B0B3B8'"></i>
+          }
+        </button>
       </div>
-      <!-- Send Button -->
-      <button class="btn btn-sm border-0 p-0 text-primary" (click)="sendMessage()" [disabled]="!newMessage().trim()">
-        <i class="bi bi-send-fill fs-4" [style.color]="newMessage().trim() ? '#0084FF' : '#B0B3B8'"></i>
-      </button>
     </div>
   }
 </div>

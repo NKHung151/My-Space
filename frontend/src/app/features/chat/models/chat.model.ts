@@ -5,6 +5,14 @@ export interface MessageResponse {
   content: string;
   type: string;
   createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string;
+  isEdited?: boolean;
+}
+
+export interface MessageActionRequest {
+  messageId: number;
+  content?: string;
 }
 
 export interface MessageRequest {
