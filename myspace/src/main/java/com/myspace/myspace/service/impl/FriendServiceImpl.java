@@ -24,12 +24,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FriendServiceImpl implements FriendService {
 
     private final FriendRequestRepository friendRequestRepository;
@@ -58,26 +60,30 @@ public class FriendServiceImpl implements FriendService {
             return;
         }
 
-        User sender = userRepository.getReferenceById(currentUserId);
-        User receiver = userRepository.getReferenceById(targetUserId);
+        User sender = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Sender not found"));
+        User receiver = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Receiver not found"));
         FriendRequest request = new FriendRequest();
         request.setSender(sender);
         request.setReceiver(receiver);
         request.setStatus("pending");
         friendRequestRepository.save(request);
 
-        // Push real-time notification to the receiver
+        // Push real-time notification to the receiver (dùng email = principal name của WebSocket)
         FriendRequestResponse response = FriendRequestResponse.builder()
                 .id(request.getId())
                 .status(request.getStatus())
                 .createdAt(request.getCreatedAt())
                 .sender(PostMapper.toPublicUser(sender))
                 .build();
+        log.info("[WS] Sending friend-request notification to user: {}", receiver.getEmail());
         messagingTemplate.convertAndSendToUser(
-                targetUserId.toString(),
+                receiver.getEmail(),
                 "/queue/friend-requests",
                 response
         );
+        log.info("[WS] Sent friend-request notification successfully");
     }
 
     @Override
@@ -90,8 +96,10 @@ public class FriendServiceImpl implements FriendService {
         request.setStatus("accepted");
         friendRequestRepository.save(request);
 
-        User currentUser = userRepository.getReferenceById(currentUserId);
-        User senderUser = userRepository.getReferenceById(senderId);
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Current user not found"));
+        User senderUser = userRepository.findById(senderId)
+                .orElseThrow(() -> new IllegalArgumentException("Sender not found"));
 
         if (!friendshipRepository.existsByUserIdAndFriendId(currentUserId, senderId)) {
             Friendship f1 = new Friendship();
@@ -105,6 +113,22 @@ public class FriendServiceImpl implements FriendService {
             f2.setFriend(currentUser);
             friendshipRepository.save(f2);
         }
+
+        // Thông báo cho người GỬI lời mời: lời mời đã được chấp nhận (dùng email = principal name)
+        PublicUserResponse currentUserResponse = PostMapper.toPublicUser(currentUser);
+        messagingTemplate.convertAndSendToUser(
+                senderUser.getEmail(),
+                "/queue/friend-accept",
+                currentUserResponse
+        );
+
+        // Thông báo cho người CHẤP NHẬN (currentUser): thêm senderUser vào danh sách bạn
+        PublicUserResponse senderResponse = PostMapper.toPublicUser(senderUser);
+        messagingTemplate.convertAndSendToUser(
+                currentUser.getEmail(),
+                "/queue/friend-accept",
+                senderResponse
+        );
     }
 
     @Override
@@ -115,6 +139,16 @@ public class FriendServiceImpl implements FriendService {
                 .orElseThrow(() -> new IllegalArgumentException("Friend request not found"));
         request.setStatus("rejected");
         friendRequestRepository.save(request);
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Báo cho người từ chối (currentUser) biết để ẩn lời mời khỏi giao diện
+        messagingTemplate.convertAndSendToUser(
+                currentUser.getEmail(),
+                "/queue/friend-reject",
+                senderId
+        );
     }
 
     @Override
@@ -122,6 +156,25 @@ public class FriendServiceImpl implements FriendService {
     public void removeFriend(Long currentUserId, Long friendId) {
         friendshipRepository.deleteByUserIdAndFriendIdBidirectional(currentUserId, friendId);
         friendRequestRepository.deleteBySenderIdAndReceiverIdBidirectional(currentUserId, friendId);
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User friendUser = userRepository.findById(friendId)
+                .orElseThrow(() -> new IllegalArgumentException("Friend not found"));
+
+        // Báo cho người bị xóa (friendUser) biết rằng currentUserId đã không còn là bạn
+        messagingTemplate.convertAndSendToUser(
+                friendUser.getEmail(),
+                "/queue/friend-remove",
+                currentUserId
+        );
+
+        // Báo cho người chủ động xóa (currentUser) biết để tự xóa friendId khỏi danh sách
+        messagingTemplate.convertAndSendToUser(
+                currentUser.getEmail(),
+                "/queue/friend-remove",
+                friendId
+        );
     }
 
     @Override

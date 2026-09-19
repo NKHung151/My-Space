@@ -59,8 +59,8 @@ export class CommentSectionComponent implements OnInit, OnChanges {
   resetCounter = 0; // Tăng sau mỗi lần submit để trigger autosize reset
   isSubmitting = signal<boolean>(false);
 
-  replyingStates = signal<Record<string, string>>({});
-  editingStates = signal<Record<string, string>>({});
+  replyingStates = signal<Record<number, string>>({});
+  editingStates = signal<Record<number, string>>({});
   
   commentToDelete = signal<{ comment: Comment, parent?: Comment } | null>(null);
 
@@ -80,9 +80,9 @@ export class CommentSectionComponent implements OnInit, OnChanges {
   }
   
   // Set lưu trữ ID của các bình luận đang được mở rộng (Read More)
-  expandedCommentIds = signal<Set<string>>(new Set());
+  expandedCommentIds = signal<Set<number>>(new Set());
 
-  toggleExpand(commentId: string): void {
+  toggleExpand(commentId: number): void {
     const current = this.expandedCommentIds();
     const next = new Set(current);
     if (next.has(commentId)) {
@@ -93,7 +93,7 @@ export class CommentSectionComponent implements OnInit, OnChanges {
     this.expandedCommentIds.set(next);
   }
 
-  isExpanded(commentId: string): boolean {
+  isExpanded(commentId: number): boolean {
     return this.expandedCommentIds().has(commentId);
   }
 
@@ -150,11 +150,11 @@ export class CommentSectionComponent implements OnInit, OnChanges {
     this.replyingStates.update(states => ({ ...states, [comment.id]: '' }));
   }
 
-  updateReplyingText(id: string, text: string): void {
+  updateReplyingText(id: number, text: string): void {
     this.replyingStates.update(states => ({ ...states, [id]: text }));
   }
 
-  cancelReply(id: string): void {
+  cancelReply(id: number): void {
     this.replyingStates.update(states => {
       const newStates = { ...states };
       delete newStates[id];
@@ -312,11 +312,11 @@ export class CommentSectionComponent implements OnInit, OnChanges {
     this.editingStates.update(states => ({ ...states, [comment.id]: comment.content }));
   }
 
-  updateEditingText(id: string, text: string): void {
+  updateEditingText(id: number, text: string): void {
     this.editingStates.update(states => ({ ...states, [id]: text }));
   }
 
-  cancelEdit(id: string): void {
+  cancelEdit(id: number): void {
     this.editingStates.update(states => {
       const newStates = { ...states };
       delete newStates[id];

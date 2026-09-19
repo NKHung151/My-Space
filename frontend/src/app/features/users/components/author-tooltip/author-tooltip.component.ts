@@ -7,7 +7,7 @@ import { AssetImageDirective } from '../../../../shared/directives/asset-image.d
 
 
 interface AuthorTooltipUser {
-  id: string;
+  id: number;
   displayName?: string | null;
   username?: string;
   avatarUrl?: string | null;

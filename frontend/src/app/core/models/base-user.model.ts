@@ -1,5 +1,5 @@
 export interface BaseUser {
-  id: string;
+  id: number;
   username: string;
   displayName: string | null;
   avatarUrl?: string | null;

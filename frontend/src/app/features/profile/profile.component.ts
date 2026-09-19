@@ -41,7 +41,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private observer?: IntersectionObserver;
   private routeSubscription?: Subscription;
   private feedSubscription?: Subscription;
-  viewedUserId: string | null = null;
+  viewedUserId: number | null = null;
   user = signal<CurrentUser | null>(this.authService.currentUser());
   isOwnProfile = signal(true);
 
@@ -62,7 +62,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   friendsCount = signal(0);
   loadingProfile = signal(true);
-  
+
 
   // Modals state
   showFriendsModal = signal(false);
@@ -70,7 +70,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   people = signal<FriendUser[]>([]);
   peopleLoading = signal(false);
   peopleSearch = signal('');
-  failedPeopleAvatarIds = signal<Set<string>>(new Set());
+  failedPeopleAvatarIds = signal<Set<number>>(new Set());
   filteredPeople = computed(() => {
     const query = this.peopleSearch().trim().toLowerCase();
     if (!query) {
@@ -170,7 +170,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       : 'assets/images/default-avatar.svg';
   }
 
-  handlePeopleAvatarError(personId: string): void {
+  handlePeopleAvatarError(personId: number): void {
     this.failedPeopleAvatarIds.update(ids => new Set(ids).add(personId));
   }
 
@@ -198,7 +198,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const currentUser = this.authService.currentUser();
     const ownProfile = !routeUserId || String(currentUser?.id) === routeUserId;
     this.isOwnProfile.set(ownProfile);
-    this.viewedUserId = routeUserId || (currentUser ? String(currentUser.id) : null);
+    this.viewedUserId = routeUserId ? Number(routeUserId) : (currentUser ? currentUser.id : null);
     this.loadingProfile.set(true);
     this.page = 1;
     this.posts.set([]);
@@ -272,7 +272,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.authService.getMe().subscribe({
       next: user => {
         this.user.set(user);
-        this.viewedUserId = String(user.id);
+        this.viewedUserId = user.id;
         this.loadingProfile.set(false);
 
         // Read counts directly from the getMe() response (no extra API call needed)
@@ -295,12 +295,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
       bio: person.bio || null,
     };
   }
-
-
-
-
-
-
 
   private formatError(error: unknown): string {
     return getApiErrorMessage(error, 'Không thể hoàn tất yêu cầu. Vui lòng thử lại.', true);

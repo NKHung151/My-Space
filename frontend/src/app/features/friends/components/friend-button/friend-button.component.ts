@@ -13,7 +13,7 @@ import { Subscription } from 'rxjs';
   styleUrl: './friend-button.component.scss'
 })
 export class FriendButtonComponent implements OnInit, OnDestroy {
-  @Input({ required: true }) userId!: string;
+  @Input({ required: true }) userId!: number;
   @Input() size: 'small' | 'medium' | 'large' = 'medium';
   @Input() outline = false;
 
@@ -29,7 +29,7 @@ export class FriendButtonComponent implements OnInit, OnDestroy {
   private statusSub?: Subscription;
 
   ngOnInit() {
-    this.isSelf = String(this.authService.currentUser()?.id) === String(this.userId);
+    this.isSelf = this.authService.currentUser()?.id === this.userId;
     if (!this.isSelf) {
       this.statusSub = this.friendsService.getFriendStatus(this.userId).subscribe(status => {
         this.ngZone.run(() => {

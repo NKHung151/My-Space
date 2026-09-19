@@ -203,13 +203,7 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
         const midIndex = Math.floor(children.length / 2);
         articleEl.insertBefore(sentinel, children[midIndex]);
       }
-
-      // ── BUG FIX: root phải là .center-feed, KHÔNG phải window ──────────────
-      // Lý do: bài viết nằm trong một scrollable div (.center-feed), không phải
-      // cuộn theo window. Nếu dùng root mặc định (window), IntersectionObserver
-      // sẽ coi sentinel là "visible" ngay khi DOM render xong (ngoài scroll area),
-      // dẫn đến view bị đếm sai ngay khi mở bài mà chưa cuộn tới 50%.
-      // ───────────────────────────────────────────────────────────────────────
+      
       const scrollRoot = this.document.querySelector<HTMLElement>('.center-feed') ?? null;
 
       this.scrollDepthObserver = new IntersectionObserver(
@@ -379,7 +373,7 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
       commentCount: 0,
       liked: false,
       author: {
-        id: String(currentUser?.id ?? post.authorId),
+        id: Number(currentUser?.id ?? post.authorId),
         displayName: currentUser?.displayName || currentUser?.username || 'Author',
         email: currentUser?.email,
         username: currentUser?.username || 'author',
@@ -390,45 +384,6 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
     };
   }
 
-  /**
-   * ═══════════════════════════════════════════════════════════════════════════
-   * HÀNH ĐỘNG: USER BẤM "LIKE" BÀI VIẾT
-   * ═══════════════════════════════════════════════════════════════════════════
-   * Cơ chế Optimistic Update (Cập nhật lạc quan) được áp dụng tại đây:
-   * Bản chất: Cập nhật giao diện (UI state) NGAY LẬP TỨC để phản hồi cho User, 
-   * TRƯỚC KHI request mạng được gọi tới Server. Mục đích là loại bỏ hoàn toàn
-   * độ trễ (latency), giúp ứng dụng có cảm giác mượt mà tức thì.
-   * 
-   * Quy trình xử lý cụ thể:
-   * 
-   * 1. PRE-CHECK & KHÓA UI TẠM THỜI:
-   *    - Kiểm tra `p.isLiking` để ngăn user bấm spam (bấm liên tục nhiều lần 
-   *      trong một giây). Chỉ cho phép 1 request được xử lý tại 1 thời điểm.
-   *    - Nếu chưa login, bật popup yêu cầu đăng nhập.
-   * 
-   * 2. UI MUTATE (Thay đổi UI ngầm định TRƯỚC API):
-   *    - Lưu lại trạng thái cũ: `previousLiked` và `previousLikeCount`.
-   *    - Tính toán trạng thái mới: Đảo ngược liked (`nextLiked = !previousLiked`), 
-   *      tăng/giảm like count (`nextLikeCount`).
-   *    - Thực hiện mutate: `this.post.set(...)` cập nhật state NGAY LẬP TỨC. 
-   *      Tại thời điểm này, nút Like trên màn hình đã sáng lên, số Like đã tăng.
-   * 
-   * 3. BACKGROUND API CALL (Gọi API ngầm):
-   *    - `likeService.togglePostLike(p.id)` gửi request mạng tới Server (POST / DELETE).
-   *    - User không hề phải xem vòng quay (loading spinner) nào cả.
-   * 
-   * 4. SYNC HOẶC ROLLBACK (Xử lý kết quả từ Server):
-   *    - NẾU THÀNH CÔNG (next): 
-   *      Server sẽ trả về `likeCount` thực tế và chính xác nhất (ví dụ có thể có 
-   *      người khác vừa like cùng lúc). Ta cập nhật lại UI state để đồng bộ hoàn toàn.
-   *      Mở khóa `isLiking = false`.
-   *    
-   *    - NẾU THẤT BẠI (error): 
-   *      Ví dụ rớt mạng, lỗi 500. Ta phải thực hiện ROLLBACK (Hoàn tác).
-   *      Khôi phục state bài viết về lại biến `previousLiked` và `previousLikeCount` 
-   *      đã lưu ở bước 2. Số like trên màn hình sẽ tụt về như ban đầu, nút like tắt.
-   *      Mở khóa `isLiking = false` để user thử lại.
-   */
   toggleLike(): void {
     this.likeSub?.unsubscribe();
     

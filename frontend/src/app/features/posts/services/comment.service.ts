@@ -37,7 +37,7 @@ export class CommentService {
   }
 
   // Sửa nội dung bình luận
-  updateComment(commentId: string, content: string): Observable<Comment> {
+  updateComment(commentId: number, content: string): Observable<Comment> {
     return this.http
       .patch<ApiResponse<Comment>>(
         `${environment.apiUrl}/comments/${commentId}`,
@@ -47,7 +47,7 @@ export class CommentService {
   }
 
   // Xóa bình luận
-  deleteComment(commentId: string): Observable<void> {
+  deleteComment(commentId: number): Observable<void> {
     return this.http
       .delete<ApiResponse<void>>(
         `${environment.apiUrl}/comments/${commentId}`

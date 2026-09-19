@@ -1,13 +1,13 @@
 import { User } from '../../users/models/user.model';
 
 export interface Comment {
-  id: string;
-  postId: string;
+  id: number;
+  postId: number;
   
-  parentId: string | null; 
-  replyToCommentId: string | null;
+  parentId: number | null; 
+  replyToCommentId: number | null;
   
-  replyToUserId: string | null;
+  replyToUserId: number | null;
   replyToDisplayName: string | null;
   
   content: string;

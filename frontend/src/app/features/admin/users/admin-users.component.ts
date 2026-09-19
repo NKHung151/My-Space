@@ -41,7 +41,7 @@ export class AdminUsersComponent implements OnInit {
   readonly selectedUser = signal<AdminUser | null>(null);
   readonly detailLoading = signal(false);
   readonly saving = signal(false);
-  readonly updatingUserIds = signal<ReadonlySet<string>>(new Set());
+  readonly updatingUserIds = signal<ReadonlySet<number>>(new Set());
   readonly adminProtectionActive = signal(false);
   readonly drawerOpen = signal(false);
   readonly selectedUserIsSelf = computed(() => this.selectedUser()?.id === this.authService.currentUser()?.id);
@@ -267,7 +267,7 @@ export class AdminUsersComponent implements OnInit {
     }
   }
 
-  private setUpdating(userId: string, updating: boolean): void {
+  private setUpdating(userId: number, updating: boolean): void {
     this.updatingUserIds.update(current => {
       const next = new Set(current);
       updating ? next.add(userId) : next.delete(userId);

@@ -64,6 +64,8 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/**", "/api/posts/**", "/api/comments/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/posts/*/view").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/refresh-token", "/api/auth/logout").permitAll()
+                        // WebSocket SockJS handshake (HTTP) phải được phép - auth thực sự qua STOMP header (WebSocketAuthInterceptor)
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

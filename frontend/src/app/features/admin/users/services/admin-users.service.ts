@@ -42,12 +42,12 @@ export class AdminUsersService {
     );
   }
 
-  getUser(userId: string): Observable<ApiResponse<AdminUser>> {
+  getUser(userId: number): Observable<ApiResponse<AdminUser>> {
     return this.http.get<ApiResponse<AdminUser>>(`${this.apiUrl}/${userId}`);
   }
 
   updateUser(
-    userId: string,
+    userId: number,
     payload: UpdateAdminUserRequest,
   ): Observable<ApiResponse<AdminUser>> {
     return this.http.patch<ApiResponse<AdminUser>>(`${this.apiUrl}/${userId}`, payload);

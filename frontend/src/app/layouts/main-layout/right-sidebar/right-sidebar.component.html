@@ -24,7 +24,7 @@
                 {{ personDisplayName(person) }}
               </a>
               <!-- Friend Button để xử lý chấp nhận/từ chối đặt ngay dưới tên -->
-              <app-friend-button class="sidebar-friend-btn d-block w-100" [userId]="person.id.toString()" />
+              <app-friend-button class="sidebar-friend-btn d-block w-100" [userId]="person.id" />
             </div>
           </div>
         }

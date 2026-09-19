@@ -16,7 +16,7 @@
         @if (isSelf) {
           <button class="btn btn-outline-primary btn-sm rounded-pill fw-bold px-3" (click)="editProfile($event)">Sửa hồ sơ</button>
         } @else if (user) {
-          <app-friend-button [userId]="user.id.toString()" />
+          <app-friend-button [userId]="user.id" />
         }
       </div>
     </div>
