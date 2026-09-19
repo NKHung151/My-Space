@@ -32,7 +32,6 @@
     </div>
   </div>
 
-  @if (!isMinimized()) {
     <!-- Body / Messages -->
     <div class="chat-body flex-grow-1 p-2 overflow-y-auto" #messagesContainer>
       <!-- Example header info inside chat -->
@@ -57,7 +56,7 @@
                 
                 <div class="d-flex align-items-center gap-2">
                   <!-- Action menu bên trái bong bóng (nếu là tin nhắn của mình) -->
-                  @if (msg.senderId === currentUserId && !msg.deletedAt && editingMessageId() !== msg.id) {
+                  @if (msg.senderId === currentUserId && !msg.deletedAt && editingMessageId() !== msg.id && msg.type !== 'CALL') {
                     <div class="message-actions d-flex gap-2 bg-white border rounded-pill px-2 py-1 shadow-sm me-2">
                       <i class="bi bi-pencil-fill cursor-pointer text-muted hover-primary" style="font-size: 0.85rem;" (click)="startEdit(msg)" title="Sửa tin nhắn"></i>
                       <i class="bi bi-trash-fill cursor-pointer text-danger hover-danger" style="font-size: 0.85rem;" (click)="deleteMessage(msg.id)" title="Thu hồi"></i>
@@ -85,7 +84,7 @@
                           <div class="p-2 rounded-circle" [class.bg-white]="msg.senderId === authService.currentUser()?.id" [class.text-primary]="msg.senderId === authService.currentUser()?.id" [class.bg-primary]="msg.senderId !== authService.currentUser()?.id" [class.text-white]="msg.senderId !== authService.currentUser()?.id">
                             <i class="bi bi-telephone-fill"></i>
                           </div>
-                          <div>
+                          <div class="text-nowrap">
                             <div class="fw-bold" style="font-size: 0.9rem;">
                               @if (msg.content.includes('ENDED')) { Cuộc gọi thoại }
                               @else if (msg.content.includes('MISSED') || msg.content.includes('NO_ANSWER') || msg.content.includes('CALLEE_REJECT')) { Cuộc gọi nhỡ }
@@ -155,5 +154,4 @@
         </button>
       </div>
     </div>
-  }
 </div>

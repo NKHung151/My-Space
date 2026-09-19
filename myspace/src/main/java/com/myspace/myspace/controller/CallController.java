@@ -54,7 +54,7 @@ public class CallController {
         Long calleeId = getUserId(headerAccessor);
         CallBroadcastResult result = callService.rejectCall(request.getCallId(), calleeId);
         messagingTemplate.convertAndSendToUser(result.getReceiverEmail(), "/queue/calls", result.getCall());
-        broadcastCallMessage(request.getCallId(), getUserEmail(headerAccessor));
+        broadcastCallMessage(request.getCallId(), getUserEmail(headerAccessor), result.getReceiverEmail());
     }
 
     @MessageMapping("/call.cancel")
@@ -62,7 +62,7 @@ public class CallController {
         Long callerId = getUserId(headerAccessor);
         CallBroadcastResult result = callService.cancelCall(request.getCallId(), callerId);
         messagingTemplate.convertAndSendToUser(result.getReceiverEmail(), "/queue/calls", result.getCall());
-        broadcastCallMessage(request.getCallId(), getUserEmail(headerAccessor));
+        broadcastCallMessage(request.getCallId(), getUserEmail(headerAccessor), result.getReceiverEmail());
     }
 
     @MessageMapping("/call.end")
@@ -70,13 +70,13 @@ public class CallController {
         Long userId = getUserId(headerAccessor);
         CallBroadcastResult result = callService.endCall(request.getCallId(), userId);
         messagingTemplate.convertAndSendToUser(result.getReceiverEmail(), "/queue/calls", result.getCall());
-        broadcastCallMessage(request.getCallId(), getUserEmail(headerAccessor));
+        broadcastCallMessage(request.getCallId(), getUserEmail(headerAccessor), result.getReceiverEmail());
     }
 
-    private void broadcastCallMessage(Long callId, String senderEmail) {
+    private void broadcastCallMessage(Long callId, String email1, String email2) {
         MessageBroadcastResult msgResult = messageService.saveCallSystemMessage(callId);
-        messagingTemplate.convertAndSendToUser(msgResult.getReceiverEmail(), "/queue/messages", msgResult.getMessage());
-        messagingTemplate.convertAndSendToUser(senderEmail, "/queue/messages", msgResult.getMessage());
+        messagingTemplate.convertAndSendToUser(email1, "/queue/messages", msgResult.getMessage());
+        messagingTemplate.convertAndSendToUser(email2, "/queue/messages", msgResult.getMessage());
     }
 
     @MessageMapping("/call.signal")
