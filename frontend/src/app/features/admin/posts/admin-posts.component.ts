@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PaginationMeta } from '../../../core/http/api-response.model';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
@@ -16,17 +17,17 @@ import { LocalizedDatePipe } from '../../../shared/pipes/localized-date.pipe';
 @Component({
   selector: 'app-admin-posts',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, UiStateComponent, AssetImageDirective, LocalizedDatePipe],
+  imports: [CommonModule, ReactiveFormsModule, PaginationComponent, UiStateComponent, AssetImageDirective, LocalizedDatePipe],
   templateUrl: './admin-posts.component.html',
   styleUrl: './admin-posts.component.scss',
 })
-export class AdminPostsComponent implements OnInit, OnDestroy {
+export class AdminPostsComponent implements OnInit {
   private readonly postsService = inject(AdminPostsService);
-
   private readonly toastService = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly destroy$ = new Subject<void>();
+  private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
   private detailRequestVersion = 0;
 
   readonly posts = signal<AdminPost[]>([]);
@@ -39,31 +40,38 @@ export class AdminPostsComponent implements OnInit, OnDestroy {
   readonly panelOpen = signal(false);
   readonly pagination = signal<PaginationMeta>({ total: 0, page: 1, limit: 8, totalPages: 0 });
 
-  search = '';
-  tag = '';
+  readonly filterForm = this.fb.nonNullable.group({
+    search: '',
+    tag: '',
+  });
 
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
-    this.search = params.get('search') ?? '';
-    this.tag = params.get('tag') ?? '';
-    this.loadPosts(this.readPage(params.get('page')));
-  }
+    this.filterForm.setValue({
+      search: params.get('search') ?? '',
+      tag: params.get('tag') ?? '',
+    }, { emitEvent: false });
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.filterForm.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged((previous, current) => JSON.stringify(previous) === JSON.stringify(current)),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.loadPosts(1));
+
+    this.loadPosts(this.readPage(params.get('page')));
   }
 
   loadPosts(page = 1): void {
     this.loading.set(true);
     this.errorMessage.set('');
     this.syncQueryParams(page);
+    const filters = this.filterForm.getRawValue();
     this.postsService.getPosts({
-      search: this.search.trim(),
-      tag: this.tag || undefined,
+      search: filters.search.trim(),
+      tag: filters.tag || undefined,
       page,
       limit: this.pagination().limit,
-    }).pipe(takeUntil(this.destroy$)).subscribe({
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: response => {
         this.posts.set(response.items);
         if (response.meta) this.pagination.set(response.meta);
@@ -82,7 +90,7 @@ export class AdminPostsComponent implements OnInit, OnDestroy {
     this.detailLoading.set(true);
     this.selectedPost.set(post);
 
-    this.postsService.getPost(post.id).pipe(takeUntil(this.destroy$)).subscribe({
+    this.postsService.getPost(post.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: response => {
         if (requestVersion !== this.detailRequestVersion || !this.panelOpen()) return;
         this.selectedPost.set(response.data);
@@ -117,7 +125,7 @@ export class AdminPostsComponent implements OnInit, OnDestroy {
     const post = this.selectedPost();
     if (!post || this.saving()) return;
     this.saving.set(true);
-    this.postsService.deletePost(post.id).pipe(takeUntil(this.destroy$)).subscribe({
+    this.postsService.deletePost(post.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.saving.set(false);
         this.closePanel();
@@ -137,12 +145,13 @@ export class AdminPostsComponent implements OnInit, OnDestroy {
   }
 
   private syncQueryParams(page: number): void {
+    const filters = this.filterForm.getRawValue();
     void this.router.navigate([], {
       relativeTo: this.route,
       replaceUrl: true,
       queryParams: {
-        search: this.search.trim() || null,
-        tag: this.tag || null,
+        search: filters.search.trim() || null,
+        tag: filters.tag || null,
         page: page > 1 ? page : null,
       },
     });

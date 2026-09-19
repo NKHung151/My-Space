@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { UiStateComponent } from '../../../shared/components/ui-state/ui-state.component';
@@ -14,7 +14,7 @@ import { AdminDashboardService } from './services/admin-dashboard.service';
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss'
 })
-export class AdminDashboardComponent {
+export class AdminDashboardComponent implements OnInit {
   private readonly dashboardService = inject(AdminDashboardService);
 
   readonly loading = signal(true);
@@ -36,8 +36,8 @@ export class AdminDashboardComponent {
     this.overview()?.posts.topArticles.map(article => article.viewCount) ?? [],
   ));
 
-  constructor() {
-    effect(() => this.loadOverview(), { allowSignalWrites: true });
+  ngOnInit(): void {
+    this.loadOverview();
   }
 
   loadOverview(): void {

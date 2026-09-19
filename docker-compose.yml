@@ -3,7 +3,7 @@ version: '3.8'
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.4.5
-    container_name: elasticsearch-lingora
+    container_name: elasticsearch-myspace
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false

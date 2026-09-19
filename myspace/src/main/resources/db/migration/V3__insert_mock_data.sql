@@ -2,7 +2,7 @@
 INSERT INTO posts (title, excerpt, content, author_id, view_count, like_count, comment_count, published_at, created_at, updated_at)
 VALUES 
 ('Bài viết đầu tiên của tôi', 'Đây là đoạn tóm tắt', 'Nội dung chi tiết của bài viết đầu tiên trên hệ thống', 1, 150, 1, 1, NOW(), NOW(), NOW()),
-('Chào mừng đến với Lingora', 'Hướng dẫn sử dụng', 'Cùng khám phá các tính năng thú vị nhé!', 2, 50, 1, 0, NOW(), NOW(), NOW());
+('Chào mừng đến với My Space', 'Hướng dẫn sử dụng', 'Cùng khám phá các tính năng thú vị nhé!', 2, 50, 1, 0, NOW(), NOW(), NOW());
 
 -- Like posts
 INSERT INTO post_likes (post_id, user_id, created_at) VALUES (1, 2, NOW());

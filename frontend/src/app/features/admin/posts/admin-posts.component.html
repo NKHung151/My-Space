@@ -5,11 +5,11 @@
       <p>Xem và xóa bài đăng của thành viên.</p>
     </header>
 
-    <div class="admin-filter-panel" aria-label="Post filters">
+    <div class="admin-filter-panel" aria-label="Post filters" [formGroup]="filterForm">
       <div class="input-group admin-search-field">
         <span class="input-group-text border-end-0"><i class="bi bi-search" aria-hidden="true"></i></span>
-        <input class="form-control border-start-0" type="search" [(ngModel)]="search"
-          (ngModelChange)="loadPosts(1)" placeholder="Tìm kiếm theo tiêu đề hoặc tác giả...">
+        <input class="form-control border-start-0" type="search" formControlName="search"
+          placeholder="Tìm kiếm theo tiêu đề hoặc tác giả...">
       </div>
     </div>
   </div>

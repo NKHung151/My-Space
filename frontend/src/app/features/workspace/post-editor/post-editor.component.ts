@@ -301,7 +301,7 @@ export class PostEditorComponent implements OnInit, OnDestroy {
   private getAutosaveKey(): string {
     const authorId = this.authService.currentUser()?.id || 'anonymous';
     const postId = this.currentPostId || 'new';
-    return `lingora_editor_draft_${authorId}_${postId}`;
+    return `myspace_editor_draft_${authorId}_${postId}`;
   }
 
   private scheduleAutosave(): void {

@@ -5,7 +5,7 @@ import {
   UserPreferences,
 } from './user-preferences.model';
 
-const STORAGE_KEY = 'lingora-user-preferences';
+const STORAGE_KEY = 'myspace-user-preferences';
 const DEFAULT_PREFERENCES: UserPreferences = {
   compactView: false,
   autoPlayMedia: true,

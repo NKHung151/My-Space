@@ -22,4 +22,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p INNER JOIN Friendship f ON p.author.id = f.friend.id WHERE f.user.id = :userId")
     Page<Post> findPostsByFriendship(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE " +
+           "(:tag IS NULL OR p.tag = :tag) AND " +
+           "(:search IS NULL OR p.unaccentedTitle LIKE %:search% OR p.author.unaccentedDisplayName LIKE %:search%)")
+    Page<Post> searchAdminPosts(@Param("search") String search, @Param("tag") String tag, Pageable pageable);
+
+    @Query("SELECT SUM(p.viewCount) FROM Post p")
+    Long sumTotalViews();
+
+    @Query("SELECT p FROM Post p ORDER BY p.viewCount DESC")
+    List<Post> findTopArticles(Pageable pageable);
 }
