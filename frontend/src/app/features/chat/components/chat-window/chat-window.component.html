@@ -1,0 +1,90 @@
+<div class="chat-window d-flex flex-column shadow-sm" [class.minimized]="isMinimized()">
+  <!-- Header -->
+  <div class="chat-header d-flex justify-content-between align-items-center p-2 border-bottom" (click)="toggleMinimize()">
+    <div (click)="goToProfile($event, targetUser.id)" class="d-flex align-items-center gap-2 overflow-hidden flex-grow-1 cursor-pointer text-decoration-none">
+      <div class="position-relative flex-shrink-0">
+        <img [appAssetImage]="personAvatar(targetUser)" alt="Avatar" class="rounded-circle object-fit-cover" width="32" height="32">
+        @if (presenceService.isOnline(targetUser.id)) {
+          <div class="online-indicator-small"></div>
+        }
+      </div>
+      <div class="d-flex flex-column min-w-0 text-dark hover-underline-name">
+        <span class="fw-bold text-truncate d-flex align-items-center gap-1" style="font-size: 0.95rem; line-height: 1.2;">
+          <span class="name-text hover-underline">{{ personDisplayName(targetUser) }}</span>
+          <i class="bi bi-chevron-down text-muted" style="font-size: 0.75rem;"></i>
+        </span>
+        <span class="text-muted text-truncate" style="font-size: 0.75rem;">
+          {{ presenceService.isOnline(targetUser.id) ? 'Đang hoạt động' : 'Đang ngoại tuyến' }}
+        </span>
+      </div>
+    </div>
+    
+    <div class="d-flex align-items-center gap-2 text-primary ms-2" (click)="$event.stopPropagation()">
+      <button class="btn btn-sm btn-icon border-0 p-1" (click)="notImplemented()">
+        <i class="bi bi-telephone-fill fs-5" style="color: #0084FF;"></i>
+      </button>
+      <button class="btn btn-sm btn-icon border-0 p-1" (click)="notImplemented()">
+        <i class="bi bi-camera-video-fill fs-5" style="color: #0084FF;"></i>
+      </button>
+      <button class="btn btn-sm btn-icon border-0 p-1" (click)="toggleMinimize()">
+        <i class="bi bi-dash-lg fs-5" style="color: #0084FF;"></i>
+      </button>
+      <button class="btn btn-sm btn-icon border-0 p-1" (click)="closeChat()">
+        <i class="bi bi-x-lg fs-5" style="color: #0084FF;"></i>
+      </button>
+    </div>
+  </div>
+
+  @if (!isMinimized()) {
+    <!-- Body / Messages -->
+    <div class="chat-body flex-grow-1 p-2 overflow-y-auto" #messagesContainer>
+      <!-- Example header info inside chat -->
+      <div class="text-center my-4">
+        <img [appAssetImage]="personAvatar(targetUser)" class="rounded-circle object-fit-cover mb-2" width="60" height="60">
+        <h6 class="fw-bold mb-1">{{ personDisplayName(targetUser) }}</h6>
+        <p class="text-muted small mb-0">Các bạn là bạn bè trên My Space</p>
+      </div>
+
+      <!-- Messages List -->
+      <div class="d-flex flex-column gap-1">
+        @for (msg of messages(); track msg.id) {
+          <div class="d-flex w-100" [class.justify-content-end]="msg.senderId === currentUserId" [class.justify-content-start]="msg.senderId !== currentUserId">
+            <div class="d-flex gap-2 align-items-end" style="max-width: 75%;">
+              <!-- Avatar người gửi (bạn bè) -->
+              @if (msg.senderId !== currentUserId) {
+                <img [appAssetImage]="personAvatar(targetUser)" alt="Avatar" class="rounded-circle object-fit-cover flex-shrink-0" width="28" height="28">
+              }
+              
+              <div class="message-bubble px-3 py-2" 
+                   [class.sent]="msg.senderId === currentUserId" 
+                   [class.received]="msg.senderId !== currentUserId">
+                {{ msg.content }}
+              </div>
+
+              <!-- Avatar của mình (người dùng hiện tại) -->
+              @if (msg.senderId === currentUserId && currentUser()) {
+                <img [appAssetImage]="personAvatar(currentUser()!)" alt="Avatar" class="rounded-circle object-fit-cover flex-shrink-0" width="28" height="28">
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Footer / Input -->
+    <div class="chat-footer p-2 border-top d-flex align-items-center gap-2">
+      <!-- Input -->
+      <div class="d-flex align-items-center flex-grow-1 rounded-pill bg-light px-3 py-1">
+        <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" 
+               placeholder="Aa" 
+               [(ngModel)]="newMessage" 
+               (keyup.enter)="sendMessage()">
+        <i class="bi bi-emoji-smile fs-5 ms-2 text-primary cursor-pointer"></i>
+      </div>
+      <!-- Send Button -->
+      <button class="btn btn-sm border-0 p-0 text-primary" (click)="sendMessage()" [disabled]="!newMessage().trim()">
+        <i class="bi bi-send-fill fs-4" [style.color]="newMessage().trim() ? '#0084FF' : '#B0B3B8'"></i>
+      </button>
+    </div>
+  }
+</div>

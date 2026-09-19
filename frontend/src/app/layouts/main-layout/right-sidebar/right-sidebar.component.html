@@ -55,8 +55,8 @@
       @if (friends().length > 0) {
         <div class="friends-list overflow-y-auto pe-2 flex-grow-1 custom-scrollbar">
           @for (person of friends(); track person.id) {
-            <a [routerLink]="['/u', person.username]" 
-               class="d-flex align-items-center gap-2 p-2 rounded text-decoration-none hover-bg-light transition-all mb-1">
+            <div (click)="chatManager.openChat(person)" 
+               class="d-flex align-items-center gap-2 p-2 rounded text-decoration-none hover-bg-light transition-all mb-1 cursor-pointer">
               <div class="position-relative">
                 <img [appAssetImage]="personAvatar(person)" 
                      alt="Avatar" class="rounded-circle object-fit-cover" 
@@ -68,7 +68,7 @@
               <span class="text-dark fw-medium text-truncate" style="font-size: 0.9rem;">
                 {{ personDisplayName(person) }}
               </span>
-            </a>
+            </div>
           }
         </div>
       } @else {

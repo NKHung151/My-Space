@@ -18,6 +18,13 @@
       <app-right-sidebar></app-right-sidebar>
     </aside>
   </main>
+
+  <!-- Chat Windows Container -->
+  <div class="chat-windows-container d-flex flex-row-reverse align-items-end gap-2 fixed-bottom pe-3 pb-0" style="z-index: 1050; pointer-events: none; right: 300px;">
+    @for (chat of chatManager.activeChats(); track chat.id) {
+      <app-chat-window [targetUser]="chat"></app-chat-window>
+    }
+  </div>
 </div>
 
 @if (mobileSidebarOpen()) {

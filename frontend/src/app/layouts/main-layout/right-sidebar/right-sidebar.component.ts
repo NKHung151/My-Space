@@ -9,6 +9,7 @@ import { FriendButtonComponent } from '../../../features/friends/components/frie
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
 import { WebSocketService } from '../../../core/websocket/websocket.service';
 import { PresenceService } from '../../../core/services/presence.service';
+import { ChatManagerService } from '../../../features/chat/services/chat-manager.service';
 
 @Component({
   selector: 'app-right-sidebar',
@@ -23,6 +24,7 @@ export class RightSidebarComponent implements OnDestroy {
   private authModalService = inject(AuthModalService);
   private webSocketService = inject(WebSocketService);
   public presenceService = inject(PresenceService);
+  public chatManager = inject(ChatManagerService);
 
   currentUser = this.authService.currentUser;
   friendRequests = signal<FriendUser[]>([]);

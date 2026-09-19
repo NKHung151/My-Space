@@ -8,17 +8,20 @@ import { MobileHeaderComponent } from './mobile-header/mobile-header.component';
 
 import { BrandComponent } from '../../shared/components/brand/brand.component';
 import { RightSidebarComponent } from './right-sidebar/right-sidebar.component';
+import { ChatWindowComponent } from '../../features/chat/components/chat-window/chat-window.component';
+import { ChatManagerService } from '../../features/chat/services/chat-manager.service';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, MobileHeaderComponent, BrandComponent, RightSidebarComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, MobileHeaderComponent, BrandComponent, RightSidebarComponent, ChatWindowComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
 })
 export class MainLayoutComponent {
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
+  public readonly chatManager = inject(ChatManagerService);
   private lastContentPath = '';
 
   @ViewChild('centerFeed') private centerFeed?: ElementRef<HTMLElement>;
