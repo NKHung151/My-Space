@@ -7,11 +7,12 @@ import { SidebarComponent } from './sidebar/sidebar.component';
 import { MobileHeaderComponent } from './mobile-header/mobile-header.component';
 
 import { BrandComponent } from '../../shared/components/brand/brand.component';
+import { RightSidebarComponent } from './right-sidebar/right-sidebar.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, MobileHeaderComponent, BrandComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, MobileHeaderComponent, BrandComponent, RightSidebarComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
 })

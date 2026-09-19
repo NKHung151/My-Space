@@ -6,7 +6,7 @@
 
 .app-main-content {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 260px 1fr 300px;
   width: 100%;
   max-width: none;
   flex: 1;
@@ -14,6 +14,16 @@
 
 .sidebar-column {
   min-width: 0;
+}
+
+.right-sidebar {
+  min-width: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--border-color);
+  background-color: var(--bg-sidebar);
 }
 
 .desktop-only {
@@ -56,6 +66,10 @@
 @media (max-width: 1200px) {
   .app-main-content {
     grid-template-columns: 240px 1fr;
+  }
+
+  .right-sidebar {
+    display: none;
   }
 
   .center-feed {

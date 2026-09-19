@@ -1,0 +1,66 @@
+.right-sidebar-container {
+  /* Ngăn không cho cuộn ngang */
+  overflow-x: hidden;
+}
+
+.hover-underline:hover {
+  text-decoration: underline !important;
+}
+
+.hover-bg-light:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Custom scrollbar cho danh sách bạn bè */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+  
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Tùy chỉnh nút Friend Button khi ở trong Sidebar */
+::ng-deep .sidebar-friend-btn {
+  display: block;
+  width: 100%;
+
+  /* Ghi đè class d-inline-flex bên trong app-friend-button */
+  .d-inline-flex {
+    display: flex !important;
+    width: 100%;
+    gap: 0.35rem !important;
+  }
+
+  button {
+    flex: 1;
+    width: 100% !important;
+    min-width: 0;
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+    font-size: 0.85rem;
+    
+    /* Thu nhỏ icon để tiết kiệm diện tích */
+    i {
+      font-size: 0.9rem;
+    }
+  }
+}

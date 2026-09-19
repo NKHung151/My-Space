@@ -1,0 +1,87 @@
+<div class="right-sidebar-container p-3 d-flex flex-column gap-4 h-100">
+  
+  @if (currentUser()) {
+    <!-- Section: Lời mời kết bạn -->
+    <section class="friend-requests-section">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="text-muted fw-bold mb-0">Lời mời kết bạn</h6>
+    </div>
+
+    @if (friendRequests().length > 0) {
+      <div class="requests-list d-flex flex-column gap-3 mb-2">
+        <!-- Chỉ lặp tối đa 3 người -->
+        @for (person of friendRequests() | slice:0:3; track person.id) {
+          <div class="d-flex align-items-start gap-2 mb-2">
+            <a [routerLink]="['/u', person.username]" class="text-decoration-none flex-shrink-0 mt-1">
+              <img [appAssetImage]="personAvatar(person)" 
+                   alt="Avatar" class="rounded-circle object-fit-cover" 
+                   width="48" height="48">
+            </a>
+            <div class="d-flex flex-column flex-grow-1 min-w-0">
+              <a [routerLink]="['/u', person.username]" 
+                 class="text-dark text-decoration-none text-truncate fw-bold hover-underline mb-2" 
+                 style="font-size: 0.95rem;">
+                {{ personDisplayName(person) }}
+              </a>
+              <!-- Friend Button để xử lý chấp nhận/từ chối đặt ngay dưới tên -->
+              <app-friend-button class="sidebar-friend-btn d-block w-100" [userId]="person.id.toString()" />
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Link xem tất cả -->
+      <a routerLink="/friends" [queryParams]="{tab: 'requests'}" 
+         class="text-decoration-none fw-medium mt-1 d-inline-block hover-underline" style="font-size: 0.9rem; color: #1877F2;">
+        Xem tất cả lời mời
+      </a>
+    } @else {
+      <div class="text-muted" style="font-size: 0.9rem;">
+        Không có lời mời kết bạn nào
+      </div>
+    }
+    </section>
+
+    <hr class="m-0 border-secondary" style="opacity: 0.1;">
+  }
+
+  <!-- Section: Danh sách bạn bè -->
+  <section class="friends-section d-flex flex-column min-h-0 flex-grow-1">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="text-muted fw-bold mb-0">Người liên hệ</h6>
+    </div>
+
+    @if (currentUser()) {
+      @if (friends().length > 0) {
+        <div class="friends-list overflow-y-auto pe-2 flex-grow-1 custom-scrollbar">
+          @for (person of friends(); track person.id) {
+            <a [routerLink]="['/u', person.username]" 
+               class="d-flex align-items-center gap-2 p-2 rounded text-decoration-none hover-bg-light transition-all mb-1">
+              <div class="position-relative">
+                <img [appAssetImage]="personAvatar(person)" 
+                     alt="Avatar" class="rounded-circle object-fit-cover" 
+                     width="36" height="36">
+              </div>
+              <span class="text-dark fw-medium text-truncate" style="font-size: 0.9rem;">
+                {{ personDisplayName(person) }}
+              </span>
+            </a>
+          }
+        </div>
+      } @else {
+        <div class="text-muted" style="font-size: 0.9rem;">
+          Hãy kết bạn để trò chuyện
+        </div>
+      }
+    } @else {
+      <div class="d-flex flex-column align-items-center justify-content-center h-100 text-center text-muted gap-3">
+        <i class="bi bi-chat-dots fs-1"></i>
+        <span>Đăng nhập để trò chuyện với bạn bè</span>
+        <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold" (click)="openLoginModal()">
+          Đăng nhập
+        </button>
+      </div>
+    }
+  </section>
+
+</div>
