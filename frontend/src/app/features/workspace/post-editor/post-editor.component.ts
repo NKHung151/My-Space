@@ -140,7 +140,30 @@ export class PostEditorComponent implements OnInit, OnDestroy {
       
     this.draft.content = textHtml + mediaHtml;
 
-    // Tự động tạo title từ nội dung để thoả mãn backend (không dùng title hiển thị nữa)
+    // Trích xuất Media đầu tiên làm Ảnh bìa / Video bìa
+    if (this.mediaAttachments.length > 0) {
+      const firstMedia = this.mediaAttachments[0];
+      this.draft.coverImageUrl = firstMedia.url;
+      this.draft.hasVideo = (firstMedia.type === 'video');
+    } else {
+      // Tìm xem trong nội dung copy-paste (nếu có HTML img/video tag) có media không
+      const imgMatch = textHtml.match(/<img[^>]+src="([^">]+)"/);
+      const videoMatch = textHtml.match(/<video[^>]+src="([^">]+)"/);
+      const iframeMatch = textHtml.match(/<iframe[^>]+src="([^">]+youtube\.com[^">]+|[^">]+youtu\.be[^">]+)"/);
+      
+      if (videoMatch || iframeMatch) {
+        this.draft.coverImageUrl = videoMatch ? videoMatch[1] : iframeMatch![1];
+        this.draft.hasVideo = true;
+      } else if (imgMatch) {
+        this.draft.coverImageUrl = imgMatch[1];
+        this.draft.hasVideo = false;
+      } else {
+        this.draft.coverImageUrl = undefined;
+        this.draft.hasVideo = false;
+      }
+    }
+
+    // Tự động tạo title từ nội dung để thoả mãn backend
     const plainText = this.textContent.trim().replace(/\s+/g, ' ');
     this.draft.title = plainText.length > 100 ? plainText.substring(0, 97) + '...' : plainText;
     if (!this.draft.title) {

@@ -62,23 +62,28 @@
         <span class="fw-bold cursor-pointer ms-1" style="color: var(--text-muted); font-size: 0.9em;">... Xem thêm</span>
       </div>
 
-      @if (post.coverVideoUrl) {
-        <div class="post-media mt-2 w-100 position-relative" style="background: #000; display: flex; justify-content: center; min-height: 250px;">
-          @if (isYoutubeEmbed(post.coverVideoUrl)) {
+      @if (post.hasVideo && post.coverImageUrl) {
+        <div class="post-media mt-2 w-100 position-relative rounded overflow-hidden" style="background: #000; display: flex; justify-content: center; min-height: 250px;">
+          @if (isYoutubeEmbed(post.coverImageUrl)) {
             <iframe 
               class="w-100 border-0" 
-              [src]="getSafeYoutubeUrl(post.coverVideoUrl)" 
+              [src]="getSafeYoutubeUrl(post.coverImageUrl)" 
               allowfullscreen 
               (click)="$event.stopPropagation()"
               style="min-height: 250px; aspect-ratio: 16/9;">
             </iframe>
           } @else {
-            <video class="w-100" #videoEl [src]="post.coverVideoUrl" muted loop playsinline (mouseenter)="videoEl.controls = true" (mouseleave)="videoEl.controls = false" (click)="$event.stopPropagation()" style="max-height: 500px; object-fit: contain;"></video>
+            <video class="w-100" #videoEl [src]="post.coverImageUrl" muted loop playsinline (mouseenter)="videoEl.controls = true" (mouseleave)="videoEl.controls = false" (click)="$event.stopPropagation()" style="max-height: 500px; object-fit: contain;"></video>
+            
+            <!-- Video Play Icon Overlay -->
+            <div class="position-absolute top-50 start-50 translate-middle pointer-events-none" style="opacity: 0.8;">
+              <i class="bi bi-play-circle-fill text-white" style="font-size: 3rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></i>
+            </div>
           }
         </div>
       } @else if (post.coverImageUrl) {
-        <div class="post-media mt-2 w-100 text-center" style="background: #000; display: flex; justify-content: center;">
-          <img class="img-fluid w-100" [src]="post.coverImageUrl" [alt]="post.title" style="max-height: 500px; object-fit: contain;" />
+        <div class="post-media mt-2 w-100 text-center rounded overflow-hidden" style="background: #f8f9fa; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border-color);">
+          <img class="img-fluid w-100" [src]="post.coverImageUrl" [alt]="post.title" style="max-height: 450px; object-fit: contain;" />
         </div>
       }
     </a>
