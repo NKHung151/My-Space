@@ -61,6 +61,9 @@
                 <img [appAssetImage]="personAvatar(person)" 
                      alt="Avatar" class="rounded-circle object-fit-cover" 
                      width="36" height="36">
+                @if (presenceService.isOnline(person.id)) {
+                  <div class="online-indicator"></div>
+                }
               </div>
               <span class="text-dark fw-medium text-truncate" style="font-size: 0.9rem;">
                 {{ personDisplayName(person) }}

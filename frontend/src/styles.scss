@@ -25,3 +25,15 @@ app-login, app-register, app-forgot-password, app-reset-password {
 }
 
 
+
+.online-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background-color: #31A24C;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  z-index: 2;
+}

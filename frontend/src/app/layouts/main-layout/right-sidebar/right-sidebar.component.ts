@@ -8,6 +8,7 @@ import { AuthModalService } from '../../../core/auth/auth-modal.service';
 import { FriendButtonComponent } from '../../../features/friends/components/friend-button/friend-button.component';
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
 import { WebSocketService } from '../../../core/websocket/websocket.service';
+import { PresenceService } from '../../../core/services/presence.service';
 
 @Component({
   selector: 'app-right-sidebar',
@@ -21,6 +22,7 @@ export class RightSidebarComponent implements OnDestroy {
   private authService = inject(AuthService);
   private authModalService = inject(AuthModalService);
   private webSocketService = inject(WebSocketService);
+  public presenceService = inject(PresenceService);
 
   currentUser = this.authService.currentUser;
   friendRequests = signal<FriendUser[]>([]);
