@@ -20,3 +20,13 @@ Thumbs.db
 .vscode/
 *.iml
 *.md
+
+nsfw-ai/venv/
+nsfw-ai/data/
+nsfw-ai/data_raw/
+nsfw-ai/data_staging/
+nsfw-ai/*.pt
+nsfw-ai/preview/
+nsfw-ai/manifest.csv
+nsfw-ai/runs/
+__pycache__/
