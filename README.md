@@ -1,4 +1,4 @@
-﻿# My Space
+# My Space
 
 Mạng xã hội real-time với đầy đủ tính năng: đăng bài, chat 1-1, gọi thoại/video WebRTC, thông báo tức thì và trang quản trị. Backend Spring Boot 4.1.1, frontend Angular 18, giao tiếp real-time qua WebSocket/STOMP.
 
@@ -446,11 +446,3 @@ Mỗi ảnh upload (bài viết hoặc avatar) được kiểm tra tự động 
 5. Service AI không phản hồi → **HTTP 503**.
 
 **Giới hạn hiện tại:** chỉ phát hiện bạo lực/vũ khí; chưa xử lý nội dung khiêu dâm; không quét video/audio; giới hạn 10 MB/ảnh.
-
----
-
-## License & Tác giả
-
-**License:** chưa có.
-
-**Tác giả:** Nguyễn Khải Hưng
