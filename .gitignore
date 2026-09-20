@@ -20,6 +20,7 @@ Thumbs.db
 .vscode/
 *.iml
 *.md
+!README.md
 
 nsfw-ai/venv/
 nsfw-ai/data/
