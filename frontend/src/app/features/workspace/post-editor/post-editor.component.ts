@@ -16,7 +16,7 @@ import { AuthorPostsService } from '../../posts/services/author-posts.service';
 import { EditorUploadsService } from '../services/editor-uploads.service';
 import { validateUploadFile } from '../utils/upload-validator';
 import { ToastService } from '../../../core/notifications/toast.service';
-import { getApiErrorMessage } from '../../../core/http/api-error.util';
+import { getApiErrorMessage, getUploadErrorMessage } from '../../../core/http/api-error.util';
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
 
 @Component({
@@ -219,7 +219,10 @@ export class PostEditorComponent implements OnInit, OnDestroy {
         this.scheduleAutosave();
       },
       error: (err: unknown) => {
-        this.toast.showError(this.formatError(err), 'Lỗi tải lên');
+        const msg = mediaType === 'image'
+          ? getUploadErrorMessage(err)
+          : getApiErrorMessage(err, 'Tải lên thất bại. Vui lòng thử lại.');
+        this.toast.showError(msg, 'Lỗi tải lên');
         this.isUploading = false;
       },
     });

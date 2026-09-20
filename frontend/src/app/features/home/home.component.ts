@@ -72,7 +72,7 @@ export class HomeComponent implements OnInit {
   readonly totalPages = signal(1);
 
   readonly quickDraftAvatar = computed(() => {
-    return this.authService.currentUser()?.avatarUrl ?? 'assets/images/default-avatar.svg';
+    return this.authService.currentUser()?.avatarUrl ?? '/assets/images/default-avatar.svg';
   });
 
   constructor() {

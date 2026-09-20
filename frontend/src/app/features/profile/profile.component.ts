@@ -167,7 +167,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   personAvatar(person: FriendUser): string {
     return person.avatarUrl && !this.failedPeopleAvatarIds().has(person.id)
       ? this.uploadsService.toAbsoluteUrl(person.avatarUrl)
-      : 'assets/images/default-avatar.svg';
+      : '/assets/images/default-avatar.svg';
   }
 
   handlePeopleAvatarError(personId: number): void {

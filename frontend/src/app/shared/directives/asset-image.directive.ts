@@ -21,7 +21,7 @@ export class AssetImageDirective implements OnChanges, AfterViewInit {
   // Đầu vào: đường dẫn file ảnh. Nếu rỗng, tự dùng fallback.
   @Input() appAssetImage: string | null | undefined;
   // Đầu vào tùy chọn: ảnh mặc định khi bị lỗi.
-  @Input() assetFallback = 'assets/images/default-avatar.svg';
+  @Input() assetFallback = '/assets/images/default-avatar.svg';
 
   // Định dạng CSS mặc định cho ảnh: tỉ lệ 1:1, cắt ảnh vừa khung, bo tròn
   @HostBinding('style.aspect-ratio') readonly aspectRatio = '1 / 1';

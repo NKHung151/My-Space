@@ -12,7 +12,7 @@ import { EditorUploadsService } from '../workspace/services/editor-uploads.servi
 import { CurrentUser } from '../../core/auth/current-user.model';
 import { validateUploadFile } from '../workspace/utils/upload-validator';
 import { isStrongPassword } from '../../shared/validators/password.validator';
-import { getApiErrorMessage } from '../../core/http/api-error.util';
+import { getApiErrorMessage, getUploadErrorMessage } from '../../core/http/api-error.util';
 import { finalize, switchMap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
@@ -312,7 +312,10 @@ export class SettingsComponent implements OnInit {
         this.setProfileForm(user);
         this.toastService.showSuccess('Cập nhật ảnh hồ sơ thành công.');
       },
-      error: () => this.toastService.showError('Không thể upload ảnh'),
+      error: (err: unknown) => {
+        const msg = getUploadErrorMessage(err);
+        this.toastService.showError(msg, 'Không thể cập nhật ảnh đại diện');
+      },
     });
   }
 

@@ -94,7 +94,7 @@ export class AuthorTooltipComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   get avatarUrl(): string {
-    return this.user?.avatarUrl || 'assets/images/default-avatar.svg';
+    return this.user?.avatarUrl || '/assets/images/default-avatar.svg';
   }
 
   ngOnDestroy(): void {
