@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.exception.AppException;
+import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.dto.request.CreatePostRequest;
@@ -52,7 +54,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     @Transactional
     public PostDetailResponse createPost(Long authorId, CreatePostRequest request) {
         User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new RuntimeException("Author not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
 
         Post post = new Post();
         post.setTitle(request.getTitle());
@@ -88,7 +90,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     @Transactional(readOnly = true)
     public PostDetailResponse getMyPost(Long authorId, Long postId) {
         Post post = postRepository.findByIdAndAuthorId(postId, authorId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
         PostDetailResponse response = PostMapper.toDetailResponse(post);
         response.setLiked(postLikeRepository.existsByPostIdAndUserId(postId, authorId));
         return response;
@@ -98,7 +100,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     @Transactional
     public PostDetailResponse updatePost(Long authorId, Long postId, UpdatePostRequest request) {
         Post post = postRepository.findByIdAndAuthorId(postId, authorId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
 
         if (request.getTitle() != null)        post.setTitle(request.getTitle());
         if (request.getExcerpt() != null)      post.setExcerpt(HtmlSanitizer.sanitize(request.getExcerpt()));
@@ -142,7 +144,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     @Transactional
     public void deletePost(Long authorId, Long postId) {
         Post post = postRepository.findByIdAndAuthorId(postId, authorId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
 
         // Xóa tất cả media Cloudinary liên quan
         Set<String> urls = extractCloudinaryUrls(post.getContent());

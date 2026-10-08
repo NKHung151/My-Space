@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.exception.AppException;
+import org.springframework.http.HttpStatus;
 import com.myspace.myspace.entity.RefreshToken;
 import com.myspace.myspace.entity.User;
 import com.myspace.myspace.repository.RefreshTokenRepository;
@@ -51,7 +53,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             // Token hết hạn -> Vô hiệu hóa ngay
             refreshToken.setRevoked(true);
             refreshTokenRepository.save(refreshToken);
-            throw new RuntimeException("Refresh token đã hết hạn! Vui lòng đăng nhập lại.");
+            throw new AppException(HttpStatus.UNAUTHORIZED, "Refresh token đã hết hạn! Vui lòng đăng nhập lại.");
         }
         return refreshToken;
     }

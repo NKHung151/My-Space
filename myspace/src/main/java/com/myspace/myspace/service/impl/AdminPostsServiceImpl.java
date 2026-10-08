@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.exception.AppException;
+import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.dto.response.AdminPostResponse;
@@ -56,7 +58,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
     @Transactional(readOnly = true)
     public AdminPostResponse getPostById(Long id) {
         Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
         return mapToResponse(post);
     }
 
@@ -64,7 +66,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
     @Transactional
     public void deletePost(Long id) {
         Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
                 
         Long authorId = post.getAuthor().getId();
         

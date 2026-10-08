@@ -61,7 +61,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
     @Transactional(readOnly = true)
     public AdminUserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
         return mapToResponse(user);
     }
 
@@ -69,7 +69,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
     @Transactional
     public AdminUserResponse updateUser(Long id, UpdateAdminUserRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
                 
         // Giống quy tắc ở FE: không đổi role/trạng thái của tài khoản admin (tránh admin tự khóa nhau / tự khóa mình)
         if (user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().getName())) {
@@ -90,7 +90,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
         
         if (request.getRole() != null && !request.getRole().trim().isEmpty()) {
             Role newRole = roleRepository.findByName(request.getRole().trim())
-                    .orElseThrow(() -> new RuntimeException("Role not found"));
+                    .orElseThrow(() -> new AppException(HttpStatus.BAD_REQUEST, "Vai trò không hợp lệ."));
             user.setRole(newRole);
         }
         

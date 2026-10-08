@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.exception.AppException;
+import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.dto.request.CreateCommentRequest;
 import com.myspace.myspace.dto.request.UpdateCommentRequest;
@@ -86,9 +88,9 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentResponse createComment(Long postId, Long authorId, CreateCommentRequest request) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
         User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
 
         Comment comment = new Comment();
         comment.setPost(post);
@@ -100,7 +102,7 @@ public class CommentServiceImpl implements CommentService {
         if (request.getParentId() != null || request.getReplyToCommentId() != null) {
             Long targetId = request.getReplyToCommentId() != null ? request.getReplyToCommentId() : request.getParentId();
             Comment target = commentRepository.findById(targetId)
-                    .orElseThrow(() -> new RuntimeException("Target comment not found"));
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bình luận."));
 
             Comment parent = target.getParent() != null ? target.getParent() : target;
             comment.setParent(parent);
@@ -126,7 +128,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentResponse updateComment(Long commentId, Long authorId, UpdateCommentRequest request) {
         Comment comment = commentRepository.findByIdAndAuthorId(commentId, authorId)
-                .orElseThrow(() -> new RuntimeException("Comment not found or you don't have permission"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bình luận."));
 
         comment.setContent(request.getContent());
         Comment updatedComment = commentRepository.save(comment);
@@ -138,13 +140,13 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void deleteComment(Long commentId, Long userId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bình luận."));
 
         boolean isAuthor = comment.getAuthor().getId().equals(userId);
         boolean isPostAuthor = comment.getPost().getAuthor().getId().equals(userId);
 
         if (!isAuthor && !isPostAuthor) {
-            throw new RuntimeException("You do not have permission to delete this comment");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền xóa bình luận này.");
         }
 
         // Chuẩn bị cập nhật các bộ đếm

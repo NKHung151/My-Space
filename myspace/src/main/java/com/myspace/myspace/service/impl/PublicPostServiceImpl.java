@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.exception.AppException;
+import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.document.PostDocument;
@@ -63,7 +65,7 @@ public class PublicPostServiceImpl implements PublicPostService {
     @Transactional(readOnly = true)
     public PostDetailResponse getPublicPost(Long id) {
         Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
         PostDetailResponse response = PostMapper.toDetailResponse(post);
         Long currentUserId = getCurrentUserId();
         if (currentUserId != null) {
@@ -90,7 +92,7 @@ public class PublicPostServiceImpl implements PublicPostService {
     @Override
     public void increaseViewCount(Long id, String viewerId) {
         // Only verify post exists, then increment in Redis
-        postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
+        postRepository.findById(id).orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
         viewCountService.incrementViewCount(id, viewerId);
     }
 

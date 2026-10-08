@@ -1,5 +1,7 @@
 package com.myspace.myspace.controller;
 
+import com.myspace.myspace.common.exception.AppException;
+import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
@@ -104,7 +106,7 @@ public class AuthController {
         }
 
         RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenStr)
-                .orElseThrow(() -> new RuntimeException("Refresh token không hợp lệ!"));
+                .orElseThrow(() -> new AppException(HttpStatus.UNAUTHORIZED, "Refresh token không hợp lệ!"));
 
         if (refreshToken.isRevoked()) {
             return ResponseEntity.status(401).body(ApiResponse.error(401, "Refresh token đã bị vô hiệu hóa!", null));

@@ -126,7 +126,7 @@ public class UploadServiceImpl implements UploadService {
                     .build();
         } catch (IOException e) {
             log.error("Error uploading to Cloudinary", e);
-            throw new RuntimeException("Could not upload file to Cloudinary");
+            throw new AppException(HttpStatus.SERVICE_UNAVAILABLE, "Không thể tải tệp lên, vui lòng thử lại sau.");
         }
     }
 

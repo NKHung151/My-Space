@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.exception.AppException;
+import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.document.UserDocument;
 import com.myspace.myspace.dto.response.PublicUserResponse;
@@ -79,7 +81,7 @@ public class UsersServiceImpl implements UsersService {
     @Transactional(readOnly = true)
     public PublicUserResponse getProfile(Long currentUserId, Long targetUserId) {
         User user = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy hồ sơ."));
 
         return PublicUserResponse.builder()
                 .id(user.getId())

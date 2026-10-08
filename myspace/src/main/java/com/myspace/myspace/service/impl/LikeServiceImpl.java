@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.exception.AppException;
+import org.springframework.http.HttpStatus;
 import com.myspace.myspace.dto.response.LikeToggleResponse;
 import com.myspace.myspace.entity.Comment;
 import com.myspace.myspace.entity.CommentLike;
@@ -32,7 +34,7 @@ public class LikeServiceImpl implements LikeService {
     @Transactional
     public LikeToggleResponse togglePostLike(Long userId, Long postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
 
         boolean exists = postLikeRepository.existsByPostIdAndUserId(postId, userId);
         if (exists) {
@@ -57,7 +59,7 @@ public class LikeServiceImpl implements LikeService {
     @Transactional
     public LikeToggleResponse toggleCommentLike(Long userId, Long commentId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bình luận."));
 
         boolean exists = commentLikeRepository.existsByCommentIdAndUserId(commentId, userId);
         if (exists) {
