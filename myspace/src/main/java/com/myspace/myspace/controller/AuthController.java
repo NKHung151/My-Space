@@ -1,12 +1,9 @@
 package com.myspace.myspace.controller;
 
-import com.myspace.myspace.common.exception.AppException;
-import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
 import com.myspace.myspace.dto.response.AuthResponse;
-import com.myspace.myspace.entity.RefreshToken;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.security.jwt.JwtService;
 import com.myspace.myspace.security.custom.CustomUserDetails;
@@ -37,6 +34,12 @@ public class AuthController {
 
     @Value("${jwt.refresh-token.expiration}")
     private long refreshTokenExpiration;
+
+    // true khi chạy HTTPS (production); dev chạy http://localhost nên mặc định false
+    @Value("${app.cookie.secure:false}")
+    private boolean secureCookie;
+
+    private static final String REFRESH_COOKIE = "refresh_token";
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody @jakarta.validation.Valid LoginRequest request) {
@@ -85,16 +88,20 @@ public class AuthController {
     }
 
     private ResponseEntity<ApiResponse<AuthResponse>> generateAuthCookieResponse(AuthResponse response) {
-        ResponseCookie springCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
-                .httpOnly(true)
-                .secure(false) // Đặt true nếu dùng HTTPS
-                .path("/")
-                .maxAge(refreshTokenExpiration / 1000)
-                .build();
-
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, springCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie(response.getRefreshToken(), refreshTokenExpiration / 1000))
                 .body(ApiResponse.success(response));
+    }
+
+    private String refreshCookie(String value, long maxAgeSeconds) {
+        return ResponseCookie.from(REFRESH_COOKIE, value)
+                .httpOnly(true)
+                .secure(secureCookie)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(maxAgeSeconds)
+                .build()
+                .toString();
     }
 
     @PostMapping("/refresh-token")
@@ -105,26 +112,24 @@ public class AuthController {
             return ResponseEntity.status(401).body(ApiResponse.error(401, "Refresh token không tồn tại!", null));
         }
 
-        RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenStr)
-                .orElseThrow(() -> new AppException(HttpStatus.UNAUTHORIZED, "Refresh token không hợp lệ!"));
-
-        if (refreshToken.isRevoked()) {
-            return ResponseEntity.status(401).body(ApiResponse.error(401, "Refresh token đã bị vô hiệu hóa!", null));
-        }
-
-        RefreshToken verifiedToken = refreshTokenService.verifyExpiration(refreshToken);
+        // Xoay vòng: token cũ bị thu hồi, client nhận token mới qua cookie
+        RefreshTokenService.Rotation rotation = refreshTokenService.rotate(refreshTokenStr);
 
         // Load lại UserDetails từ DB để tạo Access Token mới
         CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService
-                .loadUserByUsername(verifiedToken.getUser().getEmail());
+                .loadUserByUsername(rotation.user().getEmail());
         if (!userDetails.isEnabled()) {
             refreshTokenService.revokeAllUserTokens(userDetails.getUser().getId());
-            return ResponseEntity.status(403).body(ApiResponse.error(403, "Tài khoản đã bị khóa.", null));
+            return ResponseEntity.status(403)
+                    .header(HttpHeaders.SET_COOKIE, refreshCookie("", 0))
+                    .body(ApiResponse.error(403, "Tài khoản đã bị khóa.", null));
         }
 
         String newAccessToken = jwtService.generateToken(userDetails);
 
-        return ResponseEntity.ok(ApiResponse.success(Map.of("accessToken", newAccessToken)));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie(rotation.newToken(), refreshTokenExpiration / 1000))
+                .body(ApiResponse.success(Map.of("accessToken", newAccessToken)));
     }
 
     @PostMapping("/logout")
@@ -132,21 +137,13 @@ public class AuthController {
             @CookieValue(name = "refresh_token", required = false) String refreshTokenStr,
             HttpServletResponse response) {
 
+        // Chỉ đăng xuất thiết bị hiện tại; đăng xuất mọi thiết bị dùng /logout-all
         if (refreshTokenStr != null) {
-            refreshTokenService.findByToken(refreshTokenStr)
-                    .ifPresent(token -> refreshTokenService.revokeAllUserTokens(token.getUser().getId()));
+            refreshTokenService.revokeToken(refreshTokenStr);
         }
 
-        // Xóa Cookie phía Client
-        ResponseCookie deleteCookie = ResponseCookie.from("refresh_token", "")
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(0)
-                .build();
-
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie("", 0))
                 .body(ApiResponse.success("Đăng xuất thành công!"));
     }
 

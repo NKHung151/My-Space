@@ -26,6 +26,8 @@ spring.data.redis.port=6379
 jwt.secret=CHANGE_ME
 jwt.access-token.expiration=900000
 jwt.refresh-token.expiration=86400000
+# Cookie refresh_token chỉ gửi qua HTTPS — bật true khi deploy production
+app.cookie.secure=false
 
 # Jackson: bỏ field null khỏi JSON response
 spring.jackson.default-property-inclusion=non_null

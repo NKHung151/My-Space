@@ -10,7 +10,6 @@ import com.myspace.myspace.dto.response.AuthResponse;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
 import java.text.Normalizer;
 import java.util.regex.Pattern;
-import com.myspace.myspace.entity.RefreshToken;
 import com.myspace.myspace.entity.Role;
 import com.myspace.myspace.entity.User;
 import com.myspace.myspace.repository.MediaAssetRepository;
@@ -65,8 +64,8 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken = jwtService.generateToken(userDetails);
 
-        // Tạo refresh token mới và lưu vào DB (Thay thế token cũ nếu có)
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+        // Tạo phiên mới cho thiết bị này (không đụng tới phiên ở thiết bị khác)
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
         CurrentUserResponse userResponse = CurrentUserResponse.builder()
                 .id(user.getId())
@@ -81,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
+                .refreshToken(refreshToken)
                 .user(userResponse)
                 .build();
     }
@@ -109,7 +108,7 @@ public class AuthServiceImpl implements AuthService {
         // Đăng nhập luôn sau khi đăng ký thành công
         CustomUserDetails userDetails = new CustomUserDetails(user);
         String accessToken = jwtService.generateToken(userDetails);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
         CurrentUserResponse userResponse = CurrentUserResponse.builder()
                 .id(user.getId())
@@ -124,7 +123,7 @@ public class AuthServiceImpl implements AuthService {
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
+                .refreshToken(refreshToken)
                 .user(userResponse)
                 .build();
     }
