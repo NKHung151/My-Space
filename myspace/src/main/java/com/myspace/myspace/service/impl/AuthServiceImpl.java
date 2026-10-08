@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import com.myspace.myspace.entity.RefreshToken;
 import com.myspace.myspace.entity.Role;
 import com.myspace.myspace.entity.User;
+import com.myspace.myspace.repository.MediaAssetRepository;
 import com.myspace.myspace.repository.RoleRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.security.custom.CustomUserDetails;
@@ -45,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UploadService uploadService;
+    private final MediaAssetRepository mediaAssetRepository;
 
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -200,11 +202,22 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(request.getUsername());
         user.setBio(request.getBio());
 
-        if (request.getAvatarMediaId() != null && !request.getAvatarMediaId().trim().isEmpty()) {
-            if (user.getAvatarUrl() != null && user.getAvatarUrl().contains("res.cloudinary.com")) {
+        String newAvatarUrl = request.getAvatarMediaId() != null ? request.getAvatarMediaId().trim() : "";
+        if (!newAvatarUrl.isEmpty() && !newAvatarUrl.equals(user.getAvatarUrl())) {
+            // Avatar phải là ảnh do chính user upload qua /api/uploads/avatar.
+            // Nếu nhận URL tùy ý, user có thể lấy ảnh của người khác làm avatar rồi đổi avatar để xóa ảnh đó.
+            Long userId = user.getId();
+            boolean ownedImage = mediaAssetRepository.findFirstByUrl(newAvatarUrl)
+                    .filter(asset -> asset.getOwner().getId().equals(userId))
+                    .filter(asset -> "image".equals(asset.getMediaType()))
+                    .isPresent();
+            if (!ownedImage) {
+                throw new AppException(HttpStatus.BAD_REQUEST, "Ảnh đại diện không hợp lệ.");
+            }
+            if (user.getAvatarUrl() != null) {
                 uploadService.deleteEditorMedia(user.getAvatarUrl(), user.getId());
             }
-            user.setAvatarUrl(request.getAvatarMediaId());
+            user.setAvatarUrl(newAvatarUrl);
         }
 
         // Tạo tên không dấu để dễ tìm kiếm

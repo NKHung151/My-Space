@@ -65,7 +65,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
             post.setPublishedAt(LocalDateTime.now());
         }
         Post saved = postRepository.save(post);
-        updateMediaStatus(saved.getContent(), saved.getCoverImageUrl(), saved.getId());
+        updateMediaStatus(saved.getContent(), saved.getCoverImageUrl(), saved.getId(), authorId);
         searchIndexService.indexPost(saved);
         PostDetailResponse response = PostMapper.toDetailResponse(saved);
         response.setLiked(false);
@@ -125,7 +125,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         if (request.getHasVideo() != null)     post.setHasVideo(request.getHasVideo());
         if (request.getTag() != null)          post.setTag(request.getTag());
         Post updated = postRepository.save(post);
-        updateMediaStatus(updated.getContent(), updated.getCoverImageUrl(), updated.getId());
+        updateMediaStatus(updated.getContent(), updated.getCoverImageUrl(), updated.getId(), authorId);
         searchIndexService.indexPost(updated);
         PostDetailResponse response = PostMapper.toDetailResponse(updated);
         Long currentUserId = getCurrentUserId();
@@ -174,7 +174,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         items.forEach(item -> item.setLiked(likedPostIds.contains(item.getId())));
     }
 
-    private void updateMediaStatus(String content, String coverImageUrl, Long postId) {
+    private void updateMediaStatus(String content, String coverImageUrl, Long postId, Long authorId) {
         Set<String> urls = new HashSet<>();
         if (coverImageUrl != null && coverImageUrl.contains("res.cloudinary.com")) {
             urls.add(coverImageUrl);
@@ -189,7 +189,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
             });
         }
         if (!urls.isEmpty()) {
-            mediaAssetRepository.updateStatusAndPostIdByUrls("ATTACHED", postId, new java.util.ArrayList<>(urls));
+            mediaAssetRepository.updateStatusAndPostIdByUrls("ATTACHED", postId, new java.util.ArrayList<>(urls), authorId);
         }
     }
 

@@ -51,30 +51,24 @@ public class UploadServiceImpl implements UploadService {
 
     @Override
     public void deleteEditorMedia(String url, Long userId) {
-        try {
-            // https://res.cloudinary.com/.../image/upload/v.../folder/public_id.jpg
-            String publicId = null;
-            int uploadIdx = url.indexOf("/upload/");
-            if (uploadIdx != -1) {
-                String path = url.substring(uploadIdx + "/upload/".length());
-                if (path.matches("^v\\d+/.*")) {
-                    path = path.replaceFirst("^v\\d+/", "");
-                }
-                int lastDot = path.lastIndexOf('.');
-                if (lastDot != -1) {
-                    publicId = path.substring(0, lastDot);
-                } else {
-                    publicId = path;
-                }
-            }
+        if (url == null) return;
 
-            if (publicId != null) {
-                String resourceType = "image";
-                if (url.matches(".*\\.(mp4|webm|ogg|mp3|wav)$")) {
-                    resourceType = "video";
-                }
-                cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", resourceType));
-            }
+        // Chỉ xóa media do hệ thống quản lý (có trong media_assets) và thuộc đúng người yêu cầu.
+        // Trước đây publicId được suy ra từ URL nên ai cũng xóa được file Cloudinary của người khác.
+        MediaAsset asset = mediaAssetRepository.findFirstByUrl(url).orElse(null);
+        if (asset == null) {
+            log.warn("Bỏ qua xóa media không được quản lý: {}", url);
+            return;
+        }
+        if (!asset.getOwner().getId().equals(userId)) {
+            log.warn("User {} không sở hữu media {} (owner={}), bỏ qua xóa", userId, url, asset.getOwner().getId());
+            return;
+        }
+
+        try {
+            String resourceType = "video".equals(asset.getMediaType()) ? "video" : "image";
+            cloudinary.uploader().destroy(asset.getPublicId(), ObjectUtils.asMap("resource_type", resourceType));
+            mediaAssetRepository.delete(asset);
         } catch (Exception e) {
             log.error("Error deleting media from Cloudinary", e);
         }
@@ -142,7 +136,6 @@ public class UploadServiceImpl implements UploadService {
         for (com.myspace.myspace.entity.MediaAsset asset : trashMedia) {
             try {
                 deleteEditorMedia(asset.getUrl(), asset.getOwner().getId());
-                mediaAssetRepository.delete(asset);
                 log.info("Deleted temporary media: {}", asset.getUrl());
             } catch (Exception e) {
                 log.error("Failed to delete media asset id {}: {}", asset.getId(), e.getMessage());
