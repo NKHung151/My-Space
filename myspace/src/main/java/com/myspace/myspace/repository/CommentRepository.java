@@ -4,6 +4,9 @@ import com.myspace.myspace.entity.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,4 +30,14 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     // Tìm các bình luận đang trả lời cho một bình luận cụ thể
     List<Comment> findByReplyToCommentId(Long replyToCommentId);
+
+    // Gỡ tham chiếu parent/reply giữa các bình luận của bài trước khi xóa hàng loạt
+    // (FK tự tham chiếu trên comments đang là NO ACTION, xóa thẳng sẽ bị MySQL chặn)
+    @Modifying
+    @Query("UPDATE Comment c SET c.parent = NULL, c.replyToComment = NULL WHERE c.post.id = :postId")
+    void detachThreadOfPost(@Param("postId") Long postId);
+
+    @Modifying
+    @Query("DELETE FROM Comment c WHERE c.post.id = :postId")
+    void deleteAllOfPost(@Param("postId") Long postId);
 }

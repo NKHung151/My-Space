@@ -28,6 +28,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
     private final PostRepository postRepository;
     private final UploadService uploadService;
     private final SearchIndexService searchIndexService;
+    private final PostChildrenCleaner postChildrenCleaner;
 
     @Override
     @Transactional(readOnly = true)
@@ -81,6 +82,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
             }
         }
         
+        postChildrenCleaner.deleteChildrenOf(id);
         postRepository.delete(post);
         searchIndexService.removePost(id);
     }

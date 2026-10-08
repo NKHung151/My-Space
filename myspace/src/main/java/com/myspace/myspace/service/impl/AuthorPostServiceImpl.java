@@ -46,6 +46,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     private final SearchIndexService searchIndexService;
     private final UploadService uploadService;
     private final MediaAssetRepository mediaAssetRepository;
+    private final PostChildrenCleaner postChildrenCleaner;
 
     @Override
     @Transactional
@@ -150,6 +151,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         }
         urls.forEach(url -> uploadService.deleteEditorMedia(url, authorId));
 
+        postChildrenCleaner.deleteChildrenOf(postId);
         postRepository.delete(post);
         searchIndexService.removePost(postId);
     }
