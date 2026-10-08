@@ -10,9 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -22,33 +20,40 @@ public class SearchQueryServiceImpl implements SearchQueryService {
     private final ElasticsearchClient elasticsearchClient;
 
     @Override
-    public List<UserDocument> searchUsers(String keyword, int page, int size) {
+    public SearchPage<UserDocument> searchUsers(String keyword, int page, int size, Long excludeUserId) {
         try {
             int from = Math.max(0, page * size);
             SearchResponse<UserDocument> response = elasticsearchClient.search(s -> s
                     .index("users")
                     .query(q -> q
-                            .multiMatch(m -> m
-                                    .query(keyword)
-                                    .fields("displayName", "username", "bio")
-                                    .fuzziness("AUTO") // Tolerates typos
-                            )
+                            .bool(b -> {
+                                b.must(m -> m
+                                        .multiMatch(mm -> mm
+                                                .query(keyword)
+                                                .fields("displayName", "username", "bio")
+                                                .fuzziness("AUTO") // Tolerates typos
+                                        )
+                                );
+                                // Loại ngay trong truy vấn để tổng số và phân trang đúng
+                                if (excludeUserId != null) {
+                                    b.mustNot(mn -> mn.ids(i -> i.values(String.valueOf(excludeUserId))));
+                                }
+                                return b;
+                            })
                     )
                     .from(from)
                     .size(size),
                     UserDocument.class
             );
-            return response.hits().hits().stream()
-                    .map(Hit::source)
-                    .toList();
-        } catch (IOException e) {
+            return toPage(response);
+        } catch (Exception e) {
             log.error("Elasticsearch user search failed for keyword [{}]: {}", keyword, e.getMessage());
-            return Collections.emptyList();
+            return SearchPage.empty();
         }
     }
 
     @Override
-    public List<PostDocument> searchPosts(String keyword, int page, int size, String tag, Boolean hasVideo) {
+    public SearchPage<PostDocument> searchPosts(String keyword, int page, int size, String tag, Boolean hasVideo) {
         try {
             int from = Math.max(0, page * size);
             SearchResponse<PostDocument> response = elasticsearchClient.search(s -> s
@@ -72,15 +77,20 @@ public class SearchQueryServiceImpl implements SearchQueryService {
                             })
                     )
                     .from(from)
-                    .size(size),
+                    .size(size)
+                    .trackTotalHits(t -> t.enabled(true)),
                     PostDocument.class
             );
-            return response.hits().hits().stream()
-                    .map(Hit::source)
-                    .toList();
-        } catch (IOException e) {
+            return toPage(response);
+        } catch (Exception e) {
             log.error("Elasticsearch post search failed for keyword [{}]: {}", keyword, e.getMessage());
-            return Collections.emptyList();
+            return SearchPage.empty();
         }
+    }
+
+    private static <T> SearchPage<T> toPage(SearchResponse<T> response) {
+        var items = response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
+        long total = response.hits().total() != null ? response.hits().total().value() : items.size();
+        return new SearchPage<>(items, total);
     }
 }

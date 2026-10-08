@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -21,7 +23,53 @@ public class SearchIndexServiceImpl implements SearchIndexService {
 
     @Override
     public void indexUser(User user) {
-        UserDocument doc = UserDocument.builder()
+        try {
+            userSearchRepository.save(toDocument(user));
+        } catch (Exception e) {
+            log.error("Failed to index user [id={}] to Elasticsearch: {}", user.getId(), e.getMessage());
+        }
+    }
+
+    @Override
+    public void indexUsers(List<User> users) {
+        if (users.isEmpty()) return;
+        try {
+            userSearchRepository.saveAll(users.stream().map(this::toDocument).toList());
+        } catch (Exception e) {
+            log.error("Failed to bulk index {} users to Elasticsearch: {}", users.size(), e.getMessage());
+        }
+    }
+
+    @Override
+    public void indexPost(Post post) {
+        try {
+            postSearchRepository.save(toDocument(post));
+        } catch (Exception e) {
+            log.error("Failed to index post [id={}] to Elasticsearch: {}", post.getId(), e.getMessage());
+        }
+    }
+
+    @Override
+    public void indexPosts(List<Post> posts) {
+        if (posts.isEmpty()) return;
+        try {
+            postSearchRepository.saveAll(posts.stream().map(this::toDocument).toList());
+        } catch (Exception e) {
+            log.error("Failed to bulk index {} posts to Elasticsearch: {}", posts.size(), e.getMessage());
+        }
+    }
+
+    @Override
+    public void removePost(Long postId) {
+        try {
+            postSearchRepository.deleteById(postId);
+        } catch (Exception e) {
+            log.error("Failed to remove post [id={}] from Elasticsearch: {}", postId, e.getMessage());
+        }
+    }
+
+    private UserDocument toDocument(User user) {
+        return UserDocument.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .displayName(user.getDisplayName())
@@ -29,20 +77,11 @@ public class SearchIndexServiceImpl implements SearchIndexService {
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole() != null ? user.getRole().getName() : null)
                 .build();
-        userSearchRepository.save(doc);
-        log.debug("Indexed user [id={}] to Elasticsearch", user.getId());
     }
 
-    @Override
-    public void removeUser(Long userId) {
-        userSearchRepository.deleteById(userId);
-        log.debug("Removed user [id={}] from Elasticsearch index", userId);
-    }
-
-    @Override
-    public void indexPost(Post post) {
+    private PostDocument toDocument(Post post) {
         User author = post.getAuthor();
-        PostDocument doc = PostDocument.builder()
+        return PostDocument.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .excerpt(post.getExcerpt())
@@ -60,13 +99,5 @@ public class SearchIndexServiceImpl implements SearchIndexService {
                 .authorDisplayName(author != null ? author.getDisplayName() : null)
                 .authorAvatarUrl(author != null ? author.getAvatarUrl() : null)
                 .build();
-        postSearchRepository.save(doc);
-        log.debug("Indexed post [id={}] to Elasticsearch", post.getId());
-    }
-
-    @Override
-    public void removePost(Long postId) {
-        postSearchRepository.deleteById(postId);
-        log.debug("Removed post [id={}] from Elasticsearch index", postId);
     }
 }

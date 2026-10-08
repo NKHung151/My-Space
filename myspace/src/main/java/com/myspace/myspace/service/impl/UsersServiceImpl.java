@@ -34,15 +34,14 @@ public class UsersServiceImpl implements UsersService {
         if (query != null && !query.trim().isEmpty()) {
             // Use Elasticsearch
             String cleanQuery = query.trim().startsWith("@") ? query.trim().substring(1) : query.trim();
-            List<UserDocument> searchResults = searchQueryService.searchUsers(cleanQuery, pageable.getPageNumber(),
-                    limit);
+            // Loại chính mình ngay trong truy vấn ES (trước đây so Long với String nên không bao giờ loại được)
+            SearchQueryService.SearchPage<UserDocument> result =
+                    searchQueryService.searchUsers(cleanQuery, pageable.getPageNumber(), limit, currentUserId);
 
-            List<PublicUserResponse> items = searchResults.stream()
-                    .filter(doc -> currentUserId == null || !doc.getId().equals(currentUserId.toString()))
+            List<PublicUserResponse> items = result.items().stream()
                     .map(doc -> {
-                        Long userId = Long.valueOf(doc.getId());
                         return PublicUserResponse.builder()
-                                .id(userId)
+                                .id(doc.getId())
                                 .displayName(doc.getDisplayName() != null ? doc.getDisplayName() : doc.getUsername())
                                 .username(doc.getUsername())
                                 .avatarUrl(doc.getAvatarUrl())
@@ -52,13 +51,16 @@ public class UsersServiceImpl implements UsersService {
                                 .build();
                     }).collect(Collectors.toList());
 
-            return new PageResponse<>(items, new PageResponse.Meta((long) items.size(), page, limit, 1));
+            int totalPages = (int) Math.ceil((double) result.total() / Math.max(limit, 1));
+            return new PageResponse<>(items, new PageResponse.Meta(result.total(), page, limit, totalPages));
         } else {
             // Use MySQL for default recommendations
-            Page<User> usersPage = userRepository.findAll(pageable);
+            // Loại chính mình trong câu truy vấn, không lọc sau khi đã phân trang (trang bị thiếu 1 người)
+            Page<User> usersPage = currentUserId == null
+                    ? userRepository.findAll(pageable)
+                    : userRepository.findByIdNot(currentUserId, pageable);
 
             List<PublicUserResponse> items = usersPage.getContent().stream()
-                    .filter(user -> currentUserId == null || !user.getId().equals(currentUserId))
                     .map(user -> {
                         return PublicUserResponse.builder()
                                 .id(user.getId())

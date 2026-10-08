@@ -10,6 +10,7 @@ import com.myspace.myspace.repository.RoleRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.AdminUsersService;
 import com.myspace.myspace.service.RefreshTokenService;
+import com.myspace.myspace.service.search.SearchIndexService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +31,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final RefreshTokenService refreshTokenService;
+    private final SearchIndexService searchIndexService;
 
     private static final Set<String> ALLOWED_STATUSES = Set.of("active", "inactive", "banned");
 
@@ -96,6 +98,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
         }
         
         User updated = userRepository.save(user);
+        searchIndexService.indexUser(updated);
         return mapToResponse(updated);
     }
     

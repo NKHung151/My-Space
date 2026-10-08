@@ -21,6 +21,7 @@ import com.myspace.myspace.service.AuthService;
 import com.myspace.myspace.service.MailService;
 import com.myspace.myspace.service.RefreshTokenService;
 import com.myspace.myspace.service.UploadService;
+import com.myspace.myspace.service.search.SearchIndexService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -49,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UploadService uploadService;
     private final MediaAssetRepository mediaAssetRepository;
+    private final SearchIndexService searchIndexService;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final Duration OTP_TTL = Duration.ofMinutes(5);
@@ -104,6 +106,7 @@ public class AuthServiceImpl implements AuthService {
         user.setRole(userRole);
 
         userRepository.save(user);
+        searchIndexService.indexUser(user);
 
         // Đăng nhập luôn sau khi đăng ký thành công
         CustomUserDetails userDetails = new CustomUserDetails(user);
@@ -265,6 +268,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         user = userRepository.save(user);
+        searchIndexService.indexUser(user);
 
         return CurrentUserResponse.builder()
                 .id(user.getId())

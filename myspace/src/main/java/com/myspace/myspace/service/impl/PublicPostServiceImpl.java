@@ -46,12 +46,14 @@ public class PublicPostServiceImpl implements PublicPostService {
 
         if (q != null && !q.isBlank()) {
             // Tìm kiếm qua Elasticsearch
-            List<PostDocument> docs = searchQueryService.searchPosts(q.trim(), pageable.getPageNumber(), limit, tag, hasVideo);
-            List<PostResponse> items = docs.stream().map(this::mapDocToResponse).collect(Collectors.toList());
+            SearchQueryService.SearchPage<PostDocument> result =
+                    searchQueryService.searchPosts(q.trim(), pageable.getPageNumber(), limit, tag, hasVideo);
+            List<PostResponse> items = result.items().stream().map(this::mapDocToResponse).collect(Collectors.toList());
             populateCountsFromDatabase(items);
             populateLikedStatus(items);
             populateRealtimeViewCounts(items);
-            return new PageResponse<>(items, new PageResponse.Meta((long) items.size(), page, limit, 1));
+            // Tổng số lấy từ Elasticsearch (trước đây = số item của trang hiện tại, totalPages luôn = 1)
+            return new PageResponse<>(items, new PageResponse.Meta(result.total(), page, limit, totalPages(result.total(), limit)));
         }
 
         // Lấy từ MySQL khi không có từ khóa tìm kiếm
@@ -140,6 +142,10 @@ public class PublicPostServiceImpl implements PublicPostService {
         List<Long> postIds = items.stream().map(PostResponse::getId).collect(Collectors.toList());
         List<Long> likedPostIds = postLikeRepository.findLikedPostIds(currentUserId, postIds);
         items.forEach(item -> item.setLiked(likedPostIds.contains(item.getId())));
+    }
+
+    private static int totalPages(long total, int limit) {
+        return limit <= 0 ? 1 : (int) Math.ceil((double) total / limit);
     }
 
     /**
