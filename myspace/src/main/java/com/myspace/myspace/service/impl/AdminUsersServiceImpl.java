@@ -1,6 +1,7 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.dto.PageResponse;
+import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.dto.request.UpdateAdminUserRequest;
 import com.myspace.myspace.dto.response.AdminUserResponse;
 import com.myspace.myspace.entity.Role;
@@ -8,15 +9,18 @@ import com.myspace.myspace.entity.User;
 import com.myspace.myspace.repository.RoleRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.AdminUsersService;
+import com.myspace.myspace.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +29,9 @@ public class AdminUsersServiceImpl implements AdminUsersService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final RefreshTokenService refreshTokenService;
+
+    private static final Set<String> ALLOWED_STATUSES = Set.of("active", "inactive", "banned");
 
     @Override
     @Transactional(readOnly = true)
@@ -64,8 +71,21 @@ public class AdminUsersServiceImpl implements AdminUsersService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
                 
+        // Giống quy tắc ở FE: không đổi role/trạng thái của tài khoản admin (tránh admin tự khóa nhau / tự khóa mình)
+        if (user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().getName())) {
+            throw new AppException(HttpStatus.FORBIDDEN, "Không thể thay đổi tài khoản quản trị viên.");
+        }
+
         if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
-            user.setStatus(request.getStatus().trim());
+            String status = request.getStatus().trim();
+            if (!ALLOWED_STATUSES.contains(status.toLowerCase())) {
+                throw new AppException(HttpStatus.BAD_REQUEST, "Trạng thái không hợp lệ.");
+            }
+            user.setStatus(status);
+            if (!"active".equalsIgnoreCase(status)) {
+                // Khóa tài khoản -> thu hồi refresh token để không thể lấy access token mới
+                refreshTokenService.revokeAllUserTokens(user.getId());
+            }
         }
         
         if (request.getRole() != null && !request.getRole().trim().isEmpty()) {

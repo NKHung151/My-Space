@@ -115,6 +115,10 @@ public class AuthController {
         // Load lại UserDetails từ DB để tạo Access Token mới
         CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService
                 .loadUserByUsername(verifiedToken.getUser().getEmail());
+        if (!userDetails.isEnabled()) {
+            refreshTokenService.revokeAllUserTokens(userDetails.getUser().getId());
+            return ResponseEntity.status(403).body(ApiResponse.error(403, "Tài khoản đã bị khóa.", null));
+        }
 
         String newAccessToken = jwtService.generateToken(userDetails);
 
