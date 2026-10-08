@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface MessageService {
     Conversation getOrCreateConversation(Long user1Id, Long user2Id);
-    PageResponse<MessageResponse> getConversationMessages(Long conversationId, Pageable pageable);
+    PageResponse<MessageResponse> getConversationMessages(Long conversationId, Long currentUserId, Pageable pageable);
     MessageBroadcastResult saveMessage(Long senderId, Long receiverId, String content);
     MessageBroadcastResult editMessage(Long messageId, Long senderId, String newContent);
     MessageBroadcastResult deleteMessage(Long messageId, Long senderId);

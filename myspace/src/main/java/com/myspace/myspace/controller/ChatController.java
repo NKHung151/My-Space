@@ -41,10 +41,11 @@ public class ChatController {
 
     @GetMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<ApiResponse<PageResponse<MessageResponse>>> getMessages(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long conversationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        PageResponse<MessageResponse> messages = messageService.getConversationMessages(conversationId, PageRequest.of(page, size));
+        PageResponse<MessageResponse> messages = messageService.getConversationMessages(conversationId, userDetails.getUser().getId(), PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(messages));
     }
 

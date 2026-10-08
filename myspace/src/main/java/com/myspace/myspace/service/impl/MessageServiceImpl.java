@@ -1,6 +1,7 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.dto.PageResponse;
+import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.dto.response.MessageResponse;
 import com.myspace.myspace.dto.response.MessageBroadcastResult;
 import com.myspace.myspace.entity.Call;
@@ -15,6 +16,7 @@ import com.myspace.myspace.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +55,17 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<MessageResponse> getConversationMessages(Long conversationId, Pageable pageable) {
+    public PageResponse<MessageResponse> getConversationMessages(Long conversationId, Long currentUserId, Pageable pageable) {
+        // Chỉ 2 thành viên của cuộc hội thoại mới được đọc tin nhắn.
+        // Trả 404 (không phải 403) để không lộ việc conversationId có tồn tại hay không.
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy cuộc hội thoại"));
+        boolean isMember = conversation.getUser1().getId().equals(currentUserId)
+                || conversation.getUser2().getId().equals(currentUserId);
+        if (!isMember) {
+            throw new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy cuộc hội thoại");
+        }
+
         Page<Message> messages = messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId, pageable);
         return PageResponse.of(messages.map(this::mapToResponse));
     }
@@ -149,7 +161,8 @@ public class MessageServiceImpl implements MessageService {
                 .id(message.getId())
                 .conversationId(message.getConversation().getId())
                 .senderId(message.getSender().getId())
-                .content(message.getContent())
+                // Tin nhắn đã thu hồi không được trả nội dung gốc về client
+                .content(message.getDeletedAt() != null ? null : message.getContent())
                 .type(message.getType().name())
                 .createdAt(message.getCreatedAt())
                 .updatedAt(message.getUpdatedAt())
