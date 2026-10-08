@@ -1,21 +1,14 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.exception.AppException;
-import org.springframework.http.HttpStatus;
 import com.myspace.myspace.dto.response.LikeToggleResponse;
-import com.myspace.myspace.entity.Comment;
-import com.myspace.myspace.entity.CommentLike;
-import com.myspace.myspace.entity.Post;
-import com.myspace.myspace.entity.PostLike;
-import com.myspace.myspace.entity.User;
 import com.myspace.myspace.repository.CommentLikeRepository;
 import com.myspace.myspace.repository.CommentRepository;
 import com.myspace.myspace.repository.PostLikeRepository;
 import com.myspace.myspace.repository.PostRepository;
-import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.LikeService;
-import com.myspace.myspace.service.search.SearchIndexService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,55 +20,57 @@ public class LikeServiceImpl implements LikeService {
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
-    private final UserRepository userRepository;
-    private final SearchIndexService searchIndexService;
 
     @Override
     @Transactional
-    public LikeToggleResponse togglePostLike(Long userId, Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
-
-        boolean exists = postLikeRepository.existsByPostIdAndUserId(postId, userId);
-        if (exists) {
-            postLikeRepository.deleteByPostIdAndUserId(postId, userId);
-            post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
-        } else {
-            User user = userRepository.findById(userId).orElseThrow();
-            PostLike postLike = new PostLike();
-            postLike.setPost(post);
-            postLike.setUser(user);
-            postLikeRepository.save(postLike);
-            post.setLikeCount(post.getLikeCount() + 1);
+    public LikeToggleResponse likePost(Long userId, Long postId) {
+        requirePost(postId);
+        // Chỉ tăng bộ đếm khi thực sự thêm được bản ghi like (lần like thứ 2 bị INSERT IGNORE bỏ qua)
+        if (postLikeRepository.insertIfAbsent(postId, userId) > 0) {
+            postRepository.addLikeCount(postId, 1);
         }
-
-        postRepository.save(post);
-        searchIndexService.indexPost(post);
-
-        return new LikeToggleResponse(!exists, post.getLikeCount());
+        return new LikeToggleResponse(true, postRepository.findLikeCount(postId));
     }
 
     @Override
     @Transactional
-    public LikeToggleResponse toggleCommentLike(Long userId, Long commentId) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bình luận."));
-
-        boolean exists = commentLikeRepository.existsByCommentIdAndUserId(commentId, userId);
-        if (exists) {
-            commentLikeRepository.deleteByCommentIdAndUserId(commentId, userId);
-            comment.setLikeCount(Math.max(0, comment.getLikeCount() - 1));
-        } else {
-            User user = userRepository.findById(userId).orElseThrow();
-            CommentLike commentLike = new CommentLike();
-            commentLike.setComment(comment);
-            commentLike.setUser(user);
-            commentLikeRepository.save(commentLike);
-            comment.setLikeCount(comment.getLikeCount() + 1);
+    public LikeToggleResponse unlikePost(Long userId, Long postId) {
+        requirePost(postId);
+        if (postLikeRepository.deleteLike(postId, userId) > 0) {
+            postRepository.addLikeCount(postId, -1);
         }
+        return new LikeToggleResponse(false, postRepository.findLikeCount(postId));
+    }
 
-        commentRepository.save(comment);
+    @Override
+    @Transactional
+    public LikeToggleResponse likeComment(Long userId, Long commentId) {
+        requireComment(commentId);
+        if (commentLikeRepository.insertIfAbsent(commentId, userId) > 0) {
+            commentRepository.addLikeCount(commentId, 1);
+        }
+        return new LikeToggleResponse(true, commentRepository.findLikeCount(commentId));
+    }
 
-        return new LikeToggleResponse(!exists, comment.getLikeCount());
+    @Override
+    @Transactional
+    public LikeToggleResponse unlikeComment(Long userId, Long commentId) {
+        requireComment(commentId);
+        if (commentLikeRepository.deleteLike(commentId, userId) > 0) {
+            commentRepository.addLikeCount(commentId, -1);
+        }
+        return new LikeToggleResponse(false, commentRepository.findLikeCount(commentId));
+    }
+
+    // Khóa dòng bài/bình luận trước (tránh deadlock INSERT-qua-FK rồi UPDATE bộ đếm),
+    // đồng thời kiểm tra tồn tại vì INSERT IGNORE nuốt cả lỗi khóa ngoại
+    private void requirePost(Long postId) {
+        postRepository.findByIdForUpdate(postId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
+    }
+
+    private void requireComment(Long commentId) {
+        commentRepository.findByIdForUpdate(commentId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bình luận."));
     }
 }

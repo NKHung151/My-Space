@@ -16,22 +16,34 @@ public class LikeController {
 
     private final LikeService likeService;
 
-    @RequestMapping(value = "/{postId}/like", method = {RequestMethod.POST, RequestMethod.DELETE})
-    public ResponseEntity<ApiResponse<LikeToggleResponse>> togglePostLike(
+    // POST = like, DELETE = bỏ like (trước đây cả 2 đều "toggle" nên double-click hoặc 2 tab làm trạng thái đảo ngược)
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<ApiResponse<LikeToggleResponse>> likePost(
             @PathVariable Long postId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
-        LikeToggleResponse response = likeService.togglePostLike(userDetails.getUser().getId(), postId);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(ApiResponse.success(likeService.likePost(userDetails.getUser().getId(), postId)));
     }
 
-    @RequestMapping(value = "/{postId}/comments/{commentId}/like", method = {RequestMethod.POST, RequestMethod.DELETE})
-    public ResponseEntity<ApiResponse<LikeToggleResponse>> toggleCommentLike(
+    @DeleteMapping("/{postId}/like")
+    public ResponseEntity<ApiResponse<LikeToggleResponse>> unlikePost(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(likeService.unlikePost(userDetails.getUser().getId(), postId)));
+    }
+
+    @PostMapping("/{postId}/comments/{commentId}/like")
+    public ResponseEntity<ApiResponse<LikeToggleResponse>> likeComment(
             @PathVariable Long postId,
             @PathVariable Long commentId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
-        LikeToggleResponse response = likeService.toggleCommentLike(userDetails.getUser().getId(), commentId);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(ApiResponse.success(likeService.likeComment(userDetails.getUser().getId(), commentId)));
+    }
+
+    @DeleteMapping("/{postId}/comments/{commentId}/like")
+    public ResponseEntity<ApiResponse<LikeToggleResponse>> unlikeComment(
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(likeService.unlikeComment(userDetails.getUser().getId(), commentId)));
     }
 }

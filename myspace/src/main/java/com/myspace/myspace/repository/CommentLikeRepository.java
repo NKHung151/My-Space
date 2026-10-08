@@ -10,7 +10,13 @@ import java.util.List;
 
 public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> {
     boolean existsByCommentIdAndUserId(Long commentId, Long userId);
-    void deleteByCommentIdAndUserId(Long commentId, Long userId);
+    @Modifying
+    @Query(value = "INSERT IGNORE INTO comment_likes (comment_id, user_id, created_at) VALUES (:commentId, :userId, NOW(6))", nativeQuery = true)
+    int insertIfAbsent(@Param("commentId") Long commentId, @Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM CommentLike cl WHERE cl.comment.id = :commentId AND cl.user.id = :userId")
+    int deleteLike(@Param("commentId") Long commentId, @Param("userId") Long userId);
     @Modifying
     @Query("DELETE FROM CommentLike cl WHERE cl.comment.id = :commentId")
     void deleteByCommentId(@Param("commentId") Long commentId);

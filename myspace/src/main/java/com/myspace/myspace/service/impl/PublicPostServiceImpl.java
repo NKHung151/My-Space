@@ -48,6 +48,7 @@ public class PublicPostServiceImpl implements PublicPostService {
             // Tìm kiếm qua Elasticsearch
             List<PostDocument> docs = searchQueryService.searchPosts(q.trim(), pageable.getPageNumber(), limit, tag, hasVideo);
             List<PostResponse> items = docs.stream().map(this::mapDocToResponse).collect(Collectors.toList());
+            populateCountsFromDatabase(items);
             populateLikedStatus(items);
             populateRealtimeViewCounts(items);
             return new PageResponse<>(items, new PageResponse.Meta((long) items.size(), page, limit, 1));
@@ -140,6 +141,23 @@ public class PublicPostServiceImpl implements PublicPostService {
         List<Long> postIds = items.stream().map(PostResponse::getId).collect(Collectors.toList());
         List<Long> likedPostIds = postLikeRepository.findLikedPostIds(currentUserId, postIds);
         items.forEach(item -> item.setLiked(likedPostIds.contains(item.getId())));
+    }
+
+    /**
+     * Elasticsearch chỉ dùng để tìm (match); số like/bình luận/lượt xem lấy từ MySQL vì ES không còn
+     * được index lại sau mỗi lượt like/bình luận. Bài đã xóa khỏi DB nhưng còn sót trong ES thì bị loại.
+     */
+    private void populateCountsFromDatabase(List<PostResponse> items) {
+        if (items.isEmpty()) return;
+        java.util.Map<Long, Post> posts = postRepository.findAllById(items.stream().map(PostResponse::getId).toList())
+                .stream().collect(Collectors.toMap(Post::getId, p -> p));
+        items.removeIf(item -> !posts.containsKey(item.getId()));
+        items.forEach(item -> {
+            Post post = posts.get(item.getId());
+            item.setLikeCount(post.getLikeCount());
+            item.setCommentCount(post.getCommentCount());
+            item.setViewCount(post.getViewCount());
+        });
     }
 
     private void populateRealtimeViewCounts(List<PostResponse> items) {

@@ -87,7 +87,8 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentResponse createComment(Long postId, Long authorId, CreateCommentRequest request) {
-        Post post = postRepository.findById(postId)
+        // Khóa dòng bài viết trước khi insert bình luận + cập nhật bộ đếm (tránh deadlock khi bình luận đồng thời)
+        Post post = postRepository.findByIdForUpdate(postId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
         User author = userRepository.findById(authorId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
@@ -108,8 +109,7 @@ public class CommentServiceImpl implements CommentService {
             comment.setParent(parent);
             
             // Cập nhật số lượng câu trả lời của bình luận cha
-            parent.setReplyCount(parent.getReplyCount() + 1);
-            commentRepository.save(parent);
+            commentRepository.addReplyCount(parent.getId(), 1);
 
             // Gán replyToComment
             comment.setReplyToComment(target);
@@ -118,8 +118,7 @@ public class CommentServiceImpl implements CommentService {
         Comment savedComment = commentRepository.save(comment);
         
         // Tăng số đếm bình luận của bài viết
-        post.setCommentCount(post.getCommentCount() + 1);
-        postRepository.save(post);
+        postRepository.addCommentCount(postId, 1);
 
         return CommentMapper.toResponse(savedComment, authorId);
     }
@@ -149,8 +148,8 @@ public class CommentServiceImpl implements CommentService {
             throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền xóa bình luận này.");
         }
 
-        // Chuẩn bị cập nhật các bộ đếm
-        Post post = comment.getPost();
+        // Chuẩn bị cập nhật các bộ đếm (khóa dòng bài viết như khi tạo bình luận)
+        Post post = postRepository.findByIdForUpdate(comment.getPost().getId()).orElseThrow();
         long commentsToDelete = 1; 
 
         // 1. Xử lý các bình luận đang "reply" trực tiếp vào bình luận này (để tránh lỗi FK reply_to_comment_id)
@@ -177,13 +176,11 @@ public class CommentServiceImpl implements CommentService {
         // 3. Giảm số lượng câu trả lời của bình luận cha (nếu đang xóa một reply)
         if (comment.getParent() != null) {
             Comment parent = comment.getParent();
-            parent.setReplyCount(Math.max(0, parent.getReplyCount() - 1));
-            commentRepository.save(parent);
+            commentRepository.addReplyCount(parent.getId(), -1);
         }
 
         // 4. Cập nhật số đếm của bài viết
-        post.setCommentCount(Math.max(0, (int) (post.getCommentCount() - commentsToDelete)));
-        postRepository.save(post);
+        postRepository.addCommentCount(post.getId(), (int) -commentsToDelete);
 
         // 5. Xóa likes của bình luận mục tiêu và sau đó xóa bình luận
         commentLikeRepository.deleteByCommentId(comment.getId());
