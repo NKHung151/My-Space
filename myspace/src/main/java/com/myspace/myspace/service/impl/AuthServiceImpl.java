@@ -30,8 +30,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -47,6 +50,11 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UploadService uploadService;
     private final MediaAssetRepository mediaAssetRepository;
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final Duration OTP_TTL = Duration.ofMinutes(5);
+    private static final Duration RESEND_COOLDOWN = Duration.ofSeconds(60);
+    private static final int MAX_OTP_ATTEMPTS = 5;
 
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -123,14 +131,25 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void forgotPassword(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản với email này."));
+        // Email không tồn tại vẫn trả về thành công như bình thường -> không dò được email nào đã đăng ký
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return;
+        }
 
-        // Tạo ngẫu nhiên mã OTP 6 số
-        String otp = String.format("%06d", new Random().nextInt(1000000));
-        
+        // Chặn gửi lại liên tục: OTP vừa được cấp trong RESEND_COOLDOWN thì bỏ qua (vẫn trả thành công)
+        LocalDateTime now = LocalDateTime.now();
+        if (user.getResetOtpExpiry() != null
+                && user.getResetOtpExpiry().isAfter(now.plus(OTP_TTL).minus(RESEND_COOLDOWN))) {
+            return;
+        }
+
+        // OTP 6 số sinh bằng SecureRandom (java.util.Random đoán được)
+        String otp = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+
         user.setResetOtp(otp);
-        user.setResetOtpExpiry(LocalDateTime.now().plusMinutes(5)); // Mã OTP có hiệu lực trong 5 phút
+        user.setResetOtpExpiry(now.plus(OTP_TTL));
+        user.setResetOtpAttempts(0);
         userRepository.save(user);
 
         // Gửi Email chứa mã OTP
@@ -142,22 +161,40 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(HttpStatus.BAD_REQUEST, "Mã đặt lại không hợp lệ hoặc đã hết hạn."));
 
-        if (user.getResetOtp() == null || !user.getResetOtp().equals(request.getOtp())) {
+        if (user.getResetOtp() == null || user.getResetOtpExpiry() == null
+                || LocalDateTime.now().isAfter(user.getResetOtpExpiry())) {
             throw new AppException(HttpStatus.BAD_REQUEST, "Mã đặt lại không hợp lệ hoặc đã hết hạn.");
         }
 
-        if (user.getResetOtpExpiry() == null || LocalDateTime.now().isAfter(user.getResetOtpExpiry())) {
+        // So sánh thời gian hằng định; sai thì tăng bộ đếm, quá MAX_OTP_ATTEMPTS thì hủy OTP
+        boolean matches = MessageDigest.isEqual(
+                user.getResetOtp().getBytes(StandardCharsets.UTF_8),
+                String.valueOf(request.getOtp()).getBytes(StandardCharsets.UTF_8));
+        if (!matches) {
+            int attempts = (user.getResetOtpAttempts() == null ? 0 : user.getResetOtpAttempts()) + 1;
+            if (attempts >= MAX_OTP_ATTEMPTS) {
+                clearResetOtp(user);
+                userRepository.save(user);
+                throw new AppException(HttpStatus.BAD_REQUEST, "Bạn đã nhập sai quá nhiều lần. Vui lòng yêu cầu mã mới.");
+            }
+            user.setResetOtpAttempts(attempts);
+            userRepository.save(user);
             throw new AppException(HttpStatus.BAD_REQUEST, "Mã đặt lại không hợp lệ hoặc đã hết hạn.");
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setResetOtp(null);
-        user.setResetOtpExpiry(null);
+        clearResetOtp(user);
         
         userRepository.save(user);
         
         // Thu hồi toàn bộ token để bắt buộc đăng nhập lại trên mọi thiết bị
         refreshTokenService.revokeAllUserTokens(user.getId());
+    }
+
+    private void clearResetOtp(User user) {
+        user.setResetOtp(null);
+        user.setResetOtpExpiry(null);
+        user.setResetOtpAttempts(0);
     }
 
     @Override

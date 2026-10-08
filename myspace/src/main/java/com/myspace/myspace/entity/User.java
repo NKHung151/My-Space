@@ -50,6 +50,10 @@ public class User {
     @Column(name = "reset_otp_expiry")
     private LocalDateTime resetOtpExpiry;
 
+    // Số lần nhập sai OTP; quá giới hạn thì OTP bị hủy (chống brute-force 6 chữ số)
+    @Column(name = "reset_otp_attempts")
+    private Integer resetOtpAttempts;
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
