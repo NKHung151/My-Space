@@ -46,6 +46,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("UPDATE Post p SET p.commentCount = CASE WHEN COALESCE(p.commentCount, 0) + :delta < 0 THEN 0 ELSE COALESCE(p.commentCount, 0) + :delta END WHERE p.id = :id")
     void addCommentCount(@Param("id") Long id, @Param("delta") int delta);
 
+    @org.springframework.transaction.annotation.Transactional
+    @Modifying
+    @Query("UPDATE Post p SET p.viewCount = COALESCE(p.viewCount, 0) + :delta WHERE p.id = :id")
+    void addViewCount(@Param("id") Long id, @Param("delta") int delta);
+
     @Query("SELECT COALESCE(p.likeCount, 0) FROM Post p WHERE p.id = :id")
     int findLikeCount(@Param("id") Long id);
 

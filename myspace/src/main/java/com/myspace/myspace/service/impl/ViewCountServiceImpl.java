@@ -1,18 +1,19 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.repository.PostRepository;
 import com.myspace.myspace.service.ViewCountService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.time.Duration;
-
-import lombok.extern.slf4j.Slf4j;
-import com.myspace.myspace.repository.PostRepository;
-import com.myspace.myspace.service.search.SearchIndexService;
 
 @Service
 @RequiredArgsConstructor
@@ -21,112 +22,91 @@ public class ViewCountServiceImpl implements ViewCountService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final PostRepository postRepository;
-    private final SearchIndexService searchIndexService;
-    
+
     private static final String VIEW_KEY_PREFIX = "post:views:";
     private static final String TRACK_KEY_PREFIX = "view:track:post:";
+    // Tập id các bài có lượt xem chưa đồng bộ — thay cho KEYS post:views:* (O(N), chặn Redis)
+    private static final String DIRTY_SET_KEY = "post:views:dirty";
 
     @Override
     public void incrementViewCount(Long postId, String viewerId) {
         String trackKey = TRACK_KEY_PREFIX + postId + ":viewer:" + viewerId;
-        
-        // Check if user/IP already viewed this post in the last 24h
+
+        // Mỗi user/IP chỉ tính 1 lượt xem / bài / 24h
         Boolean isNewView = redisTemplate.opsForValue().setIfAbsent(trackKey, "1", Duration.ofHours(24));
-        
+
         if (Boolean.TRUE.equals(isNewView)) {
-            String key = VIEW_KEY_PREFIX + postId;
-            redisTemplate.opsForValue().increment(key);
+            redisTemplate.opsForValue().increment(VIEW_KEY_PREFIX + postId);
+            redisTemplate.opsForSet().add(DIRTY_SET_KEY, postId.toString());
         }
     }
 
     @Override
-    public Long getRedisViewCount(Long postId) {
-        String key = VIEW_KEY_PREFIX + postId;
-        Object value = redisTemplate.opsForValue().get(key);
-        if (value == null) return 0L;
-        if (value instanceof Integer) {
-            return ((Integer) value).longValue();
-        }
-        if (value instanceof String) {
-            return Long.parseLong((String) value);
-        }
-        return (Long) value;
+    public long getPendingViewCount(Long postId) {
+        return toLong(redisTemplate.opsForValue().get(VIEW_KEY_PREFIX + postId));
     }
 
     @Override
-    public Map<Long, Long> getAllRedisViewCounts() {
-        Set<String> keys = redisTemplate.keys(VIEW_KEY_PREFIX + "*");
-        Map<Long, Long> viewCounts = new HashMap<>();
-        
-        if (keys == null || keys.isEmpty()) {
-            return viewCounts;
-        }
+    public Map<Long, Long> getPendingViewCounts(Collection<Long> postIds) {
+        Map<Long, Long> result = new HashMap<>();
+        if (postIds.isEmpty()) return result;
 
-        for (String key : keys) {
-            try {
-                Long postId = Long.parseLong(key.substring(VIEW_KEY_PREFIX.length()));
-                Object value = redisTemplate.opsForValue().get(key);
-                Long count = 0L;
-                if (value != null) {
-                    if (value instanceof Integer) {
-                        count = ((Integer) value).longValue();
-                    } else if (value instanceof String) {
-                        count = Long.parseLong((String) value);
-                    } else if (value instanceof Long) {
-                        count = (Long) value;
-                    }
-                }
-                if (count > 0) {
-                    viewCounts.put(postId, count);
-                }
-            } catch (NumberFormatException ignored) {
-                // Ignore keys that don't end in a number
-            }
+        List<Long> ids = List.copyOf(postIds);
+        List<Object> values = redisTemplate.opsForValue().multiGet(ids.stream().map(id -> VIEW_KEY_PREFIX + id).toList());
+        for (int i = 0; i < ids.size(); i++) {
+            long value = values == null ? 0 : toLong(values.get(i));
+            if (value > 0) result.put(ids.get(i), value);
         }
-        return viewCounts;
+        return result;
     }
 
-    @Override
-    public void deleteViewCount(Long postId) {
-        String key = VIEW_KEY_PREFIX + postId;
-        redisTemplate.delete(key);
-    }
-
-    // Run every 5 minutes (300000 ms)
-    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 300000)
-    @org.springframework.transaction.annotation.Transactional
+    // Mặc định 5 phút; chỉnh bằng app.views.sync-interval-ms
+    @Scheduled(fixedRateString = "${app.views.sync-interval-ms:300000}")
     public void syncViewCountsToDatabase() {
-        log.info("Starting view count sync from Redis to MySQL...");
-        
-        Map<Long, Long> redisViewCounts = getAllRedisViewCounts();
-        
-        if (redisViewCounts.isEmpty()) {
+        Set<Object> dirty = redisTemplate.opsForSet().members(DIRTY_SET_KEY);
+        if (dirty == null || dirty.isEmpty()) {
             return;
         }
 
-        int updatedCount = 0;
-        for (Map.Entry<Long, Long> entry : redisViewCounts.entrySet()) {
-            Long postId = entry.getKey();
-            Long viewsToAdd = entry.getValue();
+        int updated = 0;
+        for (Object member : dirty) {
+            Long postId;
+            try {
+                postId = Long.valueOf(member.toString());
+            } catch (NumberFormatException e) {
+                redisTemplate.opsForSet().remove(DIRTY_SET_KEY, member);
+                continue;
+            }
 
-            com.myspace.myspace.entity.Post post = postRepository.findById(postId).orElse(null);
-            if (post != null) {
-                // Update MySQL
-                post.setViewCount(post.getViewCount() + viewsToAdd.intValue());
-                postRepository.save(post);
-                
-                // Update Elasticsearch
-                searchIndexService.indexPost(post);
-                
-                // Clear from Redis
-                deleteViewCount(postId);
-                updatedCount++;
-            } else {
-                // If post was deleted, still clean up redis
-                deleteViewCount(postId);
+            // Thứ tự quan trọng: bỏ khỏi tập dirty TRƯỚC rồi mới GETDEL. Lượt xem đến giữa 2 bước sẽ INCR (được GETDEL lấy luôn)
+            // và SADD lại bài vào dirty -> lần sync sau chỉ thấy 0, không mất lượt nào.
+            // (Trước đây: GET rồi mới DELETE -> lượt xem đến giữa 2 bước bị xóa mất.)
+            redisTemplate.opsForSet().remove(DIRTY_SET_KEY, member);
+            long views = toLong(redisTemplate.opsForValue().getAndDelete(VIEW_KEY_PREFIX + postId));
+            if (views <= 0) continue;
+
+            try {
+                // UPDATE nguyên tử, mỗi bài 1 câu lệnh ngắn (bài đã xóa thì không có dòng nào bị ảnh hưởng)
+                postRepository.addViewCount(postId, (int) views);
+                updated++;
+            } catch (Exception e) {
+                // Ghi DB lỗi: trả lại lượt xem vào Redis để lần sau đồng bộ tiếp
+                log.error("Failed to sync {} views of post {}: {}", views, postId, e.getMessage());
+                redisTemplate.opsForValue().increment(VIEW_KEY_PREFIX + postId, views);
+                redisTemplate.opsForSet().add(DIRTY_SET_KEY, postId.toString());
             }
         }
-        
-        log.info("Successfully synced {} post(s) view counts to MySQL.", updatedCount);
+
+        if (updated > 0) log.info("Synced view counts of {} post(s) to MySQL.", updated);
+    }
+
+    private static long toLong(Object value) {
+        if (value == null) return 0L;
+        if (value instanceof Number number) return number.longValue();
+        try {
+            return Long.parseLong(value.toString());
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
     }
 }

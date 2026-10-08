@@ -76,8 +76,7 @@ public class PublicPostServiceImpl implements PublicPostService {
         }
         
         // Add real-time views from Redis
-        Long redisViews = viewCountService.getRedisViewCount(id);
-        response.setViewCount(response.getViewCount() + redisViews.intValue());
+        response.setViewCount(response.getViewCount() + (int) viewCountService.getPendingViewCount(id));
         
         return response;
     }
@@ -161,11 +160,7 @@ public class PublicPostServiceImpl implements PublicPostService {
     }
 
     private void populateRealtimeViewCounts(List<PostResponse> items) {
-        for (PostResponse item : items) {
-            Long redisViews = viewCountService.getRedisViewCount(item.getId());
-            if (redisViews > 0) {
-                item.setViewCount(item.getViewCount() + redisViews.intValue());
-            }
-        }
+        java.util.Map<Long, Long> pending = viewCountService.getPendingViewCounts(items.stream().map(PostResponse::getId).toList());
+        items.forEach(item -> item.setViewCount(item.getViewCount() + pending.getOrDefault(item.getId(), 0L).intValue()));
     }
 }

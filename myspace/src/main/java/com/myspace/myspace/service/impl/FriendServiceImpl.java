@@ -220,10 +220,10 @@ public class FriendServiceImpl implements FriendService {
         if (!items.isEmpty()) {
             List<Long> postIds = items.stream().map(PostResponse::getId).collect(Collectors.toList());
             List<Long> likedIds = postLikeRepository.findLikedPostIds(currentUserId, postIds);
+            java.util.Map<Long, Long> pendingViews = viewCountService.getPendingViewCounts(postIds);
             items.forEach(item -> {
                 item.setLiked(likedIds.contains(item.getId()));
-                Long redisViews = viewCountService.getRedisViewCount(item.getId());
-                if (redisViews > 0) item.setViewCount(item.getViewCount() + redisViews.intValue());
+                item.setViewCount(item.getViewCount() + pendingViews.getOrDefault(item.getId(), 0L).intValue());
             });
         }
 
