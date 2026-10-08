@@ -1,5 +1,5 @@
 import { RouterOutlet } from '@angular/router';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 import { BrandComponent } from '../../shared/components/brand/brand.component';
 
@@ -11,10 +11,4 @@ import { BrandComponent } from '../../shared/components/brand/brand.component';
   templateUrl: './auth-layout.component.html',
   styleUrl: './auth-layout.component.scss'
 })
-export class AuthLayoutComponent implements OnInit {
-
-
-  ngOnInit(): void {
-
-  }
-}
+export class AuthLayoutComponent {}

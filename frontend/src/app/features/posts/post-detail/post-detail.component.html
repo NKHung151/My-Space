@@ -16,19 +16,16 @@
   <a href="#" (click)="$event.preventDefault(); goBack()"
     class="text-decoration-none text-muted mb-4 d-inline-flex align-items-center fw-medium mt-3 ms-2">
     <i class="bi bi-arrow-left me-2"></i>
-    <span>{{ authorPreview()  ? 'Quay lại bài viết của tôi' : 'Quay lại bảng tin' }}</span>
+    <span>Quay lại bảng tin</span>
   </a>
 
   <div id="postDetailContainer" class="card p-3 p-md-4 border-light-subtle shadow-sm rounded-4 mb-5">
     <app-post-card 
       [post]="p" 
       [isDetailMode]="true" 
-      [detailHtml]="displayedTranslation()?.safeContentHtml || ''" 
-      [hideFooter]="authorPreview()">
+      [detailHtml]="displayedTranslation()?.safeContentHtml || ''">
     </app-post-card>
 
-    @if (!authorPreview()) {
-      <app-comment-section [postId]="'' + p.id" [postAuthorId]="'' + p.author.id" (commentCountChange)="onCommentCountChange($event)"></app-comment-section>
-    }
+    <app-comment-section [postId]="'' + p.id" [postAuthorId]="'' + p.author.id" (commentCountChange)="onCommentCountChange($event)"></app-comment-section>
   </div>
 }

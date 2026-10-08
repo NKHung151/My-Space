@@ -1,12 +1,11 @@
-import { Component, OnDestroy, computed, inject, signal, ViewChild, ElementRef, DestroyRef, HostListener } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal, ViewChild, ElementRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer } from '@angular/platform-browser';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { forkJoin, switchMap, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs';
 import { FeedPostsService } from '../services/feed-posts.service';
 import { Post } from '../models/post.model';
-import { AuthorPostsService } from '../services/author-posts.service';
 
 import { Title } from '@angular/platform-browser';
 import { CommentSectionComponent } from '../components/comment-section/comment-section.component';
@@ -38,11 +37,10 @@ import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.gua
   templateUrl: './post-detail.component.html',
   styleUrls: ['./post-detail.component.scss']
 })
-export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
+export class PostDetailComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly postService = inject(FeedPostsService);
-  private readonly authorPostsService = inject(AuthorPostsService);
 
   private titleService = inject(Title);
   private likeService = inject(LikeService);
@@ -74,12 +72,9 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
     return true;
   }
   
-  // loading / error / authorPreview: Trạng thái UI cơ bản.
+  // loading / error: Trạng thái UI cơ bản.
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
-  authorPreview = signal(false);
-
-  private likeSub?: Subscription;
   private videoObservers: IntersectionObserver[] = [];
   private videoTimeoutId?: any;
   private scrollTimeoutId?: any;
@@ -101,7 +96,6 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
     // Dọn dẹp các observers và subscriptions khi component bị hủy để tránh memory leak
     this.cleanupVideoObservers();
     this.cleanupScrollTracker();
-    this.likeSub?.unsubscribe();
   }
 
   private cleanupVideoObservers(): void {
@@ -160,7 +154,7 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
    * ═══════════════════════════════════════════════════════════════════════════
    */
   private setupScrollTracker(postId: number): void {
-    if (typeof document === 'undefined' || this.authorPreview()) return;
+    if (typeof document === 'undefined') return;
 
     // Reset khi chuyển sang bài mới
     if (this.trackedPostId !== postId) {
@@ -246,14 +240,7 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
 
   // Xử lý nút quay lại
   goBack(): void {
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    const destination = returnUrl && /^\/workspace\/posts(?:\?|$)/.test(returnUrl)
-      ? returnUrl
-      : this.authorPreview()
-        ? '/profile'
-        : '/';
-
-    void this.router.navigateByUrl(destination);
+    void this.router.navigateByUrl('/');
   }
 
   /**
@@ -273,70 +260,25 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
   });
 
   ngOnInit(): void {
-    this.authorPreview.set(Boolean(this.route.snapshot.data['authorPreview']));
-
-    /**
-     * Quá trình load bài viết:
-     * Lắng nghe sự thay đổi của route parameters (ví dụ: chuyển từ bài A sang bài B).
-     * switchMap: hủy request cũ nếu có request mới tới, ngăn ngừa lỗi race condition.
-     */
+    // switchMap: hủy request cũ nếu chuyển nhanh sang bài khác, tránh race condition.
     this.route.paramMap.pipe(
-      switchMap(() => {
-        const id = Number(this.route.snapshot.paramMap.get('id') || this.route.snapshot.queryParamMap.get('id'));
+      switchMap(params => {
         this.loading.set(true);
         this.error.set(null);
-"vi";
-
-        if (this.authorPreview()) {
-          const includeDeleted = this.route.snapshot.queryParamMap.get('trash') === 'true';
-          
-          // ══════════════════════════════════════════════════════
-          // PIPELINE LOAD BÀI VIẾT TÁC GIẢ (forkJoin)
-          // ══════════════════════════════════════════════════════
-          // API 1: getAuthorPost() → lấy thông tin nháp/bản xem trước
-          // API 2: getPostOptions() → lấy danh mục, ngôn ngữ hỗ trợ
-          // forkJoin: Chạy các APIs này song song và gom kết quả khi tất cả xong.
-          return forkJoin({
-            post: this.authorPostsService.getAuthorPost(id),
-            mode: Promise.resolve('author' as const),
-          });
-        } else {
-          // ══════════════════════════════════════════════════════
-          // PIPELINE LOAD BÀI VIẾT (forkJoin)
-          // ══════════════════════════════════════════════════════
-          // API 1: getById(id) → lấy post details (chứa views, likes, tác giả, nội dung)
-          // API 2: getRelated(id) → lấy posts liên quan (cùng tag)
-          // forkJoin đảm bảo render màn hình khi có TẤT CẢ thông tin cần thiết.
-          return forkJoin({
-            post: this.postService.getById(id),
-            mode: Promise.resolve('public' as const),
-          });
-        }
+        return this.postService.getById(Number(params.get('id')));
       }),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
-      next: (result) => {
-
-        if (result.mode === 'author') {
-          const { post } = result as any;
-          const previewPost = this.toPreviewPost(post);
-          this.post.set(previewPost);
-        } else {
-          const { post } = result as any;
-
-          this.post.set(post);
-        }
+      next: (post) => {
+        this.post.set(post);
         this.loading.set(false);
 
         // Đặt tiêu đề tab trình duyệt theo tên bài viết
-        const title = this.displayedTranslation()?.title;
-        if (title) this.titleService.setTitle(`${title} - My Space`);
+        if (post.title) this.titleService.setTitle(`${post.title} - My Space`);
 
-        // Chỉ scroll lên đầu nếu đây là bài viết mới (chuyển trang),
-        // giữ nguyên vị trí scroll nếu chỉ là reload do đổi ngôn ngữ.
-        const id = Number(this.route.snapshot.paramMap.get('id') || this.route.snapshot.queryParamMap.get('id'));
-        if (this.currentPostId !== id) {
-          this.currentPostId = id;
+        // Chỉ scroll lên đầu nếu đây là bài viết mới (chuyển trang)
+        if (this.currentPostId !== post.id) {
+          this.currentPostId = post.id;
           const scrollContainer = this.document.querySelector('.center-feed');
           if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -344,49 +286,16 @@ export class PostDetailComponent implements OnDestroy, CanComponentDeactivate {
         this.setupVideoObservers();
 
         // Khởi động scroll tracker để ghi nhận view khi người dùng đọc >= 50%
-        // Chỉ áp dụng cho bài viết công khai (không áp dụng cho bản xem trước của tác giả)
-        if (result.mode === 'public') {
-          const { post } = result as any;
-          this.setupScrollTracker(post.id);
-        }
+        this.setupScrollTracker(post.id);
       },
       error: () => {
-        if (this.authorPreview()) {
-          this.error.set('Không thể tải bài viết này. Bài viết có thể đã thay đổi hoặc bị xóa.');
-          this.loading.set(false);
-          return;
-        }
-
         this.toast.showError('Không thể tải bài viết. Đang quay về trang chủ.');
         void this.router.navigate(['/home']);
       }
     });
   }
 
-  private toPreviewPost(post: Post): Post {
-    const currentUser = this.authService.currentUser();
-
-    return {
-      ...post,
-      title: post.title || 'Untitled',
-      likeCount: 0,
-      commentCount: 0,
-      liked: false,
-      author: {
-        id: Number(currentUser?.id ?? post.authorId),
-        displayName: currentUser?.displayName || currentUser?.username || 'Author',
-        email: currentUser?.email,
-        username: currentUser?.username || 'author',
-        avatarUrl: currentUser?.avatarUrl ?? null,
-        bio: currentUser?.bio ?? null,
-        role: currentUser?.role ?? 'user',
-      },
-    };
-  }
-
   toggleLike(): void {
-    this.likeSub?.unsubscribe();
-    
     this.likeService.optimisticTogglePostLike(
       this.post,
       this.authService,

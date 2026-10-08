@@ -130,7 +130,7 @@ export class RightSidebarComponent implements OnDestroy {
   }
 
   personAvatar(person: FriendUser): string {
-    return person.avatarUrl || '/assets/images/default-avatar.png';
+    return person.avatarUrl || '/assets/images/default-avatar.svg';
   }
 
   openLoginModal(): void {

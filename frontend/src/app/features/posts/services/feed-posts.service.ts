@@ -11,7 +11,6 @@ export interface PostQuery {
   tag?: string;
   hasVideo?: boolean;
   authorId?: number | string;
-  sort?: 'top' | 'newest' | 'trending';
   page?: number;
   limit?: number;
 }

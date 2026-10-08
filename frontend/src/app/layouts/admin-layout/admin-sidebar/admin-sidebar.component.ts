@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 
@@ -17,7 +17,7 @@ export interface AdminNavItem {
   templateUrl: './admin-sidebar.component.html',
   styleUrl: './admin-sidebar.component.scss'
 })
-export class AdminSidebarComponent implements OnInit {
+export class AdminSidebarComponent {
   private readonly authService = inject(AuthService);
 
   private readonly router = inject(Router);
@@ -32,10 +32,6 @@ export class AdminSidebarComponent implements OnInit {
     { labelKey: 'Quản lý người dùng', icon: 'bi-people', route: '/admin/users' },
     { labelKey: 'Quản lý bài viết', icon: 'bi-file-earmark-check', route: '/admin/posts' }
   ];
-
-  ngOnInit(): void {
-
-  }
 
   toggleMoreMenu(event: MouseEvent): void {
     event.stopPropagation();

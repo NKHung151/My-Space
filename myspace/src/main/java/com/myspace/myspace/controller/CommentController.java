@@ -39,11 +39,6 @@ public class CommentController {
             @Valid @RequestBody CreateCommentRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // Đảm bảo user đã đăng nhập
-        if (userDetails == null) {
-            throw new RuntimeException("Unauthorized");
-        }
-
         Long userId = userDetails.getUser().getId();
 
         CommentResponse comment = commentService.createComment(postId, userId, request);
@@ -56,10 +51,6 @@ public class CommentController {
             @Valid @RequestBody UpdateCommentRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        if (userDetails == null) {
-            throw new RuntimeException("Unauthorized");
-        }
-
         Long userId = userDetails.getUser().getId();
 
         CommentResponse comment = commentService.updateComment(commentId, userId, request);
@@ -70,10 +61,6 @@ public class CommentController {
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @PathVariable Long commentId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        if (userDetails == null) {
-            throw new RuntimeException("Unauthorized");
-        }
 
         Long userId = userDetails.getUser().getId();
 

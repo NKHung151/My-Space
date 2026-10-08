@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, effect } from '@angular/core';
+import { Component, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WebRTCService } from '../../../core/websocket/webrtc.service';
 import { FriendUser } from '../../../features/friends/models/friend.model';
@@ -12,7 +12,7 @@ import { AssetImageDirective } from '../../directives/asset-image.directive';
   templateUrl: './call-modal.component.html',
   styleUrl: './call-modal.component.scss'
 })
-export class CallModalComponent implements OnInit {
+export class CallModalComponent {
   public webrtcService = inject(WebRTCService);
   private friendService = inject(FriendsService);
 
@@ -44,8 +44,6 @@ export class CallModalComponent implements OnInit {
       }
     });
   }
-
-  ngOnInit() {}
 
   acceptCall() {
     this.webrtcService.acceptCall();
@@ -103,6 +101,6 @@ export class CallModalComponent implements OnInit {
   }
 
   getAvatarUrl(): string {
-    return this.partnerInfo?.avatarUrl || 'images/default-avatar.png';
+    return this.partnerInfo?.avatarUrl || '/assets/images/default-avatar.svg';
   }
 }

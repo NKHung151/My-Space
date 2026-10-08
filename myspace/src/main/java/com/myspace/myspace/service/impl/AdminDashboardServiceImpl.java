@@ -55,8 +55,6 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                         .build())
                 .collect(Collectors.toList());
 
-        Map<String, Long> commentsByStatus = new HashMap<>(); // Status omitted in Comments entity
-
         return AdminDashboardResponse.builder()
                 .summary(AdminDashboardResponse.Summary.builder()
                         .totalUsers(totalUsers)
@@ -77,12 +75,10 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                         .build())
                 .social(AdminDashboardResponse.Social.builder()
                         .comments(totalComments)
-                        .commentsByStatus(commentsByStatus)
                         .postLikes(totalPostLikes)
                         .commentLikes(totalCommentLikes)
                         .totalLikes(totalLikes)
                         .build())
-                .translations(new HashMap<>())
                 .build();
     }
 

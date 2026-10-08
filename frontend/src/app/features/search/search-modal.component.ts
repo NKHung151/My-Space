@@ -9,23 +9,6 @@ import { SearchModalService } from './search-modal.service';
 import { AuthorTooltipComponent } from '../users/components/author-tooltip/author-tooltip.component';
 import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
 
-
-export interface SearchPost {
-  id: string;
-  title: string;
-  createdAt: string;
-  author: {
-    id: string;
-    displayName: string | null;
-    username: string;
-    avatarUrl: string | null;
-  };
-}
-
-export interface SearchResults {
-  users: User[];
-  posts: SearchPost[];
-}
 @Component({
   selector: 'app-search-modal',
   standalone: true,
@@ -43,7 +26,7 @@ export class SearchModalComponent {
 
   readonly query = signal('');
 
-  readonly results = signal<SearchResults>({ users: [], posts: [] });
+  readonly results = signal<User[]>([]);
 
   readonly searching = signal(false);
 
@@ -70,17 +53,17 @@ export class SearchModalComponent {
           }
           this.searching.set(true);
           return this.userService.getRecommended(q, 5).pipe(
-            map(res => ({ users: res.items, posts: [] })),
+            map(res => res.items),
             catchError(() => {
               this.searching.set(false);
-              return of({ users: [], posts: [] });
+              return of([]);
             })
           );
         }),
       )
-      .subscribe((res) => {
+      .subscribe((users) => {
         this.searching.set(false);
-        if (res && !Array.isArray(res)) this.results.set(res);
+        this.results.set(users);
       });
 
     effect(() => {
@@ -89,7 +72,7 @@ export class SearchModalComponent {
         if (!this.trendingLoaded) this.loadTrending();
       } else {
         this.query.set('');
-        this.results.set({ users: [], posts: [] });
+        this.results.set([]);
       }
     }, { allowSignalWrites: true });
   }
@@ -109,7 +92,7 @@ export class SearchModalComponent {
 
   clear() {
     this.query.set('');
-    this.results.set({ users: [], posts: [] });
+    this.results.set([]);
   }
 
   close() {
@@ -119,11 +102,6 @@ export class SearchModalComponent {
   @HostListener('document:keydown.escape')
   onEscape() {
     if (this.modalService.isOpen()) this.close();
-  }
-
-  goToPost(postId: string | number) {
-    this.close();
-    this.router.navigate(['/post', postId]);
   }
 
   goToAuthor(userId: string | number) {
