@@ -62,25 +62,7 @@ export class AssetImageDirective implements OnChanges, AfterViewInit {
     this.image.src = this.resolveUrl(this.assetFallback);
   }
 
-  /**
-   * Giải thích cách xây dựng URL (resolveUrl):
-   * Mục tiêu: Đưa bất kỳ đường dẫn nào về dạng tuyệt đối có thể dùng được trên thẻ <img>.
-   * 
-   * - Nếu là URL tuyệt đối đầy đủ có protocol (`http://`, `https://`): Giữ nguyên.
-   * - Nếu là `data:` hoặc `blob:` uri (base64 mã hóa ảnh thẳng trong text): Giữ nguyên.
-   * - Nếu là đường dẫn `assets/` ở thư mục tĩnh frontend nội bộ: Giữ nguyên.
-   */
   private resolveUrl(url: string): string {
-    const normalized = url.trim();
-    if (
-      /^(?:https?:)?\/\//i.test(normalized)
-      || /^(?:data|blob):/i.test(normalized)
-      || normalized.startsWith('assets/')
-      || normalized.startsWith('/assets/')
-    ) {
-      return normalized;
-    }
-
-    return normalized;
+    return url.trim();
   }
 }

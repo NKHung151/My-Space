@@ -10,16 +10,6 @@ export interface MessageResponse {
   isEdited?: boolean;
 }
 
-export interface MessageActionRequest {
-  messageId: number;
-  content?: string;
-}
-
-export interface MessageRequest {
-  receiverId: number;
-  content: string;
-}
-
 export interface PageResponse<T> {
   data: T[];
   meta: any;

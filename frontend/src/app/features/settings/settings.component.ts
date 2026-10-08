@@ -92,8 +92,7 @@ export class SettingsComponent implements OnInit {
   passwordFieldType = 'password';
 
   get avatarUrl(): string {
-    const url = this.user()?.avatarUrl;
-    return url ? this.uploadsService.toAbsoluteUrl(url) : '';
+    return this.user()?.avatarUrl || '';
   }
 
   ngOnInit(): void {
@@ -132,8 +131,6 @@ export class SettingsComponent implements OnInit {
   }
 
   private setProfileForm(user: CurrentUser): void {
-    const dName = user.displayName;
-    const uName = user.username;
     this.profileForm = {
       displayName: user.displayName || user.username,
       username: user.username,

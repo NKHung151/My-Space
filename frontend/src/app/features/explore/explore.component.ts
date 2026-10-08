@@ -72,8 +72,6 @@ export class ExploreComponent implements OnInit, OnDestroy, AfterViewInit {
 
   hasInitialized = false;
 
-  constructor() {}
-
   ngAfterViewInit() {
     if (this.stickyHeaderRef) {
       const sentinel = document.createElement('div');
@@ -150,11 +148,11 @@ export class ExploreComponent implements OnInit, OnDestroy, AfterViewInit {
         
         if (tab === 'top') {
           return forkJoin({
-            posts: this.postsService.list({ q, tag, limit: 10, sort: 'trending' }).pipe(map(res => res.items), catchError(() => of([]))),
+            posts: this.postsService.list({ q, tag, limit: 10 }).pipe(map(res => res.items), catchError(() => of([]))),
             people: this.userService.getRecommended(q, 2, 1).pipe(map(res => res.items), catchError(() => of([])))
           }).pipe(map(res => ({ tab, data: res })));
         } else if (tab === 'posts') {
-          return this.postsService.list({ q, tag, hasVideo: video ? true : undefined, limit: 20, sort: 'trending', page: 1 }).pipe(
+          return this.postsService.list({ q, tag, hasVideo: video ? true : undefined, limit: 20, page: 1 }).pipe(
             map(res => ({ tab, data: res })),
             catchError(() => of({ tab, data: { items: [], meta: { totalPages: 1 } } }))
           );
@@ -198,7 +196,7 @@ export class ExploreComponent implements OnInit, OnDestroy, AfterViewInit {
             q,
             tag: this.selectedTag,
             hasVideo: this.onlyVideo ? true : undefined,
-            limit: 20, sort: 'trending', page,
+            limit: 20, page,
           }).pipe(map(res => ({ kind: 'posts' as const, res })));
         } else if (this.tab === 'people') {
           return this.userService.getRecommended(q, 20, page).pipe(

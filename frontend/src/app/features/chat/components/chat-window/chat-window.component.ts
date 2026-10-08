@@ -188,7 +188,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   }
 
   personAvatar(person: FriendUser): string {
-    return person.avatarUrl || 'images/default-avatar.png';
+    return person.avatarUrl || '/assets/images/default-avatar.svg';
   }
 
   personDisplayName(person: FriendUser): string {

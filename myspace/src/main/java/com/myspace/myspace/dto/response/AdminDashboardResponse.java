@@ -14,7 +14,6 @@ public class AdminDashboardResponse {
     private Users users;
     private Posts posts;
     private Social social;
-    private Map<String, Long> translations;
 
     @Data
     @Builder
@@ -61,7 +60,6 @@ public class AdminDashboardResponse {
     @Builder
     public static class Social {
         private long comments;
-        private Map<String, Long> commentsByStatus;
         private long postLikes;
         private long commentLikes;
         private long totalLikes;

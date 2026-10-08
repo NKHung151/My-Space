@@ -99,10 +99,4 @@ export class FriendsService {
       this.statusCache.set(idStr, new BehaviorSubject<FriendshipStatus>(status));
     }
   }
-
-  /** Xóa cache của userId để bắt re-fetch khi FriendButton render lại */
-  public invalidateStatus(userId: string | number): void {
-    const idStr = String(userId);
-    this.statusCache.delete(idStr);
-  }
 }

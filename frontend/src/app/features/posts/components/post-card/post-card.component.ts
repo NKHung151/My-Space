@@ -44,7 +44,6 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
   @Input() isOwnPost = false;
   @Input() isDetailMode = false;
   @Input() detailHtml?: SafeHtml | null;
-  @Input() hideFooter = false;
 
   @Output() deletePost = new EventEmitter<Post>();
   

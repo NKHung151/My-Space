@@ -31,10 +31,4 @@ export class UsersService {
       // Format mới: data là object chứa { data: User[], meta: ... }
       .pipe(map((res) => ({ items: res.data?.data || res.data || [], meta: res.data?.meta || res.meta })));
   }
-
-  updateMe(payload: Partial<User>): Observable<User> {
-    return this.http
-      .patch<ApiResponse<User>>(`${environment.apiUrl}/users/me`, payload)
-      .pipe(map((res) => res.data));
-  }
 }

@@ -24,13 +24,6 @@ export interface ApiItemResponse<T> {
   message: string;
 }
 
-export interface ApiCollectionResponse<T> {
-  success: boolean;
-  data: T[];
-  meta: PaginationMeta;
-  status: number;
-  message: string;
-}
 
 export interface PaginationMeta {
   total: number;
@@ -39,8 +32,3 @@ export interface PaginationMeta {
   totalPages: number;
 }
 
-export interface ApiError {
-  statusCode: number;
-  message: string;
-  details?: any;
-}

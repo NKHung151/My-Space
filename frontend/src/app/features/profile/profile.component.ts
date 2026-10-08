@@ -14,7 +14,6 @@ import { FriendUser } from '../friends/models/friend.model';
 import { FriendsService } from '../friends/services/friends.service';
 import { User } from '../users/models/user.model';
 import { UsersService } from '../users/services/users.service';
-import { EditorUploadsService } from '../workspace/services/editor-uploads.service';
 import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
 import { FriendButtonComponent } from '../friends/components/friend-button/friend-button.component';
 import { PostCardComponent } from '../posts/components/post-card/post-card.component';
@@ -35,7 +34,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private friendsService = inject(FriendsService);
-  private uploadsService = inject(EditorUploadsService);
   private toast = inject(ToastService);
 
   private observer?: IntersectionObserver;
@@ -98,8 +96,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   get avatarUrl(): string {
-    const url = this.user()?.avatarUrl;
-    return url ? this.uploadsService.toAbsoluteUrl(url) : '';
+    return this.user()?.avatarUrl || '';
   }
 
   @ViewChild('scrollTrigger') set scrollTrigger(el: ElementRef<HTMLElement> | undefined) {
@@ -166,16 +163,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   personAvatar(person: FriendUser): string {
     return person.avatarUrl && !this.failedPeopleAvatarIds().has(person.id)
-      ? this.uploadsService.toAbsoluteUrl(person.avatarUrl)
+      ? person.avatarUrl
       : '/assets/images/default-avatar.svg';
   }
 
   handlePeopleAvatarError(personId: number): void {
     this.failedPeopleAvatarIds.update(ids => new Set(ids).add(personId));
-  }
-
-  @HostListener('document:click', ['$event'])
-  closeFloatingMenus(): void {
   }
 
   @HostListener('document:keydown.escape')

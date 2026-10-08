@@ -10,7 +10,6 @@ import java.util.List;
 
 public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     boolean existsByUserIdAndFriendId(Long userId, Long friendId);
-    long countByUserId(Long userId);
 
     @Query("SELECT f.friend FROM Friendship f WHERE f.user.id = :userId")
     List<com.myspace.myspace.entity.User> findFriendsByUserId(@Param("userId") Long userId);

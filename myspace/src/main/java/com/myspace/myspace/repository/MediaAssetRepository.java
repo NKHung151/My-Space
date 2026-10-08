@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
     List<MediaAsset> findByStatusAndCreatedAtBefore(String status, LocalDateTime cutoff);
-    List<MediaAsset> findByUrlIn(List<String> urls);
 
     @org.springframework.data.jpa.repository.Modifying
     @Query("UPDATE MediaAsset m SET m.status = :status, m.postId = :postId WHERE m.url IN :urls")

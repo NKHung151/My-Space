@@ -12,10 +12,5 @@ import { ConfirmModalComponent } from './shared/components/confirm-modal/confirm
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
-  title = 'My Space';
 
-  constructor() {
-    // Load the selected UI bundle for every route, including public/auth pages.
-  }
-}
+export class AppComponent {}

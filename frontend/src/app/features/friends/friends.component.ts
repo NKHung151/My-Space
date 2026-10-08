@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
@@ -17,7 +17,7 @@ import { FriendUser } from './models/friend.model';
   templateUrl: './friends.component.html',
   styleUrl: './friends.component.scss'
 })
-export class FriendsComponent implements OnInit, OnDestroy {
+export class FriendsComponent implements OnInit {
   private readonly friendsService = inject(FriendsService);
   private readonly route = inject(ActivatedRoute);
 
@@ -43,8 +43,6 @@ export class FriendsComponent implements OnInit, OnDestroy {
       this.loadData();
     });
   }
-
-  ngOnDestroy(): void {}
 
   setTab(newTab: 'feed' | 'friends' | 'requests') {
     this.tab = newTab;

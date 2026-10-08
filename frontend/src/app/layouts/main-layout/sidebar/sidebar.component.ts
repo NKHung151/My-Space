@@ -3,7 +3,6 @@ import {
   HostListener,
   computed,
   inject,
-  OnInit,
   signal,
 } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -20,7 +19,7 @@ import { SearchModalService } from '../../../features/search/search-modal.servic
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   readonly searchModalService = inject(SearchModalService);
@@ -34,9 +33,6 @@ export class SidebarComponent implements OnInit {
 
   get profileAvatar(): string | null {
     return this.authService.currentUser()?.avatarUrl ?? null;
-  }
-
-  ngOnInit(): void {
   }
 
   

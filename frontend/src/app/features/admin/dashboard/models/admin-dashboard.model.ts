@@ -29,10 +29,8 @@ export interface AdminDashboardOverview {
   };
   social: {
     comments: number;
-    commentsByStatus: Record<string, number>;
     postLikes: number;
     commentLikes: number;
     totalLikes: number;
   };
-  translations: Record<string, number>;
 }

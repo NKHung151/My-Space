@@ -5,8 +5,6 @@ import { AuthService } from '../auth/auth.service';
 import { environment } from '../../../environments/environment';
 import { BehaviorSubject } from 'rxjs';
 
-// Removed PendingSubscription interface
-
 @Injectable({
   providedIn: 'root',
 })
@@ -37,16 +35,14 @@ export class WebSocketService implements OnDestroy {
     if (this.client && this.client.active) return;
 
     const token = this.authService.getToken();
-    const savedToken = token || localStorage.getItem('access_token');
-
-    if (!savedToken) return;
+    if (!token) return;
 
     const socketUrl = `${environment.apiUrl.replace('/api', '')}/ws`;
 
     this.client = new Client({
       webSocketFactory: () => new SockJS(socketUrl),
       connectHeaders: {
-        Authorization: `Bearer ${savedToken}`,
+        Authorization: `Bearer ${token}`,
       },
       debug: (str) => {
         console.log('[STOMP]', str);
