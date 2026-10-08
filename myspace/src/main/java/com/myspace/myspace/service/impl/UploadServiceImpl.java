@@ -2,6 +2,8 @@ package com.myspace.myspace.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.myspace.myspace.common.exception.AppException;
+import com.myspace.myspace.common.util.FileSignature;
 import com.myspace.myspace.dto.response.UploadResponse;
 import com.myspace.myspace.moderation.ModerationClient;
 import com.myspace.myspace.moderation.ModerationResult;
@@ -32,21 +34,33 @@ public class UploadServiceImpl implements UploadService {
 
     @Override
     public UploadResponse uploadMedia(MultipartFile file, Long userId) {
-        String contentType = file.getContentType();
-        String resourceType = "auto"; // Cloudinary can auto-detect image/video/audio
-        if (contentType != null && contentType.startsWith("video/")) {
-            resourceType = "video";
-        } else if (contentType != null && contentType.startsWith("audio/")) {
-            resourceType = "video"; // Cloudinary treats audio as video for upload resource_type
-        } else if (contentType != null && contentType.startsWith("image/")) {
-            resourceType = "image";
-        }
-        return uploadToCloudinary(file, resourceType, userId, "TEMPORARY");
+        byte[] bytes = readBytes(file);
+        // Loại file xác định từ nội dung, không từ Content-Type client gửi:
+        // trước đây gửi ảnh kèm Content-Type lạ thì resource_type = "auto" và ảnh không qua kiểm duyệt.
+        String resourceType = switch (FileSignature.detect(bytes)) {
+            case IMAGE -> "image";
+            case AUDIO_VIDEO -> "video"; // Cloudinary dùng resource_type "video" cho cả audio
+            case UNKNOWN -> throw new AppException(HttpStatus.BAD_REQUEST, "Định dạng tệp không được hỗ trợ.");
+        };
+        return uploadToCloudinary(bytes, file.getContentType(), resourceType, userId, "TEMPORARY");
     }
 
     @Override
     public UploadResponse uploadAvatar(MultipartFile file, Long userId) {
-        return uploadToCloudinary(file, "image", userId, "ATTACHED");
+        byte[] bytes = readBytes(file);
+        if (FileSignature.detect(bytes) != FileSignature.Kind.IMAGE) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Ảnh đại diện phải là JPG, PNG, GIF hoặc WebP.");
+        }
+        return uploadToCloudinary(bytes, file.getContentType(), "image", userId, "ATTACHED");
+    }
+
+    private byte[] readBytes(MultipartFile file) {
+        try {
+            return file.getBytes();
+        } catch (IOException e) {
+            log.error("Không đọc được file upload", e);
+            throw new AppException(HttpStatus.BAD_REQUEST, "Không đọc được tệp tải lên.");
+        }
     }
 
     @Override
@@ -74,10 +88,8 @@ public class UploadServiceImpl implements UploadService {
         }
     }
 
-    private UploadResponse uploadToCloudinary(MultipartFile file, String resourceType, Long userId, String status) {
+    private UploadResponse uploadToCloudinary(byte[] bytes, String contentType, String resourceType, Long userId, String status) {
         try {
-            byte[] bytes = file.getBytes();
-
             // Quét TRƯỚC khi lên Cloudinary (chỉ ảnh; video/audio chưa được kiểm)
             if ("image".equals(resourceType)) {
                 ModerationResult mod = moderationClient.moderate(bytes);
@@ -95,7 +107,7 @@ public class UploadServiceImpl implements UploadService {
             String url = uploadResult.get("secure_url").toString();
             String publicId = uploadResult.get("public_id").toString();
             String format = uploadResult.get("format") != null ? uploadResult.get("format").toString()
-                    : file.getContentType();
+                    : contentType;
 
             MediaAsset asset = new MediaAsset();
             asset.setPublicId(publicId);
