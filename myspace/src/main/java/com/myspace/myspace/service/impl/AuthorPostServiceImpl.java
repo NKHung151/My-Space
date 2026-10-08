@@ -1,6 +1,7 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.dto.PageResponse;
+import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.dto.request.CreatePostRequest;
 import com.myspace.myspace.dto.request.UpdatePostRequest;
 import com.myspace.myspace.dto.response.PostDetailResponse;
@@ -54,9 +55,9 @@ public class AuthorPostServiceImpl implements AuthorPostService {
 
         Post post = new Post();
         post.setTitle(request.getTitle());
-        post.setExcerpt(request.getExcerpt());
-        post.setContent(request.getContent());
-        post.setCoverImageUrl(request.getCoverImageUrl());
+        post.setExcerpt(HtmlSanitizer.sanitize(request.getExcerpt()));
+        post.setContent(HtmlSanitizer.sanitize(request.getContent()));
+        post.setCoverImageUrl(HtmlSanitizer.safeUrl(request.getCoverImageUrl()));
         post.setHasVideo(Boolean.TRUE.equals(request.getHasVideo()));
         post.setTag(request.getTag());
         post.setAuthor(author);
@@ -99,24 +100,26 @@ public class AuthorPostServiceImpl implements AuthorPostService {
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
         if (request.getTitle() != null)        post.setTitle(request.getTitle());
-        if (request.getExcerpt() != null)      post.setExcerpt(request.getExcerpt());
-        
-        if (request.getContent() != null && !request.getContent().equals(post.getContent())) {
+        if (request.getExcerpt() != null)      post.setExcerpt(HtmlSanitizer.sanitize(request.getExcerpt()));
+
+        String newContent = HtmlSanitizer.sanitize(request.getContent());
+        if (newContent != null && !newContent.equals(post.getContent())) {
             Set<String> oldUrls = extractCloudinaryUrls(post.getContent());
-            Set<String> newUrls = extractCloudinaryUrls(request.getContent());
+            Set<String> newUrls = extractCloudinaryUrls(newContent);
             for (String oldUrl : oldUrls) {
                 if (!newUrls.contains(oldUrl)) {
                     uploadService.deleteEditorMedia(oldUrl, authorId);
                 }
             }
-            post.setContent(request.getContent());
+            post.setContent(newContent);
         }
-        
-        if (request.getCoverImageUrl() != null && !request.getCoverImageUrl().equals(post.getCoverImageUrl())) {
+
+        String newCoverUrl = HtmlSanitizer.safeUrl(request.getCoverImageUrl());
+        if (newCoverUrl != null && !newCoverUrl.equals(post.getCoverImageUrl())) {
             if (post.getCoverImageUrl() != null && post.getCoverImageUrl().contains("res.cloudinary.com")) {
                 uploadService.deleteEditorMedia(post.getCoverImageUrl(), authorId);
             }
-            post.setCoverImageUrl(request.getCoverImageUrl());
+            post.setCoverImageUrl(newCoverUrl);
         }
         
         if (request.getHasVideo() != null)     post.setHasVideo(request.getHasVideo());

@@ -1,5 +1,6 @@
 package com.myspace.myspace.mapper;
 
+import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.dto.response.PostDetailResponse;
 import com.myspace.myspace.dto.response.PostResponse;
 import com.myspace.myspace.dto.response.PublicUserResponse;
@@ -21,8 +22,8 @@ public final class PostMapper {
                 .id(post.getId())
                 .title(post.getTitle())
                 .slug(post.getSlug())
-                .excerpt(excerpt)
-                .coverImageUrl(post.getCoverImageUrl())
+                .excerpt(HtmlSanitizer.sanitize(excerpt))
+                .coverImageUrl(HtmlSanitizer.safeUrl(post.getCoverImageUrl()))
                 .hasVideo(post.getHasVideo())
                 .tag(post.getTag())
                 .viewCount(post.getViewCount())
@@ -45,9 +46,9 @@ public final class PostMapper {
                 .id(post.getId())
                 .title(post.getTitle())
                 .slug(post.getSlug())
-                .excerpt(excerpt)
-                .content(post.getContent())
-                .coverImageUrl(post.getCoverImageUrl())
+                .excerpt(HtmlSanitizer.sanitize(excerpt))
+                .content(HtmlSanitizer.sanitize(post.getContent()))
+                .coverImageUrl(HtmlSanitizer.safeUrl(post.getCoverImageUrl()))
                 .hasVideo(post.getHasVideo())
                 .tag(post.getTag())
                 .viewCount(post.getViewCount())

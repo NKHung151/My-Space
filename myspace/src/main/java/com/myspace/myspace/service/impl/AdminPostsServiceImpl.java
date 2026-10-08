@@ -1,6 +1,7 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.dto.PageResponse;
+import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.dto.response.AdminPostResponse;
 import com.myspace.myspace.entity.Post;
 import com.myspace.myspace.repository.PostRepository;
@@ -88,7 +89,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
         return AdminPostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
-                .content(post.getContent())
+                .content(HtmlSanitizer.sanitize(post.getContent()))
                 .tag(post.getTag())
                 .createdAt(post.getCreatedAt())
                 .author(AdminPostResponse.AdminPostAuthorResponse.builder()

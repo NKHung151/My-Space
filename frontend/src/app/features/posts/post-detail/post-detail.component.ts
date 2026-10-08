@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal, ViewChild, ElementRef, DestroyRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal, ViewChild, ElementRef, DestroyRef, SecurityContext } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer } from '@angular/platform-browser';
 import { CommonModule, DOCUMENT } from '@angular/common';
@@ -244,18 +244,18 @@ export class PostDetailComponent implements OnInit, OnDestroy, CanComponentDeact
   }
 
   /**
-   * Computed signal để tự động lấy bản dịch tương ứng với ngôn ngữ đang chọn
-   * Render nội dung HTML an toàn thông qua DomSanitizer
+   * Nội dung bài viết: lọc bằng sanitizer của Angular TRƯỚC khi đưa vào preparePostDetailHtml
+   * (hàm này gán innerHTML vào một div tạm, nên HTML độc hại như <img onerror> sẽ chạy nếu chưa lọc).
+   * Kết quả sau xử lý chỉ chứa markup đã lọc nên mới bypass để giữ class/line-number.
    */
   displayedTranslation = computed(() => {
     const currentPost = this.post();
     if (!currentPost) return null;
-    
+
+    const clean = this.sanitizer.sanitize(SecurityContext.HTML, currentPost.content || '') ?? '';
     return {
       title: currentPost.title,
-      safeContentHtml: this.sanitizer.bypassSecurityTrustHtml(
-        preparePostDetailHtml(currentPost.content || ''),
-      )
+      safeContentHtml: this.sanitizer.bypassSecurityTrustHtml(preparePostDetailHtml(clean)),
     };
   });
 

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, computed, inject, OnDestroy, AfterViewInit, ElementRef, ViewChild, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, computed, inject, OnDestroy, AfterViewInit, ElementRef, ViewChild, signal, SecurityContext } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -108,15 +108,19 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
   readonly safeExcerpt = computed(() => {
     const raw = this._post().excerpt || '';
     if (!raw) return null;
-    const html = raw.includes('<!--TRUNCATED-->')
-      ? raw.replace('<!--TRUNCATED-->', '') + ' <span class="fw-bold cursor-pointer ms-1" style="color: var(--text-muted); font-size: 0.9em;">... Xem thêm</span>'
-      : raw;
+    // Lọc excerpt bằng sanitizer của Angular trước, chỉ bypass sau khi đã gắn nút "Xem thêm" (markup tĩnh)
+    const truncated = raw.includes('<!--TRUNCATED-->');
+    const clean = this.sanitizer.sanitize(SecurityContext.HTML, raw.replace('<!--TRUNCATED-->', '')) ?? '';
+    const html = truncated
+      ? clean + ' <span class="fw-bold cursor-pointer ms-1" style="color: var(--text-muted); font-size: 0.9em;">... Xem thêm</span>'
+      : clean;
     return this.sanitizer.bypassSecurityTrustHtml(html);
   });
 
+  /** Chỉ nhận đúng URL nhúng của YouTube để tránh đưa URL tùy ý (vd. javascript:) vào iframe. */
   isYoutubeEmbed(url: string | null): boolean {
     if (!url) return false;
-    return url.includes('youtube.com/') || url.includes('youtu.be/');
+    return /^https:\/\/(www\.)?(youtube\.com|youtube-nocookie\.com)\/embed\/[\w-]+/.test(url);
   }
 
   getSafeYoutubeUrl(url: string | null): SafeResourceUrl | null {

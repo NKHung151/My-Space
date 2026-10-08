@@ -1,6 +1,7 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.dto.PageResponse;
+import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.document.PostDocument;
 import com.myspace.myspace.dto.response.PostDetailResponse;
 import com.myspace.myspace.dto.response.PostResponse;
@@ -106,8 +107,8 @@ public class PublicPostServiceImpl implements PublicPostService {
                 .id(doc.getId())
                 .title(doc.getTitle())
                 .slug(doc.getSlug())
-                .excerpt(doc.getExcerpt())
-                .coverImageUrl(doc.getCoverImageUrl())
+                .excerpt(HtmlSanitizer.sanitize(doc.getExcerpt()))
+                .coverImageUrl(HtmlSanitizer.safeUrl(doc.getCoverImageUrl()))
                 .hasVideo(doc.getHasVideo())
                 .tag(doc.getTag())
                 .viewCount(doc.getViewCount())
