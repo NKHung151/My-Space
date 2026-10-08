@@ -1,0 +1,61 @@
+# Sao chép file này thành application.properties rồi điền giá trị thật (application.properties bị .gitignore chặn).
+spring.application.name=myspace
+
+# Datasource — tạo DB rỗng trước: CREATE DATABASE myspace CHARACTER SET utf8mb4;
+spring.datasource.url=jdbc:mysql://localhost:3306/myspace
+spring.datasource.username=root
+spring.datasource.password=CHANGE_ME
+
+# Schema do Flyway quản lý (db/migration/V*.sql); Hibernate chỉ kiểm tra entity khớp với DB
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=true
+
+# Flyway — chạy V1 (schema) + V2 (seed) khi khởi động lần đầu trên DB rỗng
+spring.flyway.enabled=true
+spring.flyway.baseline-on-migrate=false
+
+# Elasticsearch
+spring.elasticsearch.uris=http://localhost:9200
+
+# Redis
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+
+# JWT — secret tối thiểu 256 bit (64 ký tự hex). Sinh bằng: openssl rand -hex 64
+jwt.secret=CHANGE_ME
+jwt.access-token.expiration=900000
+jwt.refresh-token.expiration=86400000
+
+# Jackson: bỏ field null khỏi JSON response
+spring.jackson.default-property-inclusion=non_null
+
+# Mail (Gmail SMTP — dùng App Password, không dùng mật khẩu tài khoản)
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=CHANGE_ME@gmail.com
+spring.mail.password=CHANGE_ME
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Cloudinary
+cloudinary.cloud-name=CHANGE_ME
+cloudinary.api-key=CHANGE_ME
+cloudinary.api-secret=CHANGE_ME
+
+# Actuator
+management.endpoints.web.exposure.include=health,info,metrics
+management.endpoint.health.show-details=always
+
+# Upload limits
+spring.servlet.multipart.max-file-size=500MB
+spring.servlet.multipart.max-request-size=500MB
+server.tomcat.max-swallow-size=-1
+server.tomcat.max-http-post-size=-1
+
+# Nếu chạy sau reverse proxy (Nginx...), bật dòng dưới để rate limit dùng đúng IP thật của client
+#server.forward-headers-strategy=native
+
+# Service kiểm duyệt ảnh (nsfw-ai)
+moderation.url=http://127.0.0.1:8000
+moderation.api-key=

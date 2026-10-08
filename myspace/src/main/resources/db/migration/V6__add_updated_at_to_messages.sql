@@ -1,1 +1,0 @@
-ALTER TABLE messages ADD COLUMN updated_at DATETIME(6) NULL;

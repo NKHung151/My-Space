@@ -200,7 +200,7 @@ sequenceDiagram
 │       │   └── moderation/     # ModerationClient, ModerationResult
 │       └── resources/
 │           ├── application.properties
-│           └── db/migration/   # Flyway V1–V7
+│           └── db/migration/   # Flyway V1 (schema) + V2 (seed)
 └── nsfw-ai/                    # FastAPI image moderation service
     ├── serve.py                # API endpoint /moderate
     ├── train.py                # Script huấn luyện model
@@ -212,7 +212,7 @@ sequenceDiagram
 
 ## Cơ sở dữ liệu
 
-Schema khởi tạo và quản lý qua **Flyway** (7 migration, V1–V7).
+Schema khởi tạo và quản lý hoàn toàn bằng **Flyway**: `V1__init_schema.sql` (toàn bộ bảng, khóa, index) và `V2__seed_data.sql` (role + tài khoản mẫu). Hibernate chạy `ddl-auto=validate`, chỉ kiểm tra entity khớp với DB — mọi thay đổi schema phải thêm migration mới (`V3__...`).
 
 ```mermaid
 erDiagram
@@ -307,14 +307,16 @@ erDiagram
 
 | Email | Mật khẩu | Role |
 |---|---|---|
-| `admin@myspace.com` | `123456` | ADMIN |
-| `user@myspace.com` | `123456` | USER |
+| `admin@myspace.com` | `Admin@123` | admin |
+| `user@myspace.com` | `User@123` | user |
+
+Đổi mật khẩu ngay sau lần đăng nhập đầu tiên.
 
 ---
 
 ## Cấu hình môi trường
 
-Điền giá trị thật vào `myspace/src/main/resources/application.properties`. **Không commit file này lên repo.**
+Sao chép `myspace/src/main/resources/application.properties.example` thành `application.properties` rồi điền giá trị thật. **Không commit `application.properties` lên repo.**
 
 ### Backend
 
@@ -370,7 +372,7 @@ CREATE DATABASE myspace CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 ### 3. Cấu hình và chạy backend
 
-Điền thông tin vào `application.properties`, sau đó:
+Tạo `application.properties` từ file `.example` và điền thông tin, sau đó:
 
 ```bash
 cd myspace
@@ -378,7 +380,7 @@ cd myspace
 ./mvnw spring-boot:run        # Linux / macOS
 ```
 
-Flyway tự chạy migration V1–V7 và tạo tài khoản seed. Backend chạy tại `http://localhost:8080`.
+Lần chạy đầu trên DB rỗng, Flyway tự chạy V1 (schema) + V2 (seed). Backend chạy tại `http://localhost:8080`.
 
 ### 4. Chạy frontend
 
