@@ -101,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
         user.setFullName(request.getFullName());
         user.setDisplayName(request.getFullName());
         user.setUsername(generatedUsername);
-        user.setStatus("ACTIVE");
+        user.setStatus("active");
         user.setRole(userRole);
 
         userRepository.save(user);

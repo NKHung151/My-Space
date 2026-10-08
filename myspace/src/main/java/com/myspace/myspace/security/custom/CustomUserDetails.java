@@ -48,8 +48,8 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        // Chỉ tài khoản ACTIVE mới được đăng nhập / dùng token (null = dữ liệu cũ chưa có status)
+        // Chỉ tài khoản "active" mới được đăng nhập / dùng token (null = dữ liệu cũ chưa có status)
         String status = user.getStatus();
-        return status == null || "ACTIVE".equalsIgnoreCase(status);
+        return status == null || "active".equalsIgnoreCase(status);
     }
 }

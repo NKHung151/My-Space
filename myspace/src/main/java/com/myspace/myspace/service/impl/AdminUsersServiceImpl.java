@@ -77,7 +77,8 @@ public class AdminUsersServiceImpl implements AdminUsersService {
         }
 
         if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
-            String status = request.getStatus().trim();
+            // Luôn lưu chữ thường để khớp FE ('active' | 'inactive' | 'banned')
+            String status = request.getStatus().trim().toLowerCase();
             if (!ALLOWED_STATUSES.contains(status.toLowerCase())) {
                 throw new AppException(HttpStatus.BAD_REQUEST, "Trạng thái không hợp lệ.");
             }
