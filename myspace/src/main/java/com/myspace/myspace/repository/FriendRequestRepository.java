@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Long> {
     Optional<FriendRequest> findBySenderIdAndReceiverIdAndStatus(Long senderId, Long receiverId, String status);
+    Optional<FriendRequest> findBySenderIdAndReceiverId(Long senderId, Long receiverId);
     boolean existsBySenderIdAndReceiverIdAndStatus(Long senderId, Long receiverId, String status);
 
     List<FriendRequest> findByReceiverIdAndStatus(Long receiverId, String status);

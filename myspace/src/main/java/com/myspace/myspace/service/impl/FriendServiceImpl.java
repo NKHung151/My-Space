@@ -64,7 +64,10 @@ public class FriendServiceImpl implements FriendService {
                 .orElseThrow(() -> new IllegalArgumentException("Sender not found"));
         User receiver = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Receiver not found"));
-        FriendRequest request = new FriendRequest();
+        // Bảng có unique (sender_id, receiver_id): nếu lời mời cũ đã bị từ chối thì dùng lại bản ghi đó,
+        // insert thêm bản ghi mới sẽ vi phạm unique (trước đây trả lỗi 500)
+        FriendRequest request = friendRequestRepository.findBySenderIdAndReceiverId(currentUserId, targetUserId)
+                .orElseGet(FriendRequest::new);
         request.setSender(sender);
         request.setReceiver(receiver);
         request.setStatus("pending");
