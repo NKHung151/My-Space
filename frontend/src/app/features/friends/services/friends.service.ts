@@ -1,5 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, map, tap, BehaviorSubject, of, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, ApiItemResponse } from '../../../core/http/api-response.model';
@@ -15,6 +16,20 @@ export class FriendsService {
 
   // Cache for friendship statuses to avoid redundant API calls
   private statusCache = new Map<string, BehaviorSubject<FriendshipStatus>>();
+  private cacheOwnerId: number | null = null;
+
+  constructor() {
+    // Cache theo từng người đăng nhập: đăng xuất / đổi tài khoản thì xóa.
+    // Trước đây cache sống suốt phiên trình duyệt -> tài khoản B thấy trạng thái bạn bè của tài khoản A.
+    toObservable(this.authService.currentUser).subscribe(user => {
+      const userId = user?.id ?? null;
+      if (userId !== this.cacheOwnerId) {
+        this.cacheOwnerId = userId;
+        this.statusCache.forEach(subject => subject.next('none'));
+        this.statusCache.clear();
+      }
+    });
+  }
 
   getFeed(page?: number, limit?: number): Observable<{ items: Post[], meta: any }> {
     let params = new HttpParams();
