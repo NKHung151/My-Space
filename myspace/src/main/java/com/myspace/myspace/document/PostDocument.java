@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -63,9 +64,11 @@ public class PostDocument {
     @Field(type = FieldType.Boolean)
     private Boolean hasVideo;
 
-    @Field(type = FieldType.Date)
+    // Phải khai báo format: mặc định Spring Data ghi LocalDateTime thành "yyyy-MM-dd" (mất giờ) rồi không đọc lại được
+    // ("Conversion exception") -> tìm kiếm bài viết luôn rỗng. Ghi theo format đầu, đọc thử lần lượt các format.
+    @Field(type = FieldType.Date, format = {DateFormat.date_hour_minute_second_millis, DateFormat.date})
     private LocalDateTime publishedAt;
     
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Date, format = {DateFormat.date_hour_minute_second_millis, DateFormat.date})
     private LocalDateTime createdAt;
 }
