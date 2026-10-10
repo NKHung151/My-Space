@@ -240,13 +240,7 @@ export class CommentSectionComponent implements OnInit, OnChanges {
   }
 
   toggleLike(comment: Comment): void {
-    this.likeService.optimisticToggleCommentLike(
-      comment,
-      this.postId,
-      this.authService,
-      this.authModalService,
-      this.destroyRef
-    );
+    this.likeService.optimisticToggleCommentLike(comment, this.postId, this.destroyRef);
   }
 
   // Xóa bình luận

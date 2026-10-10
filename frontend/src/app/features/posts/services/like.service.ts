@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, WritableSignal, DestroyRef } from '@angular/core';
+import { Injectable, WritableSignal, DestroyRef, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/http/api-response.model';
 import { unwrap } from '../../../core/http/api.operators';
 import { Post } from '../models/post.model';
+import { Comment } from '../models/comment.model';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthModalService } from '../../../core/auth/auth-modal.service';
 
@@ -16,29 +17,22 @@ export interface LikeToggleResponse {
 
 @Injectable({ providedIn: 'root' })
 export class LikeService {
-  constructor(private readonly http: HttpClient) {}
+  private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+  private readonly authModalService = inject(AuthModalService);
 
   togglePostLike(postId: number | string, isCurrentlyLiked: boolean): Observable<LikeToggleResponse> {
-    const url = `${environment.apiUrl}/posts/${postId}/like`;
-    const req = isCurrentlyLiked
-      ? this.http.delete<ApiResponse<LikeToggleResponse>>(url)
-      : this.http.post<ApiResponse<LikeToggleResponse>>(url, {});
-    return req.pipe(unwrap());
+    return this.toggle(`${environment.apiUrl}/posts/${postId}/like`, isCurrentlyLiked);
   }
 
-  optimisticTogglePostLike<T extends Post>(
-    postSignal: WritableSignal<T | null>,
-    authService: AuthService,
-    authModalService: AuthModalService,
-    destroyRef?: DestroyRef
-  ): void {
-    const p = postSignal();
-    if (!p || p.isLiking) return;
+  toggleCommentLike(postId: number | string, commentId: number | string, isCurrentlyLiked: boolean): Observable<LikeToggleResponse> {
+    return this.toggle(`${environment.apiUrl}/posts/${postId}/comments/${commentId}/like`, isCurrentlyLiked);
+  }
 
-    if (!authService.isAuthenticated()) {
-      authModalService.open();
-      return;
-    }
+  /** Like/bỏ like bài viết: cập nhật UI ngay, đồng bộ theo server khi có kết quả, hoàn tác nếu lỗi. */
+  optimisticTogglePostLike<T extends Post>(postSignal: WritableSignal<T | null>, destroyRef?: DestroyRef): void {
+    const p = postSignal();
+    if (!p || p.isLiking || !this.ensureAuthenticated()) return;
 
     const previousLiked = p.liked === true;
     const previousLikeCount = p.likeCount ?? 0;
@@ -68,19 +62,9 @@ export class LikeService {
     });
   }
 
-  optimisticToggleCommentLike(
-    comment: any, // type Comment
-    postId: number | string,
-    authService: AuthService,
-    authModalService: AuthModalService,
-    destroyRef?: DestroyRef
-  ): void {
-    if (comment.isLiking) return;
-
-    if (!authService.isAuthenticated()) {
-      authModalService.open();
-      return;
-    }
+  /** Như optimisticTogglePostLike nhưng sửa trực tiếp object bình luận đang hiển thị. */
+  optimisticToggleCommentLike(comment: Comment, postId: number | string, destroyRef?: DestroyRef): void {
+    if (comment.isLiking || !this.ensureAuthenticated()) return;
 
     const previousLiked = comment.liked === true;
     const previousLikeCount = comment.likeCount ?? 0;
@@ -109,12 +93,17 @@ export class LikeService {
       }
     });
   }
-  
-  toggleCommentLike(postId: number | string, commentId: number | string, isCurrentlyLiked: boolean): Observable<LikeToggleResponse> {
-    const url = `${environment.apiUrl}/posts/${postId}/comments/${commentId}/like`;
+
+  private toggle(url: string, isCurrentlyLiked: boolean): Observable<LikeToggleResponse> {
     const req = isCurrentlyLiked
       ? this.http.delete<ApiResponse<LikeToggleResponse>>(url)
       : this.http.post<ApiResponse<LikeToggleResponse>>(url, {});
     return req.pipe(unwrap());
+  }
+
+  private ensureAuthenticated(): boolean {
+    if (this.authService.isAuthenticated()) return true;
+    this.authModalService.open();
+    return false;
   }
 }

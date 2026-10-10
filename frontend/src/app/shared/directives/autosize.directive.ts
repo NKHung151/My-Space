@@ -1,4 +1,4 @@
-import { Directive, ElementRef, HostListener, AfterViewInit, Input, OnChanges } from '@angular/core';
+import { Directive, ElementRef, HostListener, AfterViewInit, Input, OnChanges, inject } from '@angular/core';
 
 @Directive({
   selector: '[appAutosize]',
@@ -9,7 +9,7 @@ export class AutosizeDirective implements AfterViewInit, OnChanges {
    *  Ví dụ: [appAutosizeReset]="resetCounter" rồi tăng resetCounter++ sau submit. */
   @Input('appAutosizeReset') resetTrigger: unknown;
 
-  constructor(private el: ElementRef<HTMLTextAreaElement>) {}
+  private readonly el = inject<ElementRef<HTMLTextAreaElement>>(ElementRef);
 
   ngAfterViewInit(): void {
     setTimeout(() => this.adjust(), 0);

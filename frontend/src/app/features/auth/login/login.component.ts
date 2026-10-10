@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -26,24 +26,20 @@ export function resolvePostLoginUrl(user: CurrentUser, returnUrl: string | null)
   templateUrl: './login.component.html'
 })
 export class LoginComponent implements OnInit {
-  loginForm: FormGroup;
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly toastService = inject(ToastService);
+
+  readonly loginForm = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]]
+  });
   isSubmitting = false;
   showPassword = false;
   errorMessage = '';
   returnUrl: string | null = null;
-
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private toastService: ToastService
-  ) {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required]]
-    });
-  }
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
@@ -78,7 +74,7 @@ export class LoginComponent implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    this.authService.login(this.loginForm.value).pipe(
+    this.authService.login(this.loginForm.getRawValue()).pipe(
       finalize(() => this.isSubmitting = false),
     ).subscribe({
       next: response => {

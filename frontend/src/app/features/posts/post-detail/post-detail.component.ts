@@ -10,9 +10,7 @@ import { Post } from '../models/post.model';
 import { Title } from '@angular/platform-browser';
 import { CommentSectionComponent } from '../components/comment-section/comment-section.component';
 import { LikeService } from '../services/like.service';
-import { AuthService } from '../../../core/auth/auth.service';
 import { preparePostDetailHtml } from './post-detail-html.util';
-import { AuthModalService } from '../../../core/auth/auth-modal.service';
 import { AuthorTooltipComponent } from '../../users/components/author-tooltip/author-tooltip.component';
 import { CompactNumberPipe } from '../../../shared/pipes/compact-number.pipe';
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
@@ -45,9 +43,7 @@ export class PostDetailComponent implements OnInit, OnDestroy, CanComponentDeact
 
   private titleService = inject(Title);
   private likeService = inject(LikeService);
-  private authService = inject(AuthService);
   private sanitizer = inject(DomSanitizer);
-  private authModalService = inject(AuthModalService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
   private readonly toast = inject(ToastService);
@@ -298,12 +294,7 @@ export class PostDetailComponent implements OnInit, OnDestroy, CanComponentDeact
   }
 
   toggleLike(): void {
-    this.likeService.optimisticTogglePostLike(
-      this.post,
-      this.authService,
-      this.authModalService,
-      this.destroyRef
-    );
+    this.likeService.optimisticTogglePostLike(this.post, this.destroyRef);
   }
 
   onCommentCountChange(delta: number): void {

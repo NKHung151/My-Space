@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ToastMessage, ToastService } from '../../../core/notifications/toast.service';
@@ -20,6 +20,8 @@ import { ToastMessage, ToastService } from '../../../core/notifications/toast.se
   styleUrl: './toast.component.scss'
 })
 export class ToastComponent implements OnInit, OnDestroy {
+  private readonly toastService = inject(ToastService);
+
   toastData: ToastMessage | null = null;
   isVisible = false;
   
@@ -27,7 +29,6 @@ export class ToastComponent implements OnInit, OnDestroy {
   private dismissTimer?: ReturnType<typeof setTimeout>;
   private removalTimer?: ReturnType<typeof setTimeout>;
 
-  constructor(private toastService: ToastService) {}
 
   ngOnInit() {
     // Đăng ký nhận thông báo mới từ ToastService

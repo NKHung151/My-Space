@@ -2,12 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter, computed, inject, OnDestroy, AfterViewInit, ElementRef, ViewChild, signal, SecurityContext } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../../../core/auth/auth.service';
 
 import { Post } from '../../models/post.model';
 import { LikeService } from '../../services/like.service';
 import { UserPreferencesService } from '../../../../core/preferences/user-preferences.service';
-import { AuthModalService } from '../../../../core/auth/auth-modal.service';
 import { AuthorTooltipComponent } from '../../../users/components/author-tooltip/author-tooltip.component';
 import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe';
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
@@ -24,8 +22,6 @@ import { LocalizedDatePipe } from '../../../../shared/pipes/localized-date.pipe'
 export class PostCardComponent implements OnDestroy, AfterViewInit {
 
   private readonly likeService = inject(LikeService);
-  private readonly authService = inject(AuthService);
-  private readonly authModalService = inject(AuthModalService);
   private readonly sanitizer = inject(DomSanitizer);
 
   // Signal chứa dữ liệu bài viết hiện tại của card
@@ -114,11 +110,7 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
     event.preventDefault();   // Ngăn thẻ link điều hướng
     event.stopPropagation();  // Ngăn chặn sự kiện nổi bọt lên các thẻ cha
 
-    this.likeService.optimisticTogglePostLike(
-      this._post,
-      this.authService,
-      this.authModalService
-    );
+    this.likeService.optimisticTogglePostLike(this._post);
   }
 
   onDeleteClick(event: Event) {

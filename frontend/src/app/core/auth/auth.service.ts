@@ -1,4 +1,4 @@
-import { Injectable, signal, WritableSignal } from '@angular/core';
+import { Injectable, inject, signal, WritableSignal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
@@ -19,6 +19,7 @@ import { CurrentUser } from './current-user.model';
   providedIn: 'root'
 })
 export class AuthService {
+  private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/auth`;
   private readonly userInfoKey = 'user_info';
   private accessToken: string | null = null;
@@ -27,9 +28,7 @@ export class AuthService {
   private readonly currentUserSignal: WritableSignal<CurrentUser | null> = signal(null);
   readonly currentUser = this.currentUserSignal.asReadonly();
 
-  constructor(
-    private http: HttpClient
-  ) {
+  constructor() {
     this.loadUserFromStorage();
   }
 
