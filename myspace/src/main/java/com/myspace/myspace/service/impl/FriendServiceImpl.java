@@ -180,6 +180,7 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PublicUserResponse> getFriends(Long userId) {
         return friendshipRepository.findFriendsByUserId(userId).stream()
                 .map(UserMapper::toPublicUser)
@@ -187,6 +188,7 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FriendRequestResponse> getPendingRequests(Long currentUserId) {
         return friendRequestRepository.findByReceiverIdAndStatus(currentUserId, "pending").stream()
                 .map(FriendMapper::toRequestResponse)
@@ -194,6 +196,7 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FriendshipStatusResponse getFriendshipStatus(Long currentUserId, Long targetUserId) {
         if (currentUserId.equals(targetUserId)) return new FriendshipStatusResponse("none");
         if (friendshipRepository.existsByUserIdAndFriendId(currentUserId, targetUserId)) return new FriendshipStatusResponse("friends");
@@ -203,6 +206,7 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<PostResponse> getFriendsFeed(Long currentUserId, int page, int limit) {
         Pageable pageable = Paging.newestFirst(page, limit);
         Page<com.myspace.myspace.entity.Post> postsPage = postRepository.findPostsByFriendship(currentUserId, pageable);
@@ -224,10 +228,6 @@ public class FriendServiceImpl implements FriendService {
         return PageResponse.of(postsPage, items);
     }
 
-    /**
-     * Đẩy thông báo WebSocket sau khi transaction commit: nếu gửi trước, client có thể gọi API ngay
-     * mà dữ liệu chưa commit (thấy trạng thái cũ), hoặc nhận thông báo cho thao tác đã bị rollback.
-     */
     private void notifyAfterCommit(String userEmail, String destination, Object payload) {
         AfterCommit.run(() -> messagingTemplate.convertAndSendToUser(userEmail, destination, payload));
     }

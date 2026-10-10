@@ -1,6 +1,8 @@
 package com.myspace.myspace.service.impl;
 
+import org.springframework.transaction.annotation.Transactional;
 import com.myspace.myspace.common.exception.AppException;
+import com.myspace.myspace.common.util.AfterCommit;
 import com.myspace.myspace.common.util.TextUtils;
 import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.request.RegisterRequest;
@@ -59,6 +61,7 @@ public class AuthServiceImpl implements AuthService {
     private static final Duration RESEND_COOLDOWN = Duration.ofSeconds(60);
     private static final int MAX_OTP_ATTEMPTS = 5;
 
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
@@ -68,6 +71,7 @@ public class AuthServiceImpl implements AuthService {
 
         return issueSession(userDetails, friendshipRepository.countByUserId(user.getId()));
     }
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(HttpStatus.CONFLICT, "Email này đã được sử dụng!");
@@ -106,6 +110,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void forgotPassword(String email) {
         // Email không tồn tại vẫn trả về thành công như bình thường -> không dò được email nào đã đăng ký
         User user = userRepository.findByEmail(email).orElse(null);
@@ -128,11 +133,13 @@ public class AuthServiceImpl implements AuthService {
         user.setResetOtpAttempts(0);
         userRepository.save(user);
 
-        // Gửi Email chứa mã OTP
-        mailService.sendPasswordResetEmail(user.getEmail(), otp);
+        // Gửi email chứa OTP sau khi commit: không giữ kết nối DB trong lúc chờ SMTP, và không gửi mã chưa được lưu
+        String recipient = user.getEmail();
+        AfterCommit.run(() -> mailService.sendPasswordResetEmail(recipient, otp));
     }
 
     @Override
+    @Transactional(noRollbackFor = AppException.class)
     public void resetPassword(ResetPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(HttpStatus.BAD_REQUEST, "Mã đặt lại không hợp lệ hoặc đã hết hạn."));
@@ -174,6 +181,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void changePassword(String userEmail, ChangePasswordRequest request) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
@@ -194,6 +202,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void logoutAll(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
@@ -203,6 +212,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public CurrentUserResponse updateProfile(String userEmail, UpdateProfileRequest request) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
