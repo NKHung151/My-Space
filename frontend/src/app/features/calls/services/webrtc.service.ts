@@ -1,35 +1,8 @@
 import { Injectable, inject, signal, effect } from '@angular/core';
-import { WebSocketService } from './websocket.service';
-import { AuthService } from '../auth/auth.service';
-import { environment } from '../../../environments/environment';
-
-export interface CallResponse {
-  id: number;
-  callerId: number;
-  calleeId: number;
-  status: string;
-  type: string;
-  isVideo?: boolean;
-  createdAt: string;
-}
-
-export interface SignalRequest {
-  callId: number;
-  targetId: number;
-  type: string;
-  sdp?: any;
-  candidate?: any;
-}
-
-export interface ActiveCallState {
-  callId: number;
-  isIncoming: boolean;
-  status: 'RINGING' | 'ACCEPTED' | 'ENDED' | 'REJECTED' | 'CANCELLED';
-  partnerId: number;
-  isVideo?: boolean;
-  partnerInfo?: any; // Dùng để hiển thị thông tin UI (nếu cần)
-  startTime?: Date;
-}
+import { WebSocketService } from '../../../core/websocket/websocket.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { environment } from '../../../../environments/environment';
+import { ActiveCallState, CallResponse, SignalRequest } from '../models/call.model';
 
 @Injectable({
   providedIn: 'root'

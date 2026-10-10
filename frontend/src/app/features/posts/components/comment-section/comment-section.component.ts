@@ -23,7 +23,7 @@ import { AutosizeDirective } from '../../../../shared/directives/autosize.direct
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, RouterLink, AuthorTooltipComponent, CompactNumberPipe, AssetImageDirective, LocalizedDatePipe, AutosizeDirective],
   templateUrl: './comment-section.component.html',
-  styleUrls: ['./comment-section.component.scss']
+  styleUrl: './comment-section.component.scss'
 })
 export class CommentSectionComponent implements OnInit, OnChanges {
   @Input({ required: true }) postId!: string;

@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from './auth.service';
-import { AuthModalService } from './auth-modal.service';
+import { AuthService } from '../auth/auth.service';
+import { AuthModalService } from '../auth/auth-modal.service';
 
 export type AppRole = 'admin' | 'user' | 'guest';
 

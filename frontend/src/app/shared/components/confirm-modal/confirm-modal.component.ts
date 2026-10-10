@@ -5,7 +5,7 @@ import { ConfirmModalService } from '../../services/confirm-modal.service';
   selector: 'app-confirm-modal',
   standalone: true,
   templateUrl: './confirm-modal.component.html',
-  styleUrls: ['./confirm-modal.component.scss']
+  styleUrl: './confirm-modal.component.scss'
 })
 export class ConfirmModalComponent {
   readonly modalService = inject(ConfirmModalService);

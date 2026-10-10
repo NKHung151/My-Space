@@ -9,7 +9,7 @@ import { FriendButtonComponent } from '../../../features/friends/components/frie
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
 import { DisplayNamePipe } from '../../../shared/pipes/display-name.pipe';
 import { WebSocketService } from '../../../core/websocket/websocket.service';
-import { PresenceService } from '../../../core/services/presence.service';
+import { PresenceService } from '../../../core/websocket/presence.service';
 import { ChatManagerService } from '../../../features/chat/services/chat-manager.service';
 
 @Component({

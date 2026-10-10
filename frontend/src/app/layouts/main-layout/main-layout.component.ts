@@ -10,7 +10,7 @@ import { BrandComponent } from '../../shared/components/brand/brand.component';
 import { RightSidebarComponent } from './right-sidebar/right-sidebar.component';
 import { ChatWindowComponent } from '../../features/chat/components/chat-window/chat-window.component';
 import { ChatManagerService } from '../../features/chat/services/chat-manager.service';
-import { CallModalComponent } from '../../shared/components/call-modal/call-modal.component';
+import { CallModalComponent } from '../../features/calls/components/call-modal/call-modal.component';
 import { goHome } from './go-home';
 
 @Component({

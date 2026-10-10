@@ -7,7 +7,7 @@ import { AuthModalService } from '../../../../core/auth/auth-modal.service';
   standalone: true,
   imports: [RouterLink],
   templateUrl: './auth-modal.component.html',
-  styleUrls: ['./auth-modal.component.scss']
+  styleUrl: './auth-modal.component.scss'
 })
 export class AuthModalComponent {
   readonly modalService = inject(AuthModalService);

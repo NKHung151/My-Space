@@ -1,14 +1,14 @@
 import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FriendUser } from '../../../../features/friends/models/friend.model';
+import { FriendUser } from '../../../friends/models/friend.model';
 import { ChatManagerService } from '../../services/chat-manager.service';
 import { ChatService } from '../../services/chat.service';
 import { MessageResponse } from '../../models/chat.model';
-import { PresenceService } from '../../../../core/services/presence.service';
+import { PresenceService } from '../../../../core/websocket/presence.service';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { WebSocketService } from '../../../../core/websocket/websocket.service';
-import { WebRTCService } from '../../../../core/websocket/webrtc.service';
+import { WebRTCService } from '../../../calls/services/webrtc.service';
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
 import { DisplayNamePipe } from '../../../../shared/pipes/display-name.pipe';
 import { Router } from '@angular/router';

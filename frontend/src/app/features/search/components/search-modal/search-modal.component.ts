@@ -3,11 +3,11 @@ import { Component, ElementRef, HostListener, ViewChild, computed, effect, injec
 import { Router } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, of, map } from 'rxjs';
 
-import { User } from '../users/models/user.model';
-import { UsersService } from '../users/services/users.service';
-import { SearchModalService } from './search-modal.service';
-import { AuthorTooltipComponent } from '../users/components/author-tooltip/author-tooltip.component';
-import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
+import { User } from '../../../users/models/user.model';
+import { UsersService } from '../../../users/services/users.service';
+import { SearchModalService } from '../../services/search-modal.service';
+import { AuthorTooltipComponent } from '../../../users/components/author-tooltip/author-tooltip.component';
+import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
 
 @Component({
   selector: 'app-search-modal',

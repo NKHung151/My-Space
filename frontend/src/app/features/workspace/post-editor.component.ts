@@ -9,16 +9,16 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../../core/auth/auth.service';
-import { CreatePostPayload, Post } from '../../posts/models/post.model';
-import { EditorMediaType } from '../models/editor-upload.model';
-import { AuthorPostsService } from '../../posts/services/author-posts.service';
-import { EditorUploadsService } from '../services/editor-uploads.service';
-import { validateUploadFile } from '../utils/upload-validator';
-import { ToastService } from '../../../core/notifications/toast.service';
-import { getApiErrorMessage, getUploadErrorMessage } from '../../../core/http/api-error.util';
-import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
-import { displayNameOf } from '../../../shared/pipes/display-name.pipe';
+import { AuthService } from '../../core/auth/auth.service';
+import { CreatePostPayload, Post } from '../posts/models/post.model';
+import { EditorMediaType } from './models/editor-upload.model';
+import { AuthorPostsService } from '../posts/services/author-posts.service';
+import { EditorUploadsService } from './services/editor-uploads.service';
+import { validateUploadFile } from './utils/upload-validator';
+import { ToastService } from '../../core/notifications/toast.service';
+import { getApiErrorMessage, getUploadErrorMessage } from '../../core/http/api-error.util';
+import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
+import { displayNameOf } from '../../shared/pipes/display-name.pipe';
 
 @Component({
   selector: 'app-post-editor',

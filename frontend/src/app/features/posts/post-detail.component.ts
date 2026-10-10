@@ -4,23 +4,23 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { switchMap } from 'rxjs';
-import { FeedPostsService } from '../services/feed-posts.service';
-import { Post } from '../models/post.model';
+import { FeedPostsService } from './services/feed-posts.service';
+import { Post } from './models/post.model';
 
 import { Title } from '@angular/platform-browser';
-import { CommentSectionComponent } from '../components/comment-section/comment-section.component';
-import { LikeService } from '../services/like.service';
-import { preparePostDetailHtml } from './post-detail-html.util';
-import { AuthorTooltipComponent } from '../../users/components/author-tooltip/author-tooltip.component';
-import { CompactNumberPipe } from '../../../shared/pipes/compact-number.pipe';
-import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
+import { CommentSectionComponent } from './components/comment-section/comment-section.component';
+import { LikeService } from './services/like.service';
+import { preparePostDetailHtml } from './utils/post-detail-html.util';
+import { AuthorTooltipComponent } from '../users/components/author-tooltip/author-tooltip.component';
+import { CompactNumberPipe } from '../../shared/pipes/compact-number.pipe';
+import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
 
-import { LocalizedDatePipe } from '../../../shared/pipes/localized-date.pipe';
-import { PostCardComponent } from '../components/post-card/post-card.component';
-import { ToastService } from '../../../core/notifications/toast.service';
-import { ConfirmModalService } from '../../../shared/services/confirm-modal.service';
-import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
-import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
+import { LocalizedDatePipe } from '../../shared/pipes/localized-date.pipe';
+import { PostCardComponent } from './components/post-card/post-card.component';
+import { ToastService } from '../../core/notifications/toast.service';
+import { ConfirmModalService } from '../../shared/services/confirm-modal.service';
+import { UserPreferencesService } from '../../core/preferences/user-preferences.service';
+import { CanComponentDeactivate } from '../../core/guards/unsaved-changes.guard';
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -34,7 +34,7 @@ import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.gua
   standalone: true,
   imports: [CommonModule, RouterModule, CommentSectionComponent, AuthorTooltipComponent, CompactNumberPipe, AssetImageDirective, LocalizedDatePipe, PostCardComponent],
   templateUrl: './post-detail.component.html',
-  styleUrls: ['./post-detail.component.scss']
+  styleUrl: './post-detail.component.scss'
 })
 export class PostDetailComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private route = inject(ActivatedRoute);

@@ -1,10 +1,10 @@
 import { Component, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { WebRTCService } from '../../../core/websocket/webrtc.service';
-import { FriendUser } from '../../../features/friends/models/friend.model';
-import { FriendsService } from '../../../features/friends/services/friends.service';
-import { AssetImageDirective } from '../../directives/asset-image.directive';
-import { DisplayNamePipe } from '../../pipes/display-name.pipe';
+import { WebRTCService } from '../../services/webrtc.service';
+import { FriendUser } from '../../../friends/models/friend.model';
+import { FriendsService } from '../../../friends/services/friends.service';
+import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
+import { DisplayNamePipe } from '../../../../shared/pipes/display-name.pipe';
 
 @Component({
   selector: 'app-call-modal',

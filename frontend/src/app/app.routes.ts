@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { roleGuard } from './core/auth/role.guard';
+import { roleGuard } from './core/guards/role.guard';
 import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
 
 export const routes: Routes = [
@@ -45,7 +45,7 @@ export const routes: Routes = [
         path: 'post/:id',
         title: 'My Space',
         canDeactivate: [unsavedChangesGuard],
-        loadComponent: () => import('./features/posts/post-detail/post-detail.component').then(m => m.PostDetailComponent),
+        loadComponent: () => import('./features/posts/post-detail.component').then(m => m.PostDetailComponent),
       },
       {
         path: 'posts/:id',
@@ -98,7 +98,7 @@ export const routes: Routes = [
     title: 'Create Post - My Space',
     canActivate: [roleGuard(['user'])],
     loadComponent: () =>
-      import('./features/workspace/post-editor/post-editor.component').then(m => m.PostEditorComponent),
+      import('./features/workspace/post-editor.component').then(m => m.PostEditorComponent),
   },
   {
     path: 'create-post',
@@ -110,7 +110,7 @@ export const routes: Routes = [
     title: 'Edit Post - My Space',
     canActivate: [roleGuard(['user'])],
     loadComponent: () =>
-      import('./features/workspace/post-editor/post-editor.component').then(m => m.PostEditorComponent),
+      import('./features/workspace/post-editor.component').then(m => m.PostEditorComponent),
   },
   {
     path: 'admin',

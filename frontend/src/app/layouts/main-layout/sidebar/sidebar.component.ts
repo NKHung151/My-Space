@@ -10,7 +10,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
 import { BrandComponent } from '../../../shared/components/brand/brand.component';
-import { SearchModalService } from '../../../features/search/search-modal.service';
+import { SearchModalService } from '../../../features/search/services/search-modal.service';
 import { goHome } from '../go-home';
 
 @Component({
