@@ -6,6 +6,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
 
 import { Post } from '../../models/post.model';
 import { LikeService } from '../../services/like.service';
+import { UserPreferencesService } from '../../../../core/preferences/user-preferences.service';
 import { AuthModalService } from '../../../../core/auth/auth-modal.service';
 import { AuthorTooltipComponent } from '../../../users/components/author-tooltip/author-tooltip.component';
 import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe';
@@ -43,6 +44,13 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
   @Input() detailHtml?: SafeHtml | null;
 
   @Output() deletePost = new EventEmitter<Post>();
+
+  private readonly preferences = inject(UserPreferencesService).preferences;
+
+  /** Cài đặt "Giao diện gọn": ở feed chỉ hiện tiêu đề + thông tin, ẩn đoạn trích và ảnh/video bìa. */
+  get compactView(): boolean {
+    return !this.isDetailMode && this.preferences().compactView;
+  }
   
   @ViewChild('videoEl') videoElRef?: ElementRef<HTMLVideoElement>;
 
@@ -53,7 +61,8 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
   // POST /view, lướt nhanh là chạm giới hạn 60 request/phút và các thao tác khác (like, bình luận) bị 429.
   ngAfterViewInit(): void {
     const videoEl = this.videoElRef?.nativeElement;
-    if (!videoEl) return;
+    // Cài đặt "Tự phát media" tắt -> không tự chạy video khi lướt tới
+    if (!videoEl || !this.preferences().autoPlayMedia) return;
 
     this.videoObserver = new IntersectionObserver(
       ([entry]) => {

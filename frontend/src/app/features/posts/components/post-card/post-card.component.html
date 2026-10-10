@@ -56,12 +56,14 @@
           <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill" style="font-size: 0.85rem;">#{{ tagLabel() }}</span>
         </div>
       }
-      @if (safeExcerpt()) {
+      @if (safeExcerpt() && !compactView) {
         <div class="post-excerpt mb-2 text-main" style="font-size: 0.95rem; line-height: 1.5;" [innerHTML]="safeExcerpt()">
         </div>
       }
 
-      @if (post.hasVideo && post.coverImageUrl) {
+      @if (compactView) {
+        <!-- Giao diện gọn: không hiện ảnh/video bìa -->
+      } @else if (post.hasVideo && post.coverImageUrl) {
         <div class="post-media mt-2 w-100 position-relative rounded overflow-hidden" style="background: #000; display: flex; justify-content: center; min-height: 250px;">
           @if (isYoutubeEmbed(post.coverImageUrl)) {
             <iframe 

@@ -21,6 +21,7 @@ import { LocalizedDatePipe } from '../../../shared/pipes/localized-date.pipe';
 import { PostCardComponent } from '../components/post-card/post-card.component';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { ConfirmModalService } from '../../../shared/services/confirm-modal.service';
+import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 
 /**
@@ -51,6 +52,7 @@ export class PostDetailComponent implements OnInit, OnDestroy, CanComponentDeact
   private readonly document = inject(DOCUMENT);
   private readonly toast = inject(ToastService);
   private readonly confirmModalService = inject(ConfirmModalService);
+  private readonly preferences = inject(UserPreferencesService).preferences;
 
   @ViewChild('articleContent') articleContentRef?: ElementRef<HTMLElement>;
   @ViewChild('centerFeed') centerFeedRef?: ElementRef<HTMLElement>;
@@ -121,7 +123,7 @@ export class PostDetailComponent implements OnInit, OnDestroy, CanComponentDeact
         const obs = new IntersectionObserver(
           ([entry]) => {
             if (entry.isIntersecting) {
-              videoEl.play().catch(() => null);
+              if (this.preferences().autoPlayMedia) videoEl.play().catch(() => null);
             } else {
               videoEl.pause();
             }

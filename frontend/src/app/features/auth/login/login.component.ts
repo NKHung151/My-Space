@@ -62,6 +62,10 @@ export class LoginComponent implements OnInit {
           this.toastService.showSuccess(messages[key]);
         }
       }
+      // Trang Cài đặt chuyển tới đây sau khi đổi mật khẩu (trước đây tham số này bị bỏ qua)
+      if (params['messageKey'] === 'password_updated_sign_in_again') {
+        this.toastService.showSuccess('Đổi mật khẩu thành công. Vui lòng đăng nhập lại bằng mật khẩu mới.');
+      }
     });
   }
 

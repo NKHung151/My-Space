@@ -17,6 +17,10 @@ export class AdminPostsService {
       .set('search', query.search)
       .set('page', query.page)
       .set('limit', query.limit);
+    // Trước đây không gửi tag nên bộ lọc theo tag ở trang admin không có tác dụng
+    if (query.tag) {
+      params = params.set('tag', query.tag);
+    }
     return this.http.get<ApiResponse<any>>(this.apiUrl, { params }).pipe(
       map(res => {
         const pageData = res.data;

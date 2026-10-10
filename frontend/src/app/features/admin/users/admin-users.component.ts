@@ -184,7 +184,8 @@ export class AdminUsersComponent implements OnInit {
       next: response => {
         this.replaceUser(response.data);
         this.setUpdating(user.id, false);
-        this.toastService.showSuccess('Trạng thái tài khoản của {name} đã chuyển thành “{status}”.');
+        const label = response.data.status === 'active' ? 'Đang hoạt động' : 'Không hoạt động';
+        this.toastService.showSuccess(`Trạng thái tài khoản của ${this.userName(response.data)} đã chuyển thành “${label}”.`);
       },
       error: () => {
         input.checked = user.status === 'active';
@@ -216,7 +217,7 @@ export class AdminUsersComponent implements OnInit {
         this.replaceUser(response.data);
         this.saving.set(false);
         this.closeDrawer();
-        this.toastService.showSuccess('Đã lưu thay đổi của {name}.');
+        this.toastService.showSuccess(`Đã lưu thay đổi của ${this.userName(response.data)}.`);
       },
       error: () => {
         this.saving.set(false);
