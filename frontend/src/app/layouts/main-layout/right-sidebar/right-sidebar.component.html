@@ -12,16 +12,16 @@
         <!-- Chỉ lặp tối đa 3 người -->
         @for (person of friendRequests() | slice:0:3; track person.id) {
           <div class="d-flex align-items-start gap-2 mb-2">
-            <a [routerLink]="['/u', person.username]" class="text-decoration-none flex-shrink-0 mt-1">
-              <img [appAssetImage]="personAvatar(person)" 
+            <a [routerLink]="['/profile', person.id]" class="text-decoration-none flex-shrink-0 mt-1">
+              <img [appAssetImage]="person.avatarUrl" 
                    alt="Avatar" class="rounded-circle object-fit-cover" 
                    width="48" height="48">
             </a>
             <div class="d-flex flex-column flex-grow-1 min-w-0">
-              <a [routerLink]="['/u', person.username]" 
+              <a [routerLink]="['/profile', person.id]" 
                  class="text-dark text-decoration-none text-truncate fw-bold hover-underline mb-2" 
                  style="font-size: 0.95rem;">
-                {{ personDisplayName(person) }}
+                {{ person | displayName }}
               </a>
               <!-- Friend Button để xử lý chấp nhận/từ chối đặt ngay dưới tên -->
               <app-friend-button class="sidebar-friend-btn d-block w-100" [userId]="person.id" />
@@ -58,7 +58,7 @@
             <div (click)="chatManager.openChat(person)" 
                class="d-flex align-items-center gap-2 p-2 rounded text-decoration-none hover-bg-light transition-all mb-1 cursor-pointer">
               <div class="position-relative">
-                <img [appAssetImage]="personAvatar(person)" 
+                <img [appAssetImage]="person.avatarUrl" 
                      alt="Avatar" class="rounded-circle object-fit-cover" 
                      width="36" height="36">
                 @if (presenceService.isOnline(person.id)) {
@@ -66,7 +66,7 @@
                 }
               </div>
               <span class="text-dark fw-medium text-truncate flex-grow-1" style="font-size: 0.9rem;">
-                {{ personDisplayName(person) }}
+                {{ person | displayName }}
               </span>
               @if (chatManager.unreadCounts()[person.id]) {
                 <span class="badge bg-danger rounded-pill" style="font-size: 0.7rem; padding: 0.35em 0.5em;">

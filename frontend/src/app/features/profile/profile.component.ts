@@ -14,13 +14,14 @@ import { FriendUser } from '../friends/models/friend.model';
 import { FriendsService } from '../friends/services/friends.service';
 import { UsersService } from '../users/services/users.service';
 import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
+import { DisplayNamePipe } from '../../shared/pipes/display-name.pipe';
 import { FriendButtonComponent } from '../friends/components/friend-button/friend-button.component';
 import { PostCardComponent } from '../posts/components/post-card/post-card.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, AssetImageDirective, FriendButtonComponent, PostCardComponent],
+  imports: [CommonModule, FormsModule, RouterModule, AssetImageDirective, FriendButtonComponent, PostCardComponent, DisplayNamePipe],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
   host: { class: 'feature-page-profile' },
@@ -67,7 +68,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   people = signal<FriendUser[]>([]);
   peopleLoading = signal(false);
   peopleSearch = signal('');
-  failedPeopleAvatarIds = signal<Set<number>>(new Set());
   filteredPeople = computed(() => {
     const query = this.peopleSearch().trim().toLowerCase();
     if (!query) {
@@ -120,7 +120,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.peopleModalMode.set(mode);
     this.peopleSearch.set('');
     this.people.set([]);
-    this.failedPeopleAvatarIds.set(new Set());
     this.peopleLoading.set(true);
     this.showFriendsModal.set(true);
     document.body.classList.add('profile-modal-open');
@@ -154,20 +153,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   peopleSearchPlaceholder(): string {
     return 'Tìm kiếm bạn bè...';
-  }
-
-  personDisplayName(person: FriendUser): string {
-    return person.displayName || person.username;
-  }
-
-  personAvatar(person: FriendUser): string {
-    return person.avatarUrl && !this.failedPeopleAvatarIds().has(person.id)
-      ? person.avatarUrl
-      : '/assets/images/default-avatar.svg';
-  }
-
-  handlePeopleAvatarError(personId: number): void {
-    this.failedPeopleAvatarIds.update(ids => new Set(ids).add(personId));
   }
 
   @HostListener('document:keydown.escape')

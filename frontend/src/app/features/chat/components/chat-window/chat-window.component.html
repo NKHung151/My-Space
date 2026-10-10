@@ -3,14 +3,14 @@
   <div class="chat-header d-flex justify-content-between align-items-center p-2 border-bottom" (click)="toggleMinimize()">
     <div (click)="goToProfile($event, targetUser.id)" class="d-flex align-items-center gap-2 overflow-hidden flex-grow-1 cursor-pointer text-decoration-none">
       <div class="position-relative flex-shrink-0">
-        <img [appAssetImage]="personAvatar(targetUser)" alt="Avatar" class="rounded-circle object-fit-cover" width="32" height="32">
+        <img [appAssetImage]="targetUser.avatarUrl" alt="Avatar" class="rounded-circle object-fit-cover" width="32" height="32">
         @if (presenceService.isOnline(targetUser.id)) {
           <div class="online-indicator-small"></div>
         }
       </div>
       <div class="d-flex flex-column min-w-0 text-dark hover-underline-name">
         <span class="fw-bold text-truncate d-flex align-items-center gap-1" style="font-size: 0.95rem; line-height: 1.2;">
-          <span class="name-text hover-underline">{{ personDisplayName(targetUser) }}</span>
+          <span class="name-text hover-underline">{{ targetUser | displayName }}</span>
           <i class="bi bi-chevron-down text-muted" style="font-size: 0.75rem;"></i>
         </span>
         <span class="text-muted text-truncate" style="font-size: 0.75rem;">
@@ -39,8 +39,8 @@
     <div class="chat-body flex-grow-1 p-2 overflow-y-auto" #messagesContainer>
       <!-- Example header info inside chat -->
       <div class="text-center my-4">
-        <img [appAssetImage]="personAvatar(targetUser)" class="rounded-circle object-fit-cover mb-2" width="60" height="60">
-        <h6 class="fw-bold mb-1">{{ personDisplayName(targetUser) }}</h6>
+        <img [appAssetImage]="targetUser.avatarUrl" class="rounded-circle object-fit-cover mb-2" width="60" height="60">
+        <h6 class="fw-bold mb-1">{{ targetUser | displayName }}</h6>
         <p class="text-muted small mb-0">Các bạn là bạn bè trên My Space</p>
       </div>
 
@@ -51,7 +51,7 @@
             <div class="d-flex gap-2 align-items-end" style="max-width: 85%;">
               <!-- Avatar người gửi (bạn bè) -->
               @if (msg.senderId !== currentUserId) {
-                <img [appAssetImage]="personAvatar(targetUser)" alt="Avatar" class="rounded-circle object-fit-cover flex-shrink-0" width="28" height="28">
+                <img [appAssetImage]="targetUser.avatarUrl" alt="Avatar" class="rounded-circle object-fit-cover flex-shrink-0" width="28" height="28">
               }
               
               <!-- Khối chứa Bong bóng chat và Giờ -->
@@ -128,7 +128,7 @@
 
               <!-- Avatar của mình (người dùng hiện tại) -->
               @if (msg.senderId === currentUserId && currentUser()) {
-                <img [appAssetImage]="personAvatar(currentUser()!)" alt="Avatar" class="rounded-circle object-fit-cover flex-shrink-0" width="28" height="28">
+                <img [appAssetImage]="currentUser()?.avatarUrl" alt="Avatar" class="rounded-circle object-fit-cover flex-shrink-0" width="28" height="28">
               }
             </div>
           </div>

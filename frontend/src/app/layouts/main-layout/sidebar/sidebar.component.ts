@@ -11,6 +11,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
 import { BrandComponent } from '../../../shared/components/brand/brand.component';
 import { SearchModalService } from '../../../features/search/search-modal.service';
+import { goHome } from '../go-home';
 
 @Component({
   selector: 'app-sidebar',
@@ -58,16 +59,7 @@ export class SidebarComponent {
 
   onHomeClick(): void {
     this.closeMenus();
-    if (this.router.url === '/home' || this.router.url === '/') {
-      const centerFeed = document.querySelector('.center-feed');
-      if (centerFeed) {
-        centerFeed.scrollTo({ top: 0, behavior: 'auto' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'auto' });
-      }
-    } else {
-      void this.router.navigate(['/home']);
-    }
+    goHome(this.router);
   }
 
   @HostListener('document:click', ['$event'])

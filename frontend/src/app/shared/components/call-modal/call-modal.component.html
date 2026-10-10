@@ -20,7 +20,7 @@
 
       <!-- Phần Overlay/Tiêu đề chung -->
       <div class="call-header text-center mt-4 w-100 position-relative z-1" [class.video-overlay]="activeCall()?.isVideo && activeCall()?.status === 'ACCEPTED'">
-        <h5 class="fw-bold mb-1 shadow-text">{{ getDisplayName() }}</h5>
+        <h5 class="fw-bold mb-1 shadow-text">{{ partnerInfo | displayName: 'Người dùng' }}</h5>
         
         <p class="text-light opacity-75 mb-0 shadow-text" style="font-size: 0.9rem;">
           @if (activeCall()?.status === 'RINGING') {
@@ -36,7 +36,7 @@
       <!-- Phần Avatar rung (Chỉ hiển thị khi đổ chuông hoặc gọi thoại) -->
       @if (activeCall()?.status !== 'ACCEPTED' || !activeCall()?.isVideo) {
         <div class="avatar-container position-relative my-auto mx-auto z-1" [class.ringing]="activeCall()?.status === 'RINGING'">
-          <img [appAssetImage]="getAvatarUrl()" class="rounded-circle object-fit-cover shadow-sm" width="120" height="120" alt="Avatar">
+          <img [appAssetImage]="partnerInfo?.avatarUrl" class="rounded-circle object-fit-cover shadow-sm" width="120" height="120" alt="Avatar">
           @if (activeCall()?.status === 'RINGING') {
             <div class="ripple"></div>
             <div class="ripple delay-1"></div>

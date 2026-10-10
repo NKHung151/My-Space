@@ -71,9 +71,7 @@ export class HomeComponent implements OnInit {
   readonly page = signal(1);
   readonly totalPages = signal(1);
 
-  readonly quickDraftAvatar = computed(() => {
-    return this.authService.currentUser()?.avatarUrl ?? '/assets/images/default-avatar.svg';
-  });
+  readonly quickDraftAvatar = computed(() => this.authService.currentUser()?.avatarUrl);
 
   constructor() {
     // ══════════════════════════════════════════════════════

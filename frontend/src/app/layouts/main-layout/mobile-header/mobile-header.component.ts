@@ -6,6 +6,7 @@ import { AssetImageDirective } from '../../../shared/directives/asset-image.dire
 import { BrandComponent } from '../../../shared/components/brand/brand.component';
 
 import { SearchModalService } from '../../../features/search/search-modal.service';
+import { goHome } from '../go-home';
 
 @Component({
   selector: 'app-mobile-header',
@@ -26,15 +27,6 @@ export class MobileHeaderComponent {
   }
 
   onHomeClick(): void {
-    if (this.router.url === '/home' || this.router.url === '/') {
-      const centerFeed = document.querySelector('.center-feed');
-      if (centerFeed) {
-        centerFeed.scrollTo({ top: 0, behavior: 'auto' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'auto' });
-      }
-    } else {
-      void this.router.navigate(['/home']);
-    }
+    goHome(this.router);
   }
 }

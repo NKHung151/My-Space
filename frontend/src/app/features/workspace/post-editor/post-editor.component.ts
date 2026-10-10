@@ -18,6 +18,7 @@ import { validateUploadFile } from '../utils/upload-validator';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { getApiErrorMessage, getUploadErrorMessage } from '../../../core/http/api-error.util';
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
+import { displayNameOf } from '../../../shared/pipes/display-name.pipe';
 
 @Component({
   selector: 'app-post-editor',
@@ -48,8 +49,7 @@ export class PostEditorComponent implements OnInit, OnDestroy {
   autosaveState: 'idle' | 'saving' | 'saved' = 'idle';
 
   get authorDisplayName(): string {
-    const user = this.authService.currentUser();
-    return user?.displayName?.trim() || user?.username || 'My Space Author';
+    return displayNameOf(this.authService.currentUser(), 'My Space Author');
   }
 
   get authorAvatarUrl(): string | null {

@@ -10,7 +10,7 @@
 
   <div class="tooltip-content">
     <div class="tooltip-header d-flex justify-content-between align-items-start">
-      <img [appAssetImage]="avatarUrl" class="tooltip-avatar" [alt]="user?.displayName || user?.username" (click)="goToAuthor($event)">
+      <img [appAssetImage]="user?.avatarUrl" class="tooltip-avatar" [alt]="user | displayName" (click)="goToAuthor($event)">
       
       <div class="tooltip-action">
         @if (isSelf) {

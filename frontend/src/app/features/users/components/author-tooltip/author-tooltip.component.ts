@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { FriendButtonComponent } from '../../../friends/components/friend-button/friend-button.component';
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
+import { DisplayNamePipe } from '../../../../shared/pipes/display-name.pipe';
 
 
 interface AuthorTooltipUser {
@@ -26,7 +27,7 @@ interface AuthorTooltipUser {
 @Component({
   selector: 'app-author-tooltip',
   standalone: true,
-  imports: [CommonModule, AssetImageDirective, FriendButtonComponent],
+  imports: [CommonModule, AssetImageDirective, FriendButtonComponent, DisplayNamePipe],
   templateUrl: './author-tooltip.component.html',
   styleUrl: './author-tooltip.component.scss'
 })
@@ -91,10 +92,6 @@ export class AuthorTooltipComponent implements OnInit, OnChanges, AfterViewInit,
       this.mouseEnterListener = () => this.checkPosition();
       this.parentEl.addEventListener('mouseenter', this.mouseEnterListener);
     }
-  }
-
-  get avatarUrl(): string {
-    return this.user?.avatarUrl || '/assets/images/default-avatar.svg';
   }
 
   ngOnDestroy(): void {

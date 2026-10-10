@@ -104,11 +104,10 @@
                   <img
                     class="rounded-circle border object-fit-cover"
                     style="width: 48px; height: 48px;"
-                    [appAssetImage]="personAvatar(person)"
-                    [alt]="personDisplayName(person)"
-                    (error)="handlePeopleAvatarError(person.id)">
+                    [appAssetImage]="person.avatarUrl"
+                    [alt]="person | displayName">
                   <div class="d-flex flex-column overflow-hidden flex-grow-1">
-                    <strong class="text-truncate">{{ personDisplayName(person) }}</strong>
+                    <strong class="text-truncate">{{ person | displayName }}</strong>
                     <span class="text-muted small text-truncate">&#64;{{ person.username }}</span>
                     @if (person.bio) {
                       <small class="text-muted text-truncate">{{ person.bio }}</small>

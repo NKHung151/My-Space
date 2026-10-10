@@ -14,11 +14,12 @@ import { AdminUsersService } from './services/admin-users.service';
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
 
 import { LocalizedDatePipe } from '../../../shared/pipes/localized-date.pipe';
+import { DisplayNamePipe, displayNameOf } from '../../../shared/pipes/display-name.pipe';
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PaginationComponent, UiStateComponent, AssetImageDirective, LocalizedDatePipe],
+  imports: [CommonModule, ReactiveFormsModule, PaginationComponent, UiStateComponent, AssetImageDirective, LocalizedDatePipe, DisplayNamePipe],
   templateUrl: './admin-users.component.html',
   styleUrl: './admin-users.component.scss',
 })
@@ -182,7 +183,7 @@ export class AdminUsersComponent implements OnInit {
         this.replaceUser(updated);
         this.setUpdating(user.id, false);
         const label = updated.status === 'active' ? 'Đang hoạt động' : 'Không hoạt động';
-        this.toastService.showSuccess(`Trạng thái tài khoản của ${this.userName(updated)} đã chuyển thành “${label}”.`);
+        this.toastService.showSuccess(`Trạng thái tài khoản của ${displayNameOf(updated)} đã chuyển thành “${label}”.`);
       },
       error: () => {
         input.checked = user.status === 'active';
@@ -214,17 +215,13 @@ export class AdminUsersComponent implements OnInit {
         this.replaceUser(updated);
         this.saving.set(false);
         this.closeDrawer();
-        this.toastService.showSuccess(`Đã lưu thay đổi của ${this.userName(updated)}.`);
+        this.toastService.showSuccess(`Đã lưu thay đổi của ${displayNameOf(updated)}.`);
       },
       error: () => {
         this.saving.set(false);
         this.toastService.showError('Không thể cập nhật người dùng này.');
       },
     });
-  }
-
-  userName(user: AdminUser): string {
-    return user.displayName?.trim() || user.username;
   }
 
   isCurrentUser(user: AdminUser): boolean {

@@ -70,13 +70,13 @@
             @for (user of users(); track user.id) {
               <tr class="admin-table-row directory-user-row" tabindex="0" (click)="openUser(user)"
                 (keydown)="openUserFromKeyboard($event, user)"
-                [attr.aria-label]="'Open details for ' + userName(user)">
+                [attr.aria-label]="'Open details for ' + (user | displayName)">
                 <td data-label="User">
                   <div class="user-cell">
                     <img class="user-avatar" [appAssetImage]="user.avatarUrl" width="38" height="38" alt="">
                     <div class="user-cell-meta">
                       <div class="user-cell-name">
-                        {{ userName(user) }}
+                        {{ (user | displayName) }}
                         @if (isCurrentUser(user)) {
                           <span class="you-badge">Bạn</span>
                         }
@@ -108,11 +108,11 @@
                       </span>
                     } @else {
                       <label class="perfect-switch"
-                        [title]="(user.status === 'active' ? 'Vô hiệu hóa tài khoản: ' : 'Kích hoạt tài khoản: ') + userName(user)">
+                        [title]="(user.status === 'active' ? 'Vô hiệu hóa tài khoản: ' : 'Kích hoạt tài khoản: ') + (user | displayName)">
                         <input #statusToggle class="perfect-switch-input" type="checkbox"
                           [checked]="user.status === 'active'" [disabled]="updatingUserIds().has(user.id)"
                           (change)="toggleUserStatus(user, statusToggle)"
-                          [attr.aria-label]="'Account active for ' + userName(user)">
+                          [attr.aria-label]="'Account active for ' + (user | displayName)">
                         <span class="perfect-switch-track"><span class="perfect-switch-thumb"></span></span>
                       </label>
                     }
@@ -151,7 +151,7 @@
           <div class="detail-profile">
             <img class="detail-avatar" [appAssetImage]="user.avatarUrl" width="76" height="76" alt="">
             <div>
-              <strong>{{ userName(user) }}</strong>
+              <strong>{{ (user | displayName) }}</strong>
               <span>#{{ user.id }} · Đã tham gia {{ user.createdAt | localizedDate }}</span>
               <span class="role-badge role-badge-{{ user.role || 'user' }}">{{ user.role === 'admin'  ? 'Quản trị viên' : 'Người dùng' }}</span>
             </div>
@@ -160,7 +160,7 @@
           <section class="detail-section">
             <h3>Thông tin cơ bản</h3>
             <label for="editUserName">Tên đầy đủ</label>
-            <input id="editUserName" class="form-control" type="text" [value]="userName(user)" readonly aria-readonly="true">
+            <input id="editUserName" class="form-control" type="text" [value]="(user | displayName)" readonly aria-readonly="true">
 
             <label for="editUserEmail">Địa chỉ email</label>
             <input id="editUserEmail" class="form-control" type="email" [value]="user.email" readonly aria-readonly="true">

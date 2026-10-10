@@ -4,11 +4,12 @@ import { WebRTCService } from '../../../core/websocket/webrtc.service';
 import { FriendUser } from '../../../features/friends/models/friend.model';
 import { FriendsService } from '../../../features/friends/services/friends.service';
 import { AssetImageDirective } from '../../directives/asset-image.directive';
+import { DisplayNamePipe } from '../../pipes/display-name.pipe';
 
 @Component({
   selector: 'app-call-modal',
   standalone: true,
-  imports: [CommonModule, AssetImageDirective],
+  imports: [CommonModule, AssetImageDirective, DisplayNamePipe],
   templateUrl: './call-modal.component.html',
   styleUrl: './call-modal.component.scss'
 })
@@ -94,13 +95,5 @@ export class CallModalComponent {
       this.timerInterval = null;
       this.duration = '00:00';
     }
-  }
-
-  getDisplayName(): string {
-    return this.partnerInfo?.displayName || this.partnerInfo?.username || 'Người dùng';
-  }
-
-  getAvatarUrl(): string {
-    return this.partnerInfo?.avatarUrl || '/assets/images/default-avatar.svg';
   }
 }

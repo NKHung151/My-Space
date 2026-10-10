@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { AuthModalService } from '../../../core/auth/auth-modal.service';
 import { FriendButtonComponent } from '../../../features/friends/components/friend-button/friend-button.component';
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
+import { DisplayNamePipe } from '../../../shared/pipes/display-name.pipe';
 import { WebSocketService } from '../../../core/websocket/websocket.service';
 import { PresenceService } from '../../../core/services/presence.service';
 import { ChatManagerService } from '../../../features/chat/services/chat-manager.service';
@@ -14,7 +15,7 @@ import { ChatManagerService } from '../../../features/chat/services/chat-manager
 @Component({
   selector: 'app-right-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, FriendButtonComponent, AssetImageDirective],
+  imports: [CommonModule, RouterModule, FriendButtonComponent, AssetImageDirective, DisplayNamePipe],
   templateUrl: './right-sidebar.component.html',
   styleUrl: './right-sidebar.component.scss'
 })
@@ -121,14 +122,6 @@ export class RightSidebarComponent implements OnDestroy {
       },
       error: () => {}
     });
-  }
-
-  personDisplayName(person: FriendUser): string {
-    return person.displayName || person.username;
-  }
-
-  personAvatar(person: FriendUser): string {
-    return person.avatarUrl || '/assets/images/default-avatar.svg';
   }
 
   openLoginModal(): void {

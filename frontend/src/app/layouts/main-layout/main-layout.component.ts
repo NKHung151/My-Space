@@ -11,6 +11,7 @@ import { RightSidebarComponent } from './right-sidebar/right-sidebar.component';
 import { ChatWindowComponent } from '../../features/chat/components/chat-window/chat-window.component';
 import { ChatManagerService } from '../../features/chat/services/chat-manager.service';
 import { CallModalComponent } from '../../shared/components/call-modal/call-modal.component';
+import { goHome } from './go-home';
 
 @Component({
   selector: 'app-main-layout',
@@ -56,16 +57,7 @@ export class MainLayoutComponent {
   }
 
   onHomeClick(): void {
-    if (this.router.url === '/home' || this.router.url === '/') {
-      const centerFeed = document.querySelector('.center-feed');
-      if (centerFeed) {
-        centerFeed.scrollTo({ top: 0, behavior: 'auto' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'auto' });
-      }
-    } else {
-      void this.router.navigate(['/home']);
-    }
+    goHome(this.router);
   }
 
   private handleNavigation(event: NavigationEnd): void {

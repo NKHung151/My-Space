@@ -10,13 +10,14 @@ import { AuthService } from '../../../../core/auth/auth.service';
 import { WebSocketService } from '../../../../core/websocket/websocket.service';
 import { WebRTCService } from '../../../../core/websocket/webrtc.service';
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
+import { DisplayNamePipe } from '../../../../shared/pipes/display-name.pipe';
 import { Router } from '@angular/router';
 import { ToastService } from '../../../../core/notifications/toast.service';
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [CommonModule, FormsModule, AssetImageDirective],
+  imports: [CommonModule, FormsModule, AssetImageDirective, DisplayNamePipe],
   templateUrl: './chat-window.component.html',
   styleUrl: './chat-window.component.scss'
 })
@@ -188,13 +189,5 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
         }
       } catch (err) { }
     }, 50);
-  }
-
-  personAvatar(person: FriendUser): string {
-    return person.avatarUrl || '/assets/images/default-avatar.svg';
-  }
-
-  personDisplayName(person: FriendUser): string {
-    return person.displayName || person.username;
   }
 }
