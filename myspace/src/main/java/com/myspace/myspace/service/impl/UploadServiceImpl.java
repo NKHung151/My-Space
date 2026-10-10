@@ -1,5 +1,8 @@
 package com.myspace.myspace.service.impl;
 
+import org.springframework.scheduling.annotation.Scheduled;
+import java.time.LocalDateTime;
+import java.util.List;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.myspace.myspace.mapper.MediaMapper;
@@ -191,12 +194,12 @@ public class UploadServiceImpl implements UploadService {
     }
 
     // Run every hour: 3600000 ms
-    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 3600000)
+    @Scheduled(fixedRate = 3600000)
     public void cleanupTemporaryMedia() {
         log.info("Starting media cleanup task...");
 
-        java.time.LocalDateTime cutoff = java.time.LocalDateTime.now().minusHours(1);
-        java.util.List<com.myspace.myspace.entity.MediaAsset> trashMedia = mediaAssetRepository
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(1);
+        List<MediaAsset> trashMedia = mediaAssetRepository
                 .findByStatusAndCreatedAtBefore("TEMPORARY", cutoff);
 
         if (trashMedia.isEmpty()) {
@@ -205,7 +208,7 @@ public class UploadServiceImpl implements UploadService {
 
         log.info("Found {} temporary media files to delete.", trashMedia.size());
 
-        for (com.myspace.myspace.entity.MediaAsset asset : trashMedia) {
+        for (MediaAsset asset : trashMedia) {
             try {
                 deleteEditorMedia(asset.getUrl(), asset.getOwner().getId());
                 log.info("Deleted temporary media: {}", asset.getUrl());

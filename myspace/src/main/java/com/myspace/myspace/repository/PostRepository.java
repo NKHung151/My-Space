@@ -1,5 +1,6 @@
 package com.myspace.myspace.repository;
 
+import org.springframework.transaction.annotation.Transactional;
 import com.myspace.myspace.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +48,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("UPDATE Post p SET p.commentCount = CASE WHEN COALESCE(p.commentCount, 0) + :delta < 0 THEN 0 ELSE COALESCE(p.commentCount, 0) + :delta END WHERE p.id = :id")
     void addCommentCount(@Param("id") Long id, @Param("delta") int delta);
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     @Modifying
     @Query("UPDATE Post p SET p.viewCount = COALESCE(p.viewCount, 0) + :delta WHERE p.id = :id")
     void addViewCount(@Param("id") Long id, @Param("delta") int delta);

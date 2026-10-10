@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import java.util.Map;
 import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
@@ -117,7 +118,7 @@ public class PublicPostServiceImpl implements PublicPostService {
     
     private void populateCountsFromDatabase(List<PostResponse> items) {
         if (items.isEmpty()) return;
-        java.util.Map<Long, Post> posts = postRepository.findAllById(items.stream().map(PostResponse::getId).toList())
+        Map<Long, Post> posts = postRepository.findAllById(items.stream().map(PostResponse::getId).toList())
                 .stream().collect(Collectors.toMap(Post::getId, p -> p));
         // Bỏ bài đã xóa khỏi DB (còn sót trong ES) và bài chưa xuất bản
         items.removeIf(item -> !posts.containsKey(item.getId()) || posts.get(item.getId()).getPublishedAt() == null);
@@ -130,7 +131,7 @@ public class PublicPostServiceImpl implements PublicPostService {
     }
 
     private void populateRealtimeViewCounts(List<PostResponse> items) {
-        java.util.Map<Long, Long> pending = viewCountService.getPendingViewCounts(items.stream().map(PostResponse::getId).toList());
+        Map<Long, Long> pending = viewCountService.getPendingViewCounts(items.stream().map(PostResponse::getId).toList());
         items.forEach(item -> item.setViewCount(item.getViewCount() + pending.getOrDefault(item.getId(), 0L).intValue()));
     }
 }

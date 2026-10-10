@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import java.util.ArrayList;
 import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
@@ -174,7 +175,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     private void updateMediaStatus(String content, String coverImageUrl, Long postId, Long authorId) {
         Set<String> urls = MediaUrls.ofPost(content, coverImageUrl);
         if (!urls.isEmpty()) {
-            mediaAssetRepository.updateStatusAndPostIdByUrls("ATTACHED", postId, new java.util.ArrayList<>(urls), authorId);
+            mediaAssetRepository.updateStatusAndPostIdByUrls("ATTACHED", postId, new ArrayList<>(urls), authorId);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.myspace.myspace.controller;
 
+import org.springframework.http.ResponseEntity;
 import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.dto.response.UploadResponse;
 import com.myspace.myspace.security.custom.CustomUserDetails;
@@ -19,19 +20,19 @@ public class UploadController {
 
     @PostMapping("/media")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<UploadResponse> uploadMedia(
+    public ResponseEntity<ApiResponse<UploadResponse>> uploadMedia(
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
         UploadResponse response = uploadService.uploadMedia(file, currentUser.getUser().getId());
-        return ApiResponse.success(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/avatar")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<UploadResponse> uploadAvatar(
+    public ResponseEntity<ApiResponse<UploadResponse>> uploadAvatar(
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
         UploadResponse response = uploadService.uploadAvatar(file, currentUser.getUser().getId());
-        return ApiResponse.success(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

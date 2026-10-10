@@ -1,5 +1,6 @@
 package com.myspace.myspace.controller;
 
+import com.myspace.myspace.dto.response.PostResponse;
 import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.dto.response.FriendRequestResponse;
@@ -68,11 +69,11 @@ public class FriendController {
     }
 
     @GetMapping("/feed")
-    public ResponseEntity<ApiResponse<PageResponse<com.myspace.myspace.dto.response.PostResponse>>> getFeed(
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getFeed(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit) {
-        PageResponse<com.myspace.myspace.dto.response.PostResponse> feed = friendService.getFriendsFeed(userDetails.getUser().getId(), page, limit);
+        PageResponse<PostResponse> feed = friendService.getFriendsFeed(userDetails.getUser().getId(), page, limit);
         return ResponseEntity.ok(ApiResponse.success(feed));
     }
 

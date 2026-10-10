@@ -1,5 +1,6 @@
 package com.myspace.myspace.repository;
 
+import org.springframework.data.jpa.repository.Modifying;
 import com.myspace.myspace.entity.MediaAsset;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -15,7 +16,7 @@ public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
     Optional<MediaAsset> findFirstByUrl(String url);
 
     // Chỉ gắn media của chính tác giả vào bài, không cho "nhận" media của người khác
-    @org.springframework.data.jpa.repository.Modifying
+    @Modifying
     @Query("UPDATE MediaAsset m SET m.status = :status, m.postId = :postId WHERE m.url IN :urls AND m.owner.id = :ownerId")
     void updateStatusAndPostIdByUrls(@Param("status") String status, @Param("postId") Long postId,
                                      @Param("urls") List<String> urls, @Param("ownerId") Long ownerId);

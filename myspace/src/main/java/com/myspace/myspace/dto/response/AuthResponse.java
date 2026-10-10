@@ -1,5 +1,6 @@
 package com.myspace.myspace.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,6 +10,6 @@ public class AuthResponse {
     private String accessToken;
     private CurrentUserResponse user;
    
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     private String refreshToken;
 }

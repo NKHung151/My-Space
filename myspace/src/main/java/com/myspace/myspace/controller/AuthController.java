@@ -1,5 +1,11 @@
 package com.myspace.myspace.controller;
 
+import jakarta.validation.Valid;
+import com.myspace.myspace.dto.request.UpdateProfileRequest;
+import com.myspace.myspace.dto.request.ResetPasswordRequest;
+import com.myspace.myspace.dto.request.RegisterRequest;
+import com.myspace.myspace.dto.request.ForgotPasswordRequest;
+import com.myspace.myspace.dto.request.ChangePasswordRequest;
 import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
@@ -45,32 +51,32 @@ public class AuthController {
     private static final String REFRESH_COOKIE = "refresh_token";
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody @jakarta.validation.Valid LoginRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody @Valid LoginRequest request) {
         AuthResponse response = authService.login(request);
         return generateAuthCookieResponse(response);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.RegisterRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody @Valid RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return generateAuthCookieResponse(response);
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.ForgotPasswordRequest request) {
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
         authService.forgotPassword(request.getEmail());
         return ResponseEntity.ok(ApiResponse.success("Nếu email tồn tại, mã OTP đã được gửi. Vui lòng kiểm tra hộp thư của bạn."));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.ResetPasswordRequest request) {
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         authService.resetPassword(request);
         return ResponseEntity.ok(ApiResponse.success("Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại."));
     }
 
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse<Map<String, String>>> changePassword(
-            @RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.ChangePasswordRequest request,
+            @RequestBody @Valid ChangePasswordRequest request,
             Principal principal) {
         authService.changePassword(principal.getName(), request);
         return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")));
@@ -84,7 +90,7 @@ public class AuthController {
 
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<CurrentUserResponse>> updateProfile(
-            @RequestBody @jakarta.validation.Valid com.myspace.myspace.dto.request.UpdateProfileRequest request,
+            @RequestBody @Valid UpdateProfileRequest request,
             Principal principal) {
         CurrentUserResponse response = authService.updateProfile(principal.getName(), request);
         return ResponseEntity.ok(ApiResponse.success(response));

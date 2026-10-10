@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import java.util.Map;
+import java.util.ArrayList;
 import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
@@ -47,7 +49,7 @@ public class CommentServiceImpl implements CommentService {
         List<Comment> allReplies = commentRepository.findByParentIdInOrderByCreatedAtAsc(rootCommentIds);
         
         // Gom nhóm các câu trả lời theo ID của bình luận cha
-        java.util.Map<Long, List<Comment>> repliesByParentId = allReplies.stream()
+        Map<Long, List<Comment>> repliesByParentId = allReplies.stream()
                 .collect(Collectors.groupingBy(reply -> reply.getParent().getId()));
 
         List<CommentResponse> items = rootComments.stream()
@@ -65,7 +67,7 @@ public class CommentServiceImpl implements CommentService {
 
         // Populate Liked Status
         if (currentUserId != null && !items.isEmpty()) {
-            List<Long> allCommentIds = new java.util.ArrayList<>();
+            List<Long> allCommentIds = new ArrayList<>();
             for (CommentResponse item : items) {
                 allCommentIds.add(item.getId());
                 if (item.getReplies() != null) {

@@ -1,5 +1,6 @@
 package com.myspace.myspace.service;
 
+import java.util.Map;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.entity.Conversation;
 import com.myspace.myspace.dto.response.MessageResponse;
@@ -13,6 +14,6 @@ public interface MessageService {
     MessageBroadcastResult editMessage(Long messageId, Long senderId, String newContent);
     MessageBroadcastResult deleteMessage(Long messageId, Long senderId);
     MessageBroadcastResult saveCallSystemMessage(Long callId);
-    java.util.Map<Long, Long> getUnreadCounts(Long userId);
+    Map<Long, Long> getUnreadCounts(Long userId);
     void markAsRead(Long senderId, Long receiverId);
 }

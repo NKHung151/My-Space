@@ -1,5 +1,6 @@
 package com.myspace.myspace.repository;
 
+import com.myspace.myspace.entity.User;
 import com.myspace.myspace.entity.Friendship;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -21,7 +22,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     List<Object[]> countFriendsByUserIds(@Param("ids") List<Long> ids);
 
     @Query("SELECT f.friend FROM Friendship f WHERE f.user.id = :userId")
-    List<com.myspace.myspace.entity.User> findFriendsByUserId(@Param("userId") Long userId);
+    List<User> findFriendsByUserId(@Param("userId") Long userId);
 
     @Modifying
     @Query("DELETE FROM Friendship f WHERE (f.user.id = :userId AND f.friend.id = :friendId) OR (f.user.id = :friendId AND f.friend.id = :userId)")

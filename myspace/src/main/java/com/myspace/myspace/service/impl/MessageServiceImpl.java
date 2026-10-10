@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import java.util.Map;
+import java.util.HashMap;
 import com.myspace.myspace.mapper.MessageMapper;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.exception.AppException;
@@ -186,9 +188,9 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.Map<Long, Long> getUnreadCounts(Long userId) {
+    public Map<Long, Long> getUnreadCounts(Long userId) {
         List<Object[]> results = messageRepository.countUnreadMessagesGroupedBySender(userId);
-        java.util.Map<Long, Long> unreadCounts = new java.util.HashMap<>();
+        Map<Long, Long> unreadCounts = new HashMap<>();
         for (Object[] result : results) {
             unreadCounts.put((Long) result[0], (Long) result[1]);
         }

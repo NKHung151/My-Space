@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.entity.Post;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.common.util.Paging;
@@ -209,7 +211,7 @@ public class FriendServiceImpl implements FriendService {
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> getFriendsFeed(Long currentUserId, int page, int limit) {
         Pageable pageable = Paging.newestFirst(page, limit);
-        Page<com.myspace.myspace.entity.Post> postsPage = postRepository.findPostsByFriendship(currentUserId, pageable);
+        Page<Post> postsPage = postRepository.findPostsByFriendship(currentUserId, pageable);
 
         List<PostResponse> items = postsPage.getContent().stream()
                 .map(PostMapper::toResponse)
@@ -218,7 +220,7 @@ public class FriendServiceImpl implements FriendService {
         if (!items.isEmpty()) {
             List<Long> postIds = items.stream().map(PostResponse::getId).collect(Collectors.toList());
             List<Long> likedIds = postLikeRepository.findLikedPostIds(currentUserId, postIds);
-            java.util.Map<Long, Long> pendingViews = viewCountService.getPendingViewCounts(postIds);
+            Map<Long, Long> pendingViews = viewCountService.getPendingViewCounts(postIds);
             items.forEach(item -> {
                 item.setLiked(likedIds.contains(item.getId()));
                 item.setViewCount(item.getViewCount() + pendingViews.getOrDefault(item.getId(), 0L).intValue());

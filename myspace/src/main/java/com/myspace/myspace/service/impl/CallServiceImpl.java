@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import java.time.Duration;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.mapper.CallMapper;
@@ -115,7 +116,7 @@ public class CallServiceImpl implements CallService {
         call.setEndedAt(LocalDateTime.now());
         
         if (call.getAnsweredAt() != null) {
-            long duration = java.time.Duration.between(call.getAnsweredAt(), call.getEndedAt()).getSeconds();
+            long duration = Duration.between(call.getAnsweredAt(), call.getEndedAt()).getSeconds();
             call.setDurationSeconds((int) duration);
         }
         

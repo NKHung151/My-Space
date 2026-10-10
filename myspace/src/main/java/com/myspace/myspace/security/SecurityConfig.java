@@ -1,9 +1,10 @@
 package com.myspace.myspace.security;
 
+import org.springframework.http.HttpMethod;
+import lombok.RequiredArgsConstructor;
 import com.myspace.myspace.security.jwt.JwtAuthenticationFilter;
 import com.myspace.myspace.security.custom.CustomAuthenticationEntryPoint;
 import com.myspace.myspace.security.custom.CustomAccessDeniedHandler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -24,19 +25,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
 
-    @Autowired
-    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Autowired
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -61,8 +59,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/**", "/api/posts/**", "/api/comments/**").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/posts/*/view").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/**", "/api/posts/**", "/api/comments/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/posts/*/view").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/refresh-token", "/api/auth/logout").permitAll()
                         // WebSocket SockJS handshake (HTTP) phải được phép - auth thực sự qua STOMP header (WebSocketAuthInterceptor)
                         .requestMatchers("/ws/**").permitAll()

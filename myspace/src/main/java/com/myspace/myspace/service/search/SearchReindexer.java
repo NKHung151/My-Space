@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.search;
 
+import com.myspace.myspace.entity.User;
+import com.myspace.myspace.entity.Post;
 import com.myspace.myspace.repository.PostRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.repository.search.PostSearchRepository;
@@ -49,7 +51,7 @@ public class SearchReindexer implements ApplicationRunner {
         }
 
         long users = 0;
-        Page<com.myspace.myspace.entity.User> userPage;
+        Page<User> userPage;
         int page = 0;
         do {
             userPage = userRepository.findAll(PageRequest.of(page++, BATCH_SIZE, Sort.by("id")));
@@ -59,7 +61,7 @@ public class SearchReindexer implements ApplicationRunner {
         } while (userPage.hasNext());
 
         long posts = 0;
-        Page<com.myspace.myspace.entity.Post> postPage;
+        Page<Post> postPage;
         page = 0;
         do {
             postPage = postRepository.findAll(PageRequest.of(page++, BATCH_SIZE, Sort.by("id")));

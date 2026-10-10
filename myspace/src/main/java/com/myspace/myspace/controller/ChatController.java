@@ -1,5 +1,6 @@
 package com.myspace.myspace.controller;
 
+import java.util.Map;
 import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.common.dto.PageResponse;
@@ -29,7 +30,6 @@ public class ChatController {
 
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final com.myspace.myspace.repository.UserRepository userRepository;
 
     @GetMapping("/conversations/{targetUserId}")
     public ResponseEntity<ApiResponse<Long>> getConversationId(
@@ -50,7 +50,7 @@ public class ChatController {
     }
 
     @GetMapping("/unread-counts")
-    public ResponseEntity<ApiResponse<java.util.Map<Long, Long>>> getUnreadCounts(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ApiResponse<Map<Long, Long>>> getUnreadCounts(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.success(messageService.getUnreadCounts(userDetails.getUser().getId())));
     }
 
