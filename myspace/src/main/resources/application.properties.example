@@ -49,11 +49,10 @@ cloudinary.api-secret=CHANGE_ME
 management.endpoints.web.exposure.include=health,info,metrics
 management.endpoint.health.show-details=always
 
-# Upload limits
-spring.servlet.multipart.max-file-size=500MB
-spring.servlet.multipart.max-request-size=500MB
-server.tomcat.max-swallow-size=-1
-server.tomcat.max-http-post-size=-1
+# Upload limits — khớp giới hạn trong code (ảnh 10MB, video/audio 100MB).
+# Request lớn hơn bị từ chối ngay (413), không đọc hết body.
+spring.servlet.multipart.max-file-size=100MB
+spring.servlet.multipart.max-request-size=101MB
 
 # Nếu chạy sau reverse proxy (Nginx...), bật dòng dưới để rate limit dùng đúng IP thật của client
 #server.forward-headers-strategy=native
