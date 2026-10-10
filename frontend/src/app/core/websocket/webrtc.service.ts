@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, effect } from '@angular/core';
 import { WebSocketService } from './websocket.service';
 import { AuthService } from '../auth/auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface CallResponse {
   id: number;
@@ -43,12 +44,14 @@ export class WebRTCService {
   public localStream = signal<MediaStream | null>(null);
   public remoteStream = signal<MediaStream | null>(null);
   
-  private iceServers = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
-    ]
-  };
+  // STUN/TURN lấy từ environment: mạng NAT chặt (4G, mạng công ty) cần TURN server mới gọi được
+  private iceServers: RTCConfiguration = { iceServers: environment.iceServers };
+
+  // Promise dùng chung cho đúng 1 RTCPeerConnection mỗi cuộc gọi. Trước đây acceptCall() và tín hiệu offer đến
+  // gần như cùng lúc đều thấy peerConnection == null (getUserMedia còn đang chờ) -> tạo 2 kết nối, rò rỉ stream.
+  private peerConnectionReady: Promise<RTCPeerConnection | null> | null = null;
+  // ICE candidate đến trước khi có remote description sẽ bị addIceCandidate từ chối -> xếp hàng chờ
+  private pendingCandidates: RTCIceCandidateInit[] = [];
 
   constructor() {
     effect(() => {
@@ -95,7 +98,7 @@ export class WebRTCService {
             this.stopRingtone();
             if (!state.isIncoming) {
               // Người gọi nhận được "accepted" => Bắt đầu luồng WebRTC Offer
-              this.startPeerConnection(true, state.isVideo);
+              void this.ensurePeerConnection(true, state.isVideo);
             }
           }
           break;
@@ -117,14 +120,14 @@ export class WebRTCService {
       const state = this.activeCall();
       if (!state || state.callId !== signal.callId) return;
 
-      if (!this.peerConnection) {
-        await this.startPeerConnection(false, state.isVideo); // Tạo connection nếu chưa có
-      }
+      const pc = await this.ensurePeerConnection(false, state.isVideo);
+      if (!pc || this.activeCall()?.callId !== signal.callId) return; // cuộc gọi đã kết thúc trong lúc chờ
 
       if (signal.type === 'offer' && signal.sdp) {
-        await this.peerConnection!.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-        const answer = await this.peerConnection!.createAnswer();
-        await this.peerConnection!.setLocalDescription(answer);
+        await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+        await this.flushPendingCandidates(pc);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
         
         this.webSocketService.sendMessage('/app/call.signal', {
           callId: state.callId,
@@ -134,11 +137,16 @@ export class WebRTCService {
         });
       } 
       else if (signal.type === 'answer' && signal.sdp) {
-        await this.peerConnection!.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+        await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+        await this.flushPendingCandidates(pc);
       } 
       else if (signal.type === 'candidate' && signal.candidate) {
+        if (!pc.remoteDescription) {
+          this.pendingCandidates.push(signal.candidate);
+          return;
+        }
         try {
-          await this.peerConnection!.addIceCandidate(new RTCIceCandidate(signal.candidate));
+          await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
         } catch (e) {
           console.error('Error adding received ice candidate', e);
         }
@@ -163,7 +171,7 @@ export class WebRTCService {
     const state = this.activeCall();
     if (!state) return;
     
-    this.startPeerConnection(false, state.isVideo);
+    void this.ensurePeerConnection(false, state.isVideo);
     this.stopRingtone();
     this.webSocketService.sendMessage('/app/call.accept', { callId: state.callId });
     this.activeCall.update(s => s ? { ...s, status: 'ACCEPTED', startTime: new Date() } : null);
@@ -216,10 +224,36 @@ export class WebRTCService {
   }
 
   // --- WebRTC Logic ---
-  private async startPeerConnection(isCaller: boolean, isVideo: boolean = false) {
+  /** Trả về RTCPeerConnection của cuộc gọi hiện tại, tạo nếu chưa có — mọi nơi gọi cùng chờ 1 promise. */
+  private ensurePeerConnection(isCaller: boolean, isVideo: boolean = false): Promise<RTCPeerConnection | null> {
+    if (!this.peerConnectionReady) {
+      this.peerConnectionReady = this.createPeerConnection(isCaller, isVideo);
+    }
+    return this.peerConnectionReady;
+  }
+
+  private async flushPendingCandidates(pc: RTCPeerConnection): Promise<void> {
+    const candidates = this.pendingCandidates;
+    this.pendingCandidates = [];
+    for (const candidate of candidates) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (e) {
+        console.error('Error adding queued ice candidate', e);
+      }
+    }
+  }
+
+  private async createPeerConnection(isCaller: boolean, isVideo: boolean = false): Promise<RTCPeerConnection | null> {
     try {
       // Yêu cầu quyền Micro & Camera
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: isVideo });
+
+      // Cuộc gọi đã kết thúc trong lúc chờ người dùng cấp quyền -> tắt camera/mic, không tạo kết nối
+      if (!this.activeCall()) {
+        stream.getTracks().forEach(track => track.stop());
+        return null;
+      }
       this.localStream.set(stream);
 
       this.peerConnection = new RTCPeerConnection(this.iceServers);
@@ -263,9 +297,11 @@ export class WebRTCService {
           });
         }
       }
+      return this.peerConnection;
     } catch (err) {
       console.error('Lỗi khi truy cập Micro hoặc WebRTC', err);
       this.endCall(); // Hủy gọi nếu lỗi
+      return null;
     }
   }
 
@@ -298,6 +334,8 @@ export class WebRTCService {
       this.peerConnection.close();
       this.peerConnection = null;
     }
+    this.peerConnectionReady = null;
+    this.pendingCandidates = [];
     
     const local = this.localStream();
     if (local) {
