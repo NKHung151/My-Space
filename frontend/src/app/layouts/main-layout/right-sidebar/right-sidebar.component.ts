@@ -30,7 +30,7 @@ export class RightSidebarComponent implements OnDestroy {
   friendRequests = signal<FriendUser[]>([]);
   friends = signal<FriendUser[]>([]);
 
-  private wsSubscribed = false;
+  private wsHandles: { unsubscribe: () => void }[] = [];
 
   constructor() {
     // Đăng ký WebSocket ngay lập tức (service sẽ queue nếu chưa connected)
@@ -49,7 +49,7 @@ export class RightSidebarComponent implements OnDestroy {
 
   private registerWebSocketListeners(): void {
     // Lắng nghe lời mời kết bạn mới (dành cho người NHẬN lời mời)
-    this.webSocketService.subscribeToTopic('/user/queue/friend-requests', (newRequest: FriendRequestResponse) => {
+    this.wsHandles.push(this.webSocketService.subscribeToTopic('/user/queue/friend-requests', (newRequest: FriendRequestResponse) => {
       if (newRequest && newRequest.sender) {
         // Cập nhật cache trạng thái: người này đang gửi lời mời → trạng thái là pending_received
         this.friendsService.updateStatus(newRequest.sender.id, 'pending_received');
@@ -58,10 +58,10 @@ export class RightSidebarComponent implements OnDestroy {
           return [newRequest.sender, ...requests];
         });
       }
-    });
+    }));
 
     // Lắng nghe sự kiện được chấp nhận kết bạn (dành cho người GỬI lời mời)
-    this.webSocketService.subscribeToTopic('/user/queue/friend-accept', (newFriend: FriendUser) => {
+    this.wsHandles.push(this.webSocketService.subscribeToTopic('/user/queue/friend-accept', (newFriend: FriendUser) => {
       if (newFriend && newFriend.id) {
         // Cập nhật cache trạng thái: giờ đã là bạn bè
         this.friendsService.updateStatus(newFriend.id, 'friends');
@@ -72,32 +72,30 @@ export class RightSidebarComponent implements OnDestroy {
         // Xóa khỏi danh sách lời mời nếu có
         this.friendRequests.update(requests => requests.filter(r => r.id !== newFriend.id));
       }
-    });
+    }));
 
     // Lắng nghe sự kiện từ chối kết bạn (dành cho người bị từ chối hoặc người từ chối)
-    this.webSocketService.subscribeToTopic('/user/queue/friend-reject', (rejectedId: number) => {
+    this.wsHandles.push(this.webSocketService.subscribeToTopic('/user/queue/friend-reject', (rejectedId: number) => {
       if (rejectedId != null) {
         // Cập nhật cache trạng thái về none
         this.friendsService.updateStatus(rejectedId, 'none');
         this.friendRequests.update(requests => requests.filter(r => r.id !== rejectedId));
       }
-    });
+    }));
 
     // Lắng nghe sự kiện xóa bạn bè
-    this.webSocketService.subscribeToTopic('/user/queue/friend-remove', (removedId: number) => {
+    this.wsHandles.push(this.webSocketService.subscribeToTopic('/user/queue/friend-remove', (removedId: number) => {
       if (removedId != null) {
         // Cập nhật cache trạng thái về none
         this.friendsService.updateStatus(removedId, 'none');
         this.friends.update(friends => friends.filter(f => f.id !== removedId));
       }
-    });
+    }));
   }
 
   ngOnDestroy(): void {
-    this.webSocketService.unsubscribeFromTopic('/user/queue/friend-requests');
-    this.webSocketService.unsubscribeFromTopic('/user/queue/friend-accept');
-    this.webSocketService.unsubscribeFromTopic('/user/queue/friend-reject');
-    this.webSocketService.unsubscribeFromTopic('/user/queue/friend-remove');
+    // Chỉ gỡ callback của component này (unsubscribeFromTopic cũ gỡ luôn callback của nơi khác cùng nghe topic)
+    this.wsHandles.forEach(handle => handle.unsubscribe());
   }
 
   private loadData(): void {

@@ -18,30 +18,12 @@ export class PresenceService {
   private _onlineUsers = signal<Set<number>>(new Set());
   public onlineUsers = this._onlineUsers.asReadonly();
 
+  // Id user đã tải trạng thái online; currentUser đổi khi sửa hồ sơ thì không tải lại
+  private loadedForUserId: number | null = null;
+
   constructor() {
-    // Khi user đăng nhập thì init
-    toObservable(this.authService.currentUser).subscribe((user: any) => {
-      if (user) {
-        this.init();
-      } else {
-        this._onlineUsers.set(new Set());
-        this.webSocketService.unsubscribeFromTopic('/topic/presence');
-      }
-    });
-  }
-
-  private init() {
-    // Lấy trạng thái online ban đầu
-    this.http.get<ApiResponse<number[]>>(`${environment.apiUrl}/presence`).subscribe({
-      next: (response) => {
-        if (response.data) {
-          this._onlineUsers.set(new Set(response.data));
-        }
-      },
-      error: (err) => console.error('[PresenceService] Failed to load initial presence', err)
-    });
-
-    // Lắng nghe cập nhật realtime
+    // Lắng nghe cập nhật realtime — đăng ký 1 lần, WebSocketService tự đăng ký lại khi kết nối lại.
+    // (Trước đây đăng ký lại mỗi lần currentUser đổi -> nhân bản callback, gọi API thừa)
     this.webSocketService.subscribeToTopic('/topic/presence', (message: { userId: number, online: boolean }) => {
       if (message && message.userId != null) {
         this._onlineUsers.update(current => {
@@ -54,6 +36,28 @@ export class PresenceService {
           return newSet;
         });
       }
+    });
+
+    toObservable(this.authService.currentUser).subscribe(user => {
+      if (!user) {
+        this.loadedForUserId = null;
+        this._onlineUsers.set(new Set());
+      } else if (user.id !== this.loadedForUserId) {
+        this.loadedForUserId = user.id;
+        this.loadInitialPresence();
+      }
+    });
+  }
+
+  private loadInitialPresence() {
+    // Lấy trạng thái online ban đầu
+    this.http.get<ApiResponse<number[]>>(`${environment.apiUrl}/presence`).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this._onlineUsers.set(new Set(response.data));
+        }
+      },
+      error: (err) => console.error('[PresenceService] Failed to load initial presence', err)
     });
   }
 

@@ -30,6 +30,8 @@ export class ChatManagerService {
 
     // Listen to new messages to increment unread counts
     this.webSocketService.subscribeToTopic('/user/queue/messages', (message: MessageResponse) => {
+      // Server gửi lại cả tin của chính mình (để đồng bộ các tab) -> không tính là chưa đọc
+      if (message.senderId === this.authService.currentUser()?.id) return;
       // If the message is from someone else and their chat is not open
       const isOpen = this._activeChats().find(c => c.id === message.senderId);
       if (!isOpen) {
