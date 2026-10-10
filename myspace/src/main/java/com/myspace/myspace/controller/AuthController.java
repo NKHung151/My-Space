@@ -4,6 +4,7 @@ import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
 import com.myspace.myspace.dto.response.AuthResponse;
+import com.myspace.myspace.repository.FriendshipRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.security.jwt.JwtService;
 import com.myspace.myspace.security.custom.CustomUserDetails;
@@ -30,6 +31,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final FriendshipRepository friendshipRepository;
     private final CustomUserDetailsService customUserDetailsService;
 
     @Value("${jwt.refresh-token.expiration}")
@@ -160,6 +162,7 @@ public class AuthController {
                             .avatarUrl(user.getAvatarUrl())
                             .bio(user.getBio())
                             .role(user.getRole().getName())
+                            .friendsCount(friendshipRepository.countByUserId(user.getId()))
                             .build();
                     return ResponseEntity.ok(ApiResponse.success(userResponse));
                 })

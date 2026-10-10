@@ -1,6 +1,7 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.dto.PageResponse;
+import com.myspace.myspace.common.util.TextUtils;
 import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.dto.request.UpdateAdminUserRequest;
 import com.myspace.myspace.dto.response.AdminUserResponse;
@@ -41,7 +42,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
         Pageable pageable = PageRequest.of(Math.max(page - 1, 0), limit, Sort.by(Sort.Direction.DESC, "createdAt"));
         
         // Treat empty strings as null for JPQL query
-        String searchParam = (search != null && !search.trim().isEmpty()) ? search.trim().toLowerCase() : null;
+        String searchParam = (search != null && !search.trim().isEmpty()) ? TextUtils.unaccent(search) : null;
         String roleParam = (role != null && !role.trim().isEmpty()) ? role.trim() : null;
         String statusParam = (status != null && !status.trim().isEmpty()) ? status.trim() : null;
         

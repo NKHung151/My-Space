@@ -14,4 +14,5 @@ public class CurrentUserResponse {
     private String avatarUrl;
     private String bio;
     private String role;
+    private Long friendsCount;
 }

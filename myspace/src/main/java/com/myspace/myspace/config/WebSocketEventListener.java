@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.time.LocalDateTime;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -43,6 +45,8 @@ public class WebSocketEventListener {
             userRepository.findByEmail(email).ifPresent(user -> {
                 boolean changed = presenceService.removeOnlineUser(user.getId());
                 if (changed) {
+                    // Lưu thời điểm offline (cột last_seen_at trước đây không bao giờ được ghi)
+                    userRepository.updateLastSeenAt(user.getId(), LocalDateTime.now());
                     broadcastPresence(user.getId(), false);
                 }
             });

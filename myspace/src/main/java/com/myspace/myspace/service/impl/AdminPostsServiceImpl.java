@@ -3,6 +3,7 @@ package com.myspace.myspace.service.impl;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
+import com.myspace.myspace.common.util.TextUtils;
 import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.dto.response.AdminPostResponse;
 import com.myspace.myspace.entity.Post;
@@ -37,7 +38,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
     public PageResponse<AdminPostResponse> getPosts(String search, String tag, int page, int limit) {
         Pageable pageable = PageRequest.of(Math.max(page - 1, 0), limit, Sort.by(Sort.Direction.DESC, "createdAt"));
         
-        String searchParam = (search != null && !search.trim().isEmpty()) ? search.trim().toLowerCase() : null;
+        String searchParam = (search != null && !search.trim().isEmpty()) ? TextUtils.unaccent(search) : null;
         String tagParam = (tag != null && !tag.trim().isEmpty()) ? tag.trim() : null;
         
         Page<Post> postsPage = postRepository.searchAdminPosts(searchParam, tagParam, pageable);

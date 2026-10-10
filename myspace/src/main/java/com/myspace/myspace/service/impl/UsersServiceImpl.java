@@ -1,11 +1,11 @@
 package com.myspace.myspace.service.impl;
 
-import com.myspace.myspace.common.exception.AppException;
-import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
+import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.document.UserDocument;
 import com.myspace.myspace.dto.response.PublicUserResponse;
 import com.myspace.myspace.entity.User;
+import com.myspace.myspace.repository.FriendshipRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.UsersService;
 import com.myspace.myspace.service.search.SearchQueryService;
@@ -13,17 +13,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class UsersServiceImpl implements UsersService {
 
     private final UserRepository userRepository;
+    private final FriendshipRepository friendshipRepository;
     private final SearchQueryService searchQueryService;
 
     @Override
@@ -39,44 +44,32 @@ public class UsersServiceImpl implements UsersService {
                     searchQueryService.searchUsers(cleanQuery, pageable.getPageNumber(), limit, currentUserId);
 
             List<PublicUserResponse> items = result.items().stream()
-                    .map(doc -> {
-                        return PublicUserResponse.builder()
-                                .id(doc.getId())
-                                .displayName(doc.getDisplayName() != null ? doc.getDisplayName() : doc.getUsername())
-                                .username(doc.getUsername())
-                                .avatarUrl(doc.getAvatarUrl())
-                                .bio(doc.getBio())
-                                .isFriend(false)
-                                .friendsCount(0L)
-                                .build();
-                    }).collect(Collectors.toList());
+                    .map(doc -> PublicUserResponse.builder()
+                            .id(doc.getId())
+                            .displayName(doc.getDisplayName() != null ? doc.getDisplayName() : doc.getUsername())
+                            .username(doc.getUsername())
+                            .avatarUrl(doc.getAvatarUrl())
+                            .bio(doc.getBio())
+                            .role(doc.getRole())
+                            .build())
+                    .toList();
+            populateFriendship(items, currentUserId);
 
             int totalPages = (int) Math.ceil((double) result.total() / Math.max(limit, 1));
             return new PageResponse<>(items, new PageResponse.Meta(result.total(), page, limit, totalPages));
-        } else {
-            // Use MySQL for default recommendations
-            // Loại chính mình trong câu truy vấn, không lọc sau khi đã phân trang (trang bị thiếu 1 người)
-            Page<User> usersPage = currentUserId == null
-                    ? userRepository.findAll(pageable)
-                    : userRepository.findByIdNot(currentUserId, pageable);
-
-            List<PublicUserResponse> items = usersPage.getContent().stream()
-                    .map(user -> {
-                        return PublicUserResponse.builder()
-                                .id(user.getId())
-                                .displayName(user.getDisplayName() != null ? user.getDisplayName() : user.getUsername())
-                                .username(user.getUsername())
-                                .avatarUrl(user.getAvatarUrl())
-                                .bio(user.getBio())
-                                .role(user.getRole() != null ? user.getRole().getName() : "member")
-                                .isFriend(false)
-                                .friendsCount(0L)
-                                .build();
-                    }).collect(Collectors.toList());
-
-            return new PageResponse<>(items,
-                    new PageResponse.Meta(usersPage.getTotalElements(), page, limit, usersPage.getTotalPages()));
         }
+
+        // Use MySQL for default recommendations
+        // Loại chính mình trong câu truy vấn, không lọc sau khi đã phân trang (trang bị thiếu 1 người)
+        Page<User> usersPage = currentUserId == null
+                ? userRepository.findAll(pageable)
+                : userRepository.findByIdNot(currentUserId, pageable);
+
+        List<PublicUserResponse> items = usersPage.getContent().stream().map(this::toPublicUser).toList();
+        populateFriendship(items, currentUserId);
+
+        return new PageResponse<>(items,
+                new PageResponse.Meta(usersPage.getTotalElements(), page, limit, usersPage.getTotalPages()));
     }
 
     @Override
@@ -85,6 +78,12 @@ public class UsersServiceImpl implements UsersService {
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy hồ sơ."));
 
+        PublicUserResponse response = toPublicUser(user);
+        populateFriendship(List.of(response), currentUserId);
+        return response;
+    }
+
+    private PublicUserResponse toPublicUser(User user) {
         return PublicUserResponse.builder()
                 .id(user.getId())
                 .displayName(user.getDisplayName() != null ? user.getDisplayName() : user.getUsername())
@@ -92,8 +91,24 @@ public class UsersServiceImpl implements UsersService {
                 .avatarUrl(user.getAvatarUrl())
                 .bio(user.getBio())
                 .role(user.getRole() != null ? user.getRole().getName() : "member")
-                .isFriend(false)
-                .friendsCount(0L)
                 .build();
+    }
+
+    private void populateFriendship(List<PublicUserResponse> items, Long currentUserId) {
+        if (items.isEmpty()) return;
+        List<Long> ids = items.stream().map(PublicUserResponse::getId).toList();
+
+        Map<Long, Long> friendCounts = new HashMap<>();
+        for (Object[] row : friendshipRepository.countFriendsByUserIds(ids)) {
+            friendCounts.put((Long) row[0], ((Number) row[1]).longValue());
+        }
+        Set<Long> friendIds = currentUserId == null
+                ? Set.of()
+                : new HashSet<>(friendshipRepository.findFriendIdsAmong(currentUserId, ids));
+
+        items.forEach(item -> {
+            item.setFriendsCount(friendCounts.getOrDefault(item.getId(), 0L));
+            item.setFriend(friendIds.contains(item.getId()));
+        });
     }
 }

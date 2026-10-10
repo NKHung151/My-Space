@@ -1,6 +1,7 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.exception.AppException;
+import com.myspace.myspace.common.util.TextUtils;
 import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.request.RegisterRequest;
 import com.myspace.myspace.dto.request.ResetPasswordRequest;
@@ -8,8 +9,6 @@ import com.myspace.myspace.dto.request.ChangePasswordRequest;
 import com.myspace.myspace.dto.request.UpdateProfileRequest;
 import com.myspace.myspace.dto.response.AuthResponse;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
-import java.text.Normalizer;
-import java.util.regex.Pattern;
 import com.myspace.myspace.entity.Role;
 import com.myspace.myspace.entity.User;
 import com.myspace.myspace.repository.MediaAssetRepository;
@@ -101,6 +100,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());
         user.setDisplayName(request.getFullName());
+        user.setUnaccentedDisplayName(TextUtils.unaccent(request.getFullName()));
         user.setUsername(generatedUsername);
         user.setStatus("active");
         user.setRole(userRole);
@@ -260,12 +260,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Tạo tên không dấu để dễ tìm kiếm
-        if (request.getDisplayName() != null) {
-            String temp = Normalizer.normalize(request.getDisplayName(), Normalizer.Form.NFD);
-            Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-            String unaccented = pattern.matcher(temp).replaceAll("").toLowerCase();
-            user.setUnaccentedDisplayName(unaccented);
-        }
+        user.setUnaccentedDisplayName(TextUtils.unaccent(request.getDisplayName()));
 
         user = userRepository.save(user);
         searchIndexService.indexUser(user);

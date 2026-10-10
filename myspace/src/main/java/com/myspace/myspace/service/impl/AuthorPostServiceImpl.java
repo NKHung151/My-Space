@@ -4,6 +4,7 @@ import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.HtmlSanitizer;
+import com.myspace.myspace.common.util.TextUtils;
 import com.myspace.myspace.dto.request.CreatePostRequest;
 import com.myspace.myspace.dto.request.UpdatePostRequest;
 import com.myspace.myspace.dto.response.PostDetailResponse;
@@ -58,11 +59,13 @@ public class AuthorPostServiceImpl implements AuthorPostService {
 
         Post post = new Post();
         post.setTitle(request.getTitle());
+        post.setUnaccentedTitle(TextUtils.unaccent(request.getTitle()));
         post.setExcerpt(HtmlSanitizer.sanitize(request.getExcerpt()));
         post.setContent(HtmlSanitizer.sanitize(request.getContent()));
         post.setCoverImageUrl(HtmlSanitizer.safeUrl(request.getCoverImageUrl()));
         post.setHasVideo(Boolean.TRUE.equals(request.getHasVideo()));
         post.setTag(request.getTag());
+        post.setUnaccentedTag(TextUtils.unaccent(request.getTag()));
         post.setAuthor(author);
         if (request.isPublish()) {
             post.setPublishedAt(LocalDateTime.now());
@@ -102,7 +105,10 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         Post post = postRepository.findByIdAndAuthorId(postId, authorId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
 
-        if (request.getTitle() != null)        post.setTitle(request.getTitle());
+        if (request.getTitle() != null) {
+            post.setTitle(request.getTitle());
+            post.setUnaccentedTitle(TextUtils.unaccent(request.getTitle()));
+        }
         if (request.getExcerpt() != null)      post.setExcerpt(HtmlSanitizer.sanitize(request.getExcerpt()));
 
         String newContent = HtmlSanitizer.sanitize(request.getContent());
@@ -126,7 +132,10 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         }
         
         if (request.getHasVideo() != null)     post.setHasVideo(request.getHasVideo());
-        if (request.getTag() != null)          post.setTag(request.getTag());
+        if (request.getTag() != null) {
+            post.setTag(request.getTag());
+            post.setUnaccentedTag(TextUtils.unaccent(request.getTag()));
+        }
         Post updated = postRepository.save(post);
         updateMediaStatus(updated.getContent(), updated.getCoverImageUrl(), updated.getId(), authorId);
         searchIndexService.indexPost(updated);

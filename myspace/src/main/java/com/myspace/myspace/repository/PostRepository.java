@@ -28,7 +28,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p WHERE " +
            "(:tag IS NULL OR p.tag = :tag) AND " +
-           "(:search IS NULL OR p.unaccentedTitle LIKE %:search% OR p.author.unaccentedDisplayName LIKE %:search%)")
+           "(:search IS NULL OR p.unaccentedTitle LIKE %:search% OR p.title LIKE %:search% OR p.author.unaccentedDisplayName LIKE %:search%)")
     Page<Post> searchAdminPosts(@Param("search") String search, @Param("tag") String tag, Pageable pageable);
 
     // SELECT ... FOR UPDATE: khóa dòng bài viết TRƯỚC khi thêm like/bình luận. Nếu không, INSERT (giữ khóa S qua FK)
