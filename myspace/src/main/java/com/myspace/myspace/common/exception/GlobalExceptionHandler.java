@@ -70,8 +70,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
-        // Các service dùng IllegalArgumentException cho lỗi nghiệp vụ (đã là bạn bè, không có quyền sửa tin nhắn...)
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), null);
+        // Lỗi nghiệp vụ dùng AppException; IllegalArgumentException giờ chỉ đến từ thư viện/framework
+        // nên không trả message gốc (có thể lộ chi tiết nội bộ)
+        log.debug("IllegalArgumentException: {}", ex.getMessage());
+        return build(HttpStatus.BAD_REQUEST, "Yêu cầu không hợp lệ.", null);
     }
 
     @ExceptionHandler({

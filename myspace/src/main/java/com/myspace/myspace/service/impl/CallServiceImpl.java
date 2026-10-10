@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import org.springframework.http.HttpStatus;
+import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.mapper.CallMapper;
 import com.myspace.myspace.dto.response.CallBroadcastResult;
 import com.myspace.myspace.entity.Call;
@@ -27,10 +29,10 @@ public class CallServiceImpl implements CallService {
     @Transactional
     public CallBroadcastResult initiateCall(Long callerId, Long calleeId, Boolean isVideo) {
         if (calleeId == null || callerId.equals(calleeId)) {
-            throw new IllegalArgumentException("Không thể gọi cho chính mình");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Không thể gọi cho chính mình.");
         }
         User caller = userRepository.getReferenceById(callerId);
-        User callee = userRepository.findById(calleeId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User callee = userRepository.findById(calleeId).orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
         
         Conversation conversation = messageService.getOrCreateConversation(callerId, calleeId);
 
@@ -50,7 +52,7 @@ public class CallServiceImpl implements CallService {
     public CallBroadcastResult acceptCall(Long callId, Long calleeId) {
         Call call = getCallAndValidate(callId);
         if (!call.getCallee().getId().equals(calleeId)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này với cuộc gọi.");
         }
         requireStatus(call, Call.CallStatus.RINGING);
         
@@ -66,7 +68,7 @@ public class CallServiceImpl implements CallService {
     public CallBroadcastResult rejectCall(Long callId, Long calleeId) {
         Call call = getCallAndValidate(callId);
         if (!call.getCallee().getId().equals(calleeId)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này với cuộc gọi.");
         }
         requireStatus(call, Call.CallStatus.RINGING);
 
@@ -83,7 +85,7 @@ public class CallServiceImpl implements CallService {
     public CallBroadcastResult cancelCall(Long callId, Long callerId) {
         Call call = getCallAndValidate(callId);
         if (!call.getCaller().getId().equals(callerId)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này với cuộc gọi.");
         }
         requireStatus(call, Call.CallStatus.RINGING);
 
@@ -104,7 +106,7 @@ public class CallServiceImpl implements CallService {
         boolean isCallee = call.getCallee().getId().equals(userId);
         
         if (!isCaller && !isCallee) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này với cuộc gọi.");
         }
         requireStatus(call, Call.CallStatus.RINGING, Call.CallStatus.ACCEPTED);
 
@@ -134,7 +136,7 @@ public class CallServiceImpl implements CallService {
         requireStatus(call, Call.CallStatus.RINGING, Call.CallStatus.ACCEPTED);
         if (call.getCaller().getId().equals(senderId)) return call.getCallee().getEmail();
         if (call.getCallee().getId().equals(senderId)) return call.getCaller().getEmail();
-        throw new IllegalArgumentException("Unauthorized");
+        throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này với cuộc gọi.");
     }
 
     // Máy trạng thái: chỉ chuyển trạng thái hợp lệ (vd. không "nhận" cuộc gọi đã kết thúc, không kết thúc 2 lần
@@ -143,12 +145,12 @@ public class CallServiceImpl implements CallService {
         for (Call.CallStatus status : allowed) {
             if (call.getStatus() == status) return;
         }
-        throw new IllegalArgumentException("Cuộc gọi không còn ở trạng thái phù hợp (" + call.getStatus() + ")");
+        throw new AppException(HttpStatus.CONFLICT, "Cuộc gọi không còn ở trạng thái phù hợp (" + call.getStatus() + ").");
     }
 
     private Call getCallAndValidate(Long callId) {
         return callRepository.findById(callId)
-                .orElseThrow(() -> new IllegalArgumentException("Call not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy cuộc gọi."));
     }
 
 }

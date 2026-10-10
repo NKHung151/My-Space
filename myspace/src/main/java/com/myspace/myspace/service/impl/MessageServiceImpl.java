@@ -45,8 +45,8 @@ public class MessageServiceImpl implements MessageService {
             return conversationOpt.get();
         }
 
-        User user1 = userRepository.findById(smallerId).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        User user2 = userRepository.findById(largerId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user1 = userRepository.findById(smallerId).orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
+        User user2 = userRepository.findById(largerId).orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
 
         Conversation conversation = new Conversation();
         conversation.setUser1(user1);
@@ -75,7 +75,7 @@ public class MessageServiceImpl implements MessageService {
     @Transactional
     public MessageBroadcastResult saveMessage(Long senderId, Long receiverId, String content) {
         if (receiverId == null || receiverId.equals(senderId)) {
-            throw new IllegalArgumentException("Người nhận không hợp lệ");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Người nhận không hợp lệ.");
         }
         content = validateContent(content);
         Conversation conversation = getOrCreateConversation(senderId, receiverId);
@@ -97,14 +97,14 @@ public class MessageServiceImpl implements MessageService {
     @Transactional
     public MessageBroadcastResult editMessage(Long messageId, Long senderId, String newContent) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tin nhắn."));
                 
         if (!message.getSender().getId().equals(senderId)) {
-            throw new IllegalArgumentException("Not authorized to edit this message");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền sửa tin nhắn này.");
         }
         // Không sửa tin đã thu hồi (sẽ "hồi sinh" nội dung) hay tin hệ thống của cuộc gọi
         if (message.getDeletedAt() != null || message.getType() == Message.MessageType.CALL) {
-            throw new IllegalArgumentException("Không thể sửa tin nhắn này");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Không thể sửa tin nhắn này.");
         }
         newContent = validateContent(newContent);
         
@@ -123,13 +123,13 @@ public class MessageServiceImpl implements MessageService {
     @Transactional
     public MessageBroadcastResult deleteMessage(Long messageId, Long senderId) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy tin nhắn."));
                 
         if (!message.getSender().getId().equals(senderId)) {
-            throw new IllegalArgumentException("Not authorized to delete this message");
+            throw new AppException(HttpStatus.FORBIDDEN, "Bạn không có quyền thu hồi tin nhắn này.");
         }
         if (message.getType() == Message.MessageType.CALL) {
-            throw new IllegalArgumentException("Không thể thu hồi tin nhắn này");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Không thể thu hồi tin nhắn này.");
         }
         
         message.setDeletedAt(LocalDateTime.now());
@@ -146,7 +146,7 @@ public class MessageServiceImpl implements MessageService {
     @Transactional
     public MessageBroadcastResult saveCallSystemMessage(Long callId) {
         Call call = callRepository.findById(callId)
-                .orElseThrow(() -> new IllegalArgumentException("Call not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy cuộc gọi."));
 
         Message message = new Message();
         message.setConversation(call.getConversation());
@@ -175,10 +175,10 @@ public class MessageServiceImpl implements MessageService {
     private static String validateContent(String content) {
         String trimmed = content == null ? "" : content.trim();
         if (trimmed.isEmpty()) {
-            throw new IllegalArgumentException("Tin nhắn không được để trống");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Tin nhắn không được để trống.");
         }
         if (trimmed.length() > MAX_CONTENT_LENGTH) {
-            throw new IllegalArgumentException("Tin nhắn tối đa " + MAX_CONTENT_LENGTH + " ký tự");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Tin nhắn tối đa " + MAX_CONTENT_LENGTH + " ký tự");
         }
         return trimmed;
     }

@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import org.springframework.http.HttpStatus;
+import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.mapper.UserMapper;
 import com.myspace.myspace.mapper.FriendMapper;
@@ -48,13 +50,13 @@ public class FriendServiceImpl implements FriendService {
     @Transactional
     public void sendRequest(Long currentUserId, Long targetUserId) {
         if (currentUserId.equals(targetUserId)) {
-            throw new IllegalArgumentException("Cannot send friend request to yourself");
+            throw new AppException(HttpStatus.BAD_REQUEST, "Không thể gửi lời mời kết bạn cho chính mình.");
         }
         if (friendshipRepository.existsByUserIdAndFriendId(currentUserId, targetUserId)) {
-            throw new IllegalArgumentException("Already friends");
+            throw new AppException(HttpStatus.CONFLICT, "Hai người đã là bạn bè.");
         }
         if (friendRequestRepository.existsBySenderIdAndReceiverIdAndStatus(currentUserId, targetUserId, "pending")) {
-            throw new IllegalArgumentException("Friend request already sent");
+            throw new AppException(HttpStatus.CONFLICT, "Bạn đã gửi lời mời kết bạn rồi.");
         }
         // Auto-accept if reverse pending request exists
         if (friendRequestRepository.existsBySenderIdAndReceiverIdAndStatus(targetUserId, currentUserId, "pending")) {
@@ -63,9 +65,9 @@ public class FriendServiceImpl implements FriendService {
         }
 
         User sender = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Sender not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
         User receiver = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Receiver not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
         // Bảng có unique (sender_id, receiver_id): nếu lời mời cũ đã bị từ chối thì dùng lại bản ghi đó,
         // insert thêm bản ghi mới sẽ vi phạm unique (trước đây trả lỗi 500)
         FriendRequest request = friendRequestRepository.findBySenderIdAndReceiverId(currentUserId, targetUserId)
@@ -91,15 +93,15 @@ public class FriendServiceImpl implements FriendService {
     public void acceptRequest(Long currentUserId, Long senderId) {
         FriendRequest request = friendRequestRepository
                 .findBySenderIdAndReceiverIdAndStatus(senderId, currentUserId, "pending")
-                .orElseThrow(() -> new IllegalArgumentException("Friend request not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy lời mời kết bạn."));
 
         request.setStatus("accepted");
         friendRequestRepository.save(request);
 
         User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Current user not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
         User senderUser = userRepository.findById(senderId)
-                .orElseThrow(() -> new IllegalArgumentException("Sender not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
 
         if (!friendshipRepository.existsByUserIdAndFriendId(currentUserId, senderId)) {
             Friendship f1 = new Friendship();
@@ -136,12 +138,12 @@ public class FriendServiceImpl implements FriendService {
     public void rejectRequest(Long currentUserId, Long senderId) {
         FriendRequest request = friendRequestRepository
                 .findBySenderIdAndReceiverIdAndStatus(senderId, currentUserId, "pending")
-                .orElseThrow(() -> new IllegalArgumentException("Friend request not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy lời mời kết bạn."));
         request.setStatus("rejected");
         friendRequestRepository.save(request);
 
         User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
 
         // Báo cho người từ chối (currentUser) biết để ẩn lời mời khỏi giao diện
         notifyAfterCommit(
@@ -158,9 +160,9 @@ public class FriendServiceImpl implements FriendService {
         friendRequestRepository.deleteBySenderIdAndReceiverIdBidirectional(currentUserId, friendId);
 
         User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
         User friendUser = userRepository.findById(friendId)
-                .orElseThrow(() -> new IllegalArgumentException("Friend not found"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
 
         // Báo cho người bị xóa (friendUser) biết rằng currentUserId đã không còn là bạn
         notifyAfterCommit(

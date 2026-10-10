@@ -14,9 +14,9 @@ import java.util.Map;
 @ControllerAdvice
 public class WebSocketExceptionHandler {
 
-    @MessageExceptionHandler({IllegalArgumentException.class, AppException.class})
+    @MessageExceptionHandler(AppException.class)
     @SendToUser(destinations = "/queue/errors", broadcast = false)
-    public Map<String, String> handleBusinessError(RuntimeException ex) {
+    public Map<String, String> handleBusinessError(AppException ex) {
         return Map.of("message", ex.getMessage());
     }
 

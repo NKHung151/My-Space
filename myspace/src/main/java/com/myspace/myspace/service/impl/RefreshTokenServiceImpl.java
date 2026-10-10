@@ -42,7 +42,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Transactional
     public String createRefreshToken(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found!"));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
         return issue(user);
     }
 
