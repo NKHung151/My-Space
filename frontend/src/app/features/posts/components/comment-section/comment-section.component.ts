@@ -11,6 +11,7 @@ import { RouterModule, RouterLink } from '@angular/router';
 import { AuthorTooltipComponent } from '../../../users/components/author-tooltip/author-tooltip.component';
 import { AuthModalService } from '../../../../core/auth/auth-modal.service';
 import { ToastService } from '../../../../core/notifications/toast.service';
+import { ConfirmModalService } from '../../../../shared/services/confirm-modal.service';
 import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe';
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
 
@@ -36,6 +37,7 @@ export class CommentSectionComponent implements OnInit, OnChanges {
   public authService = inject(AuthService);
   private authModalService = inject(AuthModalService);
   private toastService = inject(ToastService);
+  private confirmModal = inject(ConfirmModalService);
   private destroyRef = inject(DestroyRef);
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -62,8 +64,6 @@ export class CommentSectionComponent implements OnInit, OnChanges {
   replyingStates = signal<Record<number, string>>({});
   editingStates = signal<Record<number, string>>({});
   
-  commentToDelete = signal<{ comment: Comment, parent?: Comment } | null>(null);
-
   hasUnsavedChanges(): boolean {
     const hasNew = this.newCommentText.trim().length > 0;
     const hasReplying = Object.values(this.replyingStates()).some(text => text.trim().length > 0);
@@ -243,27 +243,20 @@ export class CommentSectionComponent implements OnInit, OnChanges {
     this.likeService.optimisticToggleCommentLike(comment, this.postId, this.destroyRef);
   }
 
-  // Xóa bình luận
-  deleteComment(comment: Comment, parent?: Comment): void {
-    this.commentToDelete.set({ comment, parent });
-    document.body.classList.add('modal-open'); // Hiển thị modal confirm
-  }
+  // Xóa bình luận (parent = bình luận gốc khi xóa một trả lời)
+  async deleteComment(comment: Comment, parent?: Comment): Promise<void> {
+    const confirmed = await this.confirmModal.open({
+      title: 'Xóa bình luận?',
+      message: 'Bạn có chắc muốn xóa bình luận này không?',
+      confirmText: 'Xóa',
+      danger: true,
+    });
+    if (!confirmed) return;
 
-  cancelDelete(): void {
-    this.commentToDelete.set(null);
-    document.body.classList.remove('modal-open');
-  }
-
-  confirmDelete(): void {
-    const target = this.commentToDelete();
-    if (!target) return;
-    const { comment, parent } = target;
-    
     this.commentService.deleteComment(comment.id).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: () => {
-        this.cancelDelete();
         this.toastService.showSuccess('Đã xóa bình luận');
         
         let deletedCount = 1;
@@ -293,7 +286,7 @@ export class CommentSectionComponent implements OnInit, OnChanges {
         this.commentCountChange.emit(-deletedCount);
       },
       error: () => {
-        this.cancelDelete();
+        this.toastService.showError('Không thể xóa bình luận.');
       }
     });
   }

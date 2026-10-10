@@ -11,6 +11,7 @@ import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe'
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
 
 import { LocalizedDatePipe } from '../../../../shared/pipes/localized-date.pipe';
+import { ConfirmModalService } from '../../../../shared/services/confirm-modal.service';
 
 @Component({
   selector: 'app-post-card',
@@ -23,6 +24,7 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
 
   private readonly likeService = inject(LikeService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly confirmModal = inject(ConfirmModalService);
 
   // Signal chứa dữ liệu bài viết hiện tại của card
   private _post = signal<Post>({} as Post);
@@ -113,10 +115,16 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
     this.likeService.optimisticTogglePostLike(this._post);
   }
 
-  onDeleteClick(event: Event) {
+  async onDeleteClick(event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    if (confirm('Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.')) {
+    const confirmed = await this.confirmModal.open({
+      title: 'Xóa bài viết?',
+      message: 'Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.',
+      confirmText: 'Xóa',
+      danger: true,
+    });
+    if (confirmed) {
       this.deletePost.emit(this.post);
     }
   }

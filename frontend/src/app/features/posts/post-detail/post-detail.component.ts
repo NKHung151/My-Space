@@ -65,7 +65,12 @@ export class PostDetailComponent implements OnInit, OnDestroy, CanComponentDeact
 
   canDeactivate(): boolean | Promise<boolean> {
     if (this.commentSection?.hasUnsavedChanges()) {
-      return this.confirmModalService.open();
+      return this.confirmModalService.open({
+        title: 'Rời khỏi trang?',
+        message: 'Bạn chưa hoàn tất bình luận. Bạn có muốn rời mà không hoàn tất không?',
+        confirmText: 'Rời khỏi Trang',
+        cancelText: 'Ở lại Trang',
+      });
     }
     return true;
   }

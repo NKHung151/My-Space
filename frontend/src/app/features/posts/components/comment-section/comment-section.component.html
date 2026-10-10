@@ -202,26 +202,4 @@
     } <!-- Closes @else -->
   </div> <!-- Closes commentsListContainer -->
 
-  <!-- Delete Confirmation Modal -->
-  <div class="modal fade" id="deleteCommentModal" tabindex="-1" aria-labelledby="deleteCommentModalLabel" aria-hidden="true" [class.show]="commentToDelete()" [style.display]="commentToDelete() ? 'block' : 'none'">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header border-0">
-          <h5 class="modal-title fw-bold" id="deleteCommentModalLabel">Xóa</h5>
-          <button type="button" class="btn-close" (click)="cancelDelete()" aria-label="Close"></button>
-        </div>
-        <div class="modal-body text-secondary">
-          Bạn có chắc muốn xóa bình luận này không?
-        </div>
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" (click)="cancelDelete()">Hủy bỏ</button>
-          <button type="button" class="btn btn-danger rounded-pill px-4 fw-medium" (click)="confirmDelete()">Xóa</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  @if (commentToDelete()) {
-    <div class="modal-backdrop fade show"></div>
-  }
 </div> <!-- Closes .mt-5.pt-3.border-top -->

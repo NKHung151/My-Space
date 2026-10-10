@@ -13,6 +13,7 @@ import { AdminPost } from './models/admin-post.model';
 import { AdminPostsService } from './services/admin-posts.service';
 import { AssetImageDirective } from '../../../shared/directives/asset-image.directive';
 import { LocalizedDatePipe } from '../../../shared/pipes/localized-date.pipe';
+import { ConfirmModalService } from '../../../shared/services/confirm-modal.service';
 
 @Component({
   selector: 'app-admin-posts',
@@ -24,6 +25,7 @@ import { LocalizedDatePipe } from '../../../shared/pipes/localized-date.pipe';
 export class AdminPostsComponent implements OnInit {
   private readonly postsService = inject(AdminPostsService);
   private readonly toastService = inject(ToastService);
+  private readonly confirmModal = inject(ConfirmModalService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
@@ -121,9 +123,16 @@ export class AdminPostsComponent implements OnInit {
     this.selectedPost.set(null);
   }
 
-  deletePost(): void {
+  async deletePost(): Promise<void> {
     const post = this.selectedPost();
     if (!post || this.saving()) return;
+    const confirmed = await this.confirmModal.open({
+      title: 'Xóa bài viết?',
+      message: `Bài viết "${post.title}" sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.`,
+      confirmText: 'Xóa',
+      danger: true,
+    });
+    if (!confirmed || this.selectedPost()?.id !== post.id) return;
     this.saving.set(true);
     this.postsService.deletePost(post.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {

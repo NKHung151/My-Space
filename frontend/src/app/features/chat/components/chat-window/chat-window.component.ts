@@ -13,6 +13,7 @@ import { AssetImageDirective } from '../../../../shared/directives/asset-image.d
 import { DisplayNamePipe } from '../../../../shared/pipes/display-name.pipe';
 import { Router } from '@angular/router';
 import { ToastService } from '../../../../core/notifications/toast.service';
+import { ConfirmModalService } from '../../../../shared/services/confirm-modal.service';
 
 @Component({
   selector: 'app-chat-window',
@@ -33,6 +34,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   private webrtcService = inject(WebRTCService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private confirmModal = inject(ConfirmModalService);
 
   messages = signal<MessageResponse[]>([]);
   newMessage = '';
@@ -144,8 +146,14 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
     this.newMessage = '';
   }
 
-  deleteMessage(id: number) {
-    if (confirm('Bạn có chắc muốn thu hồi tin nhắn này không?')) {
+  async deleteMessage(id: number) {
+    const confirmed = await this.confirmModal.open({
+      title: 'Thu hồi tin nhắn?',
+      message: 'Bạn có chắc muốn thu hồi tin nhắn này không?',
+      confirmText: 'Thu hồi',
+      danger: true,
+    });
+    if (confirmed) {
       this.webSocketService.sendMessage('/app/chat.deleteMessage', {
         messageId: id
       });

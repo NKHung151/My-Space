@@ -1,16 +1,30 @@
 import { Injectable, signal } from '@angular/core';
 
+export interface ConfirmOptions {
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  /** Hành động phá hủy (xóa, thu hồi) -> nút xác nhận màu đỏ */
+  danger?: boolean;
+}
+
+/** Hộp xác nhận dùng chung cho cả app (thay cho window.confirm và các modal tự viết trong từng component). */
 @Injectable({
   providedIn: 'root'
 })
 export class ConfirmModalService {
-  private readonly isOpenSignal = signal<boolean>(false);
+  private readonly optionsSignal = signal<ConfirmOptions | null>(null);
   private resolveFn: ((result: boolean) => void) | null = null;
 
-  readonly isOpen = this.isOpenSignal.asReadonly();
+  /** Nội dung hộp thoại đang mở; null = đang đóng. */
+  readonly options = this.optionsSignal.asReadonly();
 
-  open(): Promise<boolean> {
-    this.isOpenSignal.set(true);
+  /** Mở hộp xác nhận; trả true nếu người dùng đồng ý. */
+  open(options: ConfirmOptions): Promise<boolean> {
+    // Đang có hộp khác mở -> coi như hộp cũ bị hủy
+    this.resolveFn?.(false);
+    this.optionsSignal.set(options);
     document.body.classList.add('modal-open');
     return new Promise(resolve => {
       this.resolveFn = resolve;
@@ -18,11 +32,9 @@ export class ConfirmModalService {
   }
 
   close(result: boolean): void {
-    this.isOpenSignal.set(false);
+    this.optionsSignal.set(null);
     document.body.classList.remove('modal-open');
-    if (this.resolveFn) {
-      this.resolveFn(result);
-      this.resolveFn = null;
-    }
+    this.resolveFn?.(result);
+    this.resolveFn = null;
   }
 }
