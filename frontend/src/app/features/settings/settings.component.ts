@@ -16,6 +16,7 @@ import { getApiErrorMessage, getUploadErrorMessage } from '../../core/http/api-e
 import { finalize, switchMap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
+import { ConfirmModalService } from '../../shared/services/confirm-modal.service';
 
 @Component({
   selector: 'app-settings',
@@ -31,6 +32,7 @@ export class SettingsComponent implements OnInit {
   private readonly uploadsService = inject(EditorUploadsService);
 
   private readonly toastService = inject(ToastService);
+  private readonly confirmModal = inject(ConfirmModalService);
   private readonly userPreferencesService = inject(UserPreferencesService);
 
   readonly preferences = this.userPreferencesService.preferences;
@@ -89,6 +91,7 @@ export class SettingsComponent implements OnInit {
   passwordFormSubmitted = signal(false);
   passwordErrors = signal<Partial<Record<'current' | 'new' | 'confirm' | 'form', string>>>({});
   savingPassword = signal(false);
+  loggingOutAll = signal(false);
   passwordFieldType = 'password';
 
   get avatarUrl(): string {
@@ -375,6 +378,31 @@ export class SettingsComponent implements OnInit {
       delete next[field];
       delete next.form;
       return next;
+    });
+  }
+
+  async logoutAllDevices(): Promise<void> {
+    if (this.loggingOutAll()) return;
+    const confirmed = await this.confirmModal.open({
+      title: 'Đăng xuất khỏi tất cả thiết bị?',
+      message: 'Mọi phiên đăng nhập của tài khoản này, kể cả trên thiết bị hiện tại, sẽ bị thu hồi. Bạn cần đăng nhập lại.',
+      confirmText: 'Đăng xuất tất cả',
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    this.loggingOutAll.set(true);
+    this.authService.logoutAll().subscribe({
+      next: () => {
+        this.loggingOutAll.set(false);
+        void this.router.navigate(['/auth/login'], {
+          queryParams: { messageKey: 'logged_out_all_devices' },
+        });
+      },
+      error: err => {
+        this.loggingOutAll.set(false);
+        this.toastService.showError(getApiErrorMessage(err, 'Không thể đăng xuất khỏi các thiết bị. Vui lòng thử lại.'));
+      },
     });
   }
 

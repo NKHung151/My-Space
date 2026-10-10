@@ -144,6 +144,22 @@
             }
           </form>
         </article>
+
+        <article id="sessions" class="card shadow-sm rounded-4 p-4 p-md-5 border-light-subtle mb-4">
+          <div class="mb-3">
+            <h2 class="h5 fw-bold mb-1">Phiên đăng nhập</h2>
+            <p class="text-muted small mb-0">
+              Nghi ngờ tài khoản bị đăng nhập ở nơi khác? Đăng xuất khỏi tất cả thiết bị để thu hồi mọi phiên.
+              Thiết bị khác sẽ mất đăng nhập chậm nhất sau 15 phút (khi phiên truy cập hiện tại của nó hết hạn).
+            </p>
+          </div>
+          <hr class="text-light-subtle mb-4">
+          <button id="logoutAllDevicesBtn" class="btn btn-outline-danger px-4 py-2" type="button"
+                  [disabled]="loggingOutAll()" (click)="logoutAllDevices()">
+            <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>
+            {{ loggingOutAll() ? 'Đang đăng xuất...' : 'Đăng xuất khỏi tất cả thiết bị' }}
+          </button>
+        </article>
       }
 
 

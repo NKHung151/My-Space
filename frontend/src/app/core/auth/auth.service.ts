@@ -157,13 +157,15 @@ export class AuthService {
     );
   }
 
+  /** Thu hồi mọi phiên (refresh token) của tài khoản trên mọi thiết bị, rồi đăng xuất thiết bị này. */
   logoutAll(): Observable<void> {
     return this.http.post(
       `${this.apiUrl}/logout-all`,
       {},
       { withCredentials: true },
     ).pipe(
-      finalize(() => this.clearSession()),
+      // Chỉ xóa phiên khi server đã thu hồi xong; lỗi thì giữ đăng nhập để người dùng thử lại
+      tap(() => this.clearSession()),
       map((): void => undefined),
     );
   }

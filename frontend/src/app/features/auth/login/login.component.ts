@@ -58,9 +58,14 @@ export class LoginComponent implements OnInit {
           this.toastService.showSuccess(messages[key]);
         }
       }
-      // Trang Cài đặt chuyển tới đây sau khi đổi mật khẩu (trước đây tham số này bị bỏ qua)
-      if (params['messageKey'] === 'password_updated_sign_in_again') {
-        this.toastService.showSuccess('Đổi mật khẩu thành công. Vui lòng đăng nhập lại bằng mật khẩu mới.');
+      // Trang Cài đặt chuyển tới đây sau khi đổi mật khẩu / đăng xuất tất cả thiết bị
+      const keyMessages: Record<string, string> = {
+        password_updated_sign_in_again: 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại bằng mật khẩu mới.',
+        logged_out_all_devices: 'Đã đăng xuất khỏi tất cả thiết bị.',
+      };
+      const keyMessage = keyMessages[params['messageKey']];
+      if (keyMessage) {
+        this.toastService.showSuccess(keyMessage);
       }
     });
   }

@@ -79,13 +79,18 @@ public class AuthController {
             @RequestBody @Valid ChangePasswordRequest request,
             Principal principal) {
         authService.changePassword(principal.getName(), request);
-        return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")));
+        // Mọi refresh token đã bị thu hồi -> xóa luôn cookie của thiết bị này (giống /logout)
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie("", 0))
+                .body(ApiResponse.success(Map.of("message", "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")));
     }
 
     @PostMapping("/logout-all")
     public ResponseEntity<ApiResponse<String>> logoutAll(Principal principal) {
         authService.logoutAll(principal.getName());
-        return ResponseEntity.ok(ApiResponse.success("Đã đăng xuất khỏi tất cả các thiết bị."));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie("", 0))
+                .body(ApiResponse.success("Đã đăng xuất khỏi tất cả các thiết bị."));
     }
 
     @PatchMapping("/me")
