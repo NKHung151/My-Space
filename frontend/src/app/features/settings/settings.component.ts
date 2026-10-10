@@ -176,9 +176,9 @@ export class SettingsComponent implements OnInit {
     input.value = '';
     if (!file) return;
 
-    const validation = validateUploadFile(file, 'image');
-    if (!validation.valid) {
-      this.toastService.showError('File không hợp lệ');
+    const invalidReason = validateUploadFile(file, 'image');
+    if (invalidReason) {
+      this.toastService.showError(invalidReason);
       return;
     }
     this.openAvatarCropper(file);

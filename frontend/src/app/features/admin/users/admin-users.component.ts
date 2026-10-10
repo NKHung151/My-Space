@@ -35,7 +35,6 @@ export class AdminUsersComponent implements OnInit {
 
   readonly pageSize = 8;
   readonly users = signal<AdminUser[]>([]);
-  readonly directoryTotal = signal(0);
   readonly pagination = signal<PageMeta>({ total: 0, page: 1, limit: this.pageSize, totalPages: 0 });
   readonly loading = signal(true);
   readonly errorMessage = signal('');
@@ -98,7 +97,6 @@ export class AdminUsersComponent implements OnInit {
       next: response => {
         this.users.set(response.items);
         this.pagination.set(response.meta);
-        this.directoryTotal.set(Number((response.meta as any)?.['directoryTotal'] ?? response.meta?.total ?? 0));
         this.loading.set(false);
       },
       error: () => {

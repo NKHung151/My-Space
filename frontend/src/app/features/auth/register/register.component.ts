@@ -61,7 +61,7 @@ export class RegisterComponent {
         void this.router.navigateByUrl(returnUrl);
       },
       error: error => {
-        this.errorMessage = getApiErrorMessage(error, 'Đăng ký thất bại. Vui lòng thử lại.', true);
+        this.errorMessage = getApiErrorMessage(error, 'Đăng ký thất bại. Vui lòng thử lại.');
       }
     });
   }

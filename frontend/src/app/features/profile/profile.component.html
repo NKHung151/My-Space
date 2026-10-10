@@ -34,7 +34,7 @@
           </section>
 
           <div class="d-flex gap-2 mt-3 p-2 border rounded-4 bg-body" aria-label="Profile statistics">
-            <button class="btn btn-light flex-grow-1 d-flex align-items-baseline justify-content-center gap-2 py-2 rounded-3 text-muted" type="button" (click)="openPeopleModal('friends', $event)">
+            <button class="btn btn-light flex-grow-1 d-flex align-items-baseline justify-content-center gap-2 py-2 rounded-3 text-muted" type="button" (click)="openPeopleModal($event)">
               <strong class="text-dark fs-5 fw-bold">{{ friendsCount() }}</strong>
               <span>Bạn bè</span>
             </button>
@@ -76,7 +76,7 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 560px;" (click)="$event.stopPropagation()">
       <div class="modal-content rounded-4 border-0 shadow-lg">
         <div class="modal-header border-bottom px-4 py-3">
-          <h2 class="modal-title fs-4 fw-bold" id="friendsModalTitle">{{ peopleModalTitle() }}</h2>
+          <h2 class="modal-title fs-4 fw-bold" id="friendsModalTitle">Bạn bè</h2>
           <button type="button" class="btn-close" aria-label="Close" (click)="closePeopleModal()"></button>
         </div>
         <div class="modal-body p-0">
@@ -86,7 +86,7 @@
               <input type="text"
                 class="form-control border-0 shadow-none bg-transparent p-0"
                 id="friendsSearchInput"
-                [placeholder]="peopleSearchPlaceholder()"
+                placeholder="Tìm kiếm bạn bè..."
                 [ngModel]="peopleSearch()"
                 (ngModelChange)="peopleSearch.set($event)">
             </div>

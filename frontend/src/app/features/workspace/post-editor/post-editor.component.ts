@@ -202,8 +202,8 @@ export class PostEditorComponent implements OnInit, OnDestroy {
   }
 
   private uploadFile(file: File, mediaType: EditorMediaType): void {
-    const { valid } = validateUploadFile(file, mediaType);
-    if (!valid) { this.toast.showError('Tệp không hợp lệ'); return; }
+    const invalidReason = validateUploadFile(file, mediaType);
+    if (invalidReason) { this.toast.showError(invalidReason); return; }
 
     this.isUploading = true;
     this.toast.showLoading('Đang tải tệp lên...', 'Đang xử lý');
@@ -218,10 +218,7 @@ export class PostEditorComponent implements OnInit, OnDestroy {
         this.scheduleAutosave();
       },
       error: (err: unknown) => {
-        const msg = mediaType === 'image'
-          ? getUploadErrorMessage(err)
-          : getApiErrorMessage(err, 'Tải lên thất bại. Vui lòng thử lại.');
-        this.toast.showError(msg, 'Lỗi tải lên');
+        this.toast.showError(getUploadErrorMessage(err), 'Lỗi tải lên');
         this.isUploading = false;
       },
     });

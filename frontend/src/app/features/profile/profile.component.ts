@@ -64,7 +64,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   // Modals state
   showFriendsModal = signal(false);
-  peopleModalMode = signal<'friends'>('friends');
   people = signal<FriendUser[]>([]);
   peopleLoading = signal(false);
   peopleSearch = signal('');
@@ -115,9 +114,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  openPeopleModal(mode: 'friends', event?: Event): void {
+  openPeopleModal(event?: Event): void {
     event?.preventDefault();
-    this.peopleModalMode.set(mode);
     this.peopleSearch.set('');
     this.people.set([]);
     this.peopleLoading.set(true);
@@ -129,7 +127,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       : of([]);
     request.subscribe({
       next: people => {
-        if (this.showFriendsModal() && this.peopleModalMode() === mode) {
+        if (this.showFriendsModal()) {
           this.people.set(people);
         }
         this.peopleLoading.set(false);
@@ -145,14 +143,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.showFriendsModal.set(false);
     this.peopleSearch.set('');
     document.body.classList.remove('profile-modal-open');
-  }
-
-  peopleModalTitle(): string {
-    return 'Bạn bè';
-  }
-
-  peopleSearchPlaceholder(): string {
-    return 'Tìm kiếm bạn bè...';
   }
 
   @HostListener('document:keydown.escape')
@@ -265,6 +255,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   private formatError(error: unknown): string {
-    return getApiErrorMessage(error, 'Không thể hoàn tất yêu cầu. Vui lòng thử lại.', true);
+    return getApiErrorMessage(error, 'Không thể hoàn tất yêu cầu. Vui lòng thử lại.');
   }
 }

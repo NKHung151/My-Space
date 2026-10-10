@@ -82,7 +82,7 @@ export class LoginComponent implements OnInit {
         void this.router.navigateByUrl(resolvePostLoginUrl(response.user, this.returnUrl));
       },
       error: error => {
-        this.errorMessage = getApiErrorMessage(error, 'Đăng nhập thất bại. Hãy kiểm tra thông tin và thử lại.', true);
+        this.errorMessage = getApiErrorMessage(error, 'Đăng nhập thất bại. Hãy kiểm tra thông tin và thử lại.');
       }
     });
   }

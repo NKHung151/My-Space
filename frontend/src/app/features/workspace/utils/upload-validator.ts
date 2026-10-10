@@ -1,9 +1,10 @@
 import { EditorMediaType } from '../models/editor-upload.model';
 
+// Khớp giới hạn của UploadServiceImpl ở BE (ảnh 10 MB, âm thanh/video 100 MB)
 export const UPLOAD_LIMITS = {
-  image: { maxBytes: 5 * 1024 * 1024, maxMb: 5 },
-  audio: { maxBytes: 25 * 1024 * 1024, maxMb: 25 },
-  video: { maxBytes: 95 * 1024 * 1024, maxMb: 95 },
+  image: { maxBytes: 10 * 1024 * 1024, maxMb: 10 },
+  audio: { maxBytes: 100 * 1024 * 1024, maxMb: 100 },
+  video: { maxBytes: 100 * 1024 * 1024, maxMb: 100 },
 } as const;
 
 export const ALLOWED_MIME_TYPES: Record<EditorMediaType, readonly string[]> = {
@@ -27,18 +28,13 @@ export const ALLOWED_EXTENSIONS: Record<EditorMediaType, readonly string[]> = {
   video: ['.mp4', '.ogv', '.ogg', '.mov', '.webm'],
 };
 
-export interface FileValidationResult {
-  valid: boolean;
-  errorKey?: string;
-  params?: Record<string, string | number>;
-}
-
+/** Kiểm tra file trước khi upload; trả message lỗi để hiển thị, hoặc null nếu hợp lệ. */
 export function validateUploadFile(
   file: File | null | undefined,
   mediaType: EditorMediaType,
-): FileValidationResult {
+): string | null {
   if (!file) {
-    return { valid: false, errorKey: 'file_required' };
+    return 'Vui lòng chọn tệp.';
   }
 
   const limits = UPLOAD_LIMITS[mediaType];
@@ -49,21 +45,14 @@ export function validateUploadFile(
   const fileName = file.name ? file.name.toLowerCase() : '';
   const extMatch = allowedExts.some((ext) => fileName.endsWith(ext));
 
-  if (mime) {
-    if (!allowedMimes.includes(mime) && !extMatch) {
-      return { valid: false, errorKey: 'invalid_file_type' };
-    }
-  } else if (!extMatch) {
-    return { valid: false, errorKey: 'invalid_file_type' };
+  const typeAllowed = mime ? allowedMimes.includes(mime) || extMatch : extMatch;
+  if (!typeAllowed) {
+    return `Định dạng tệp không được hỗ trợ (${allowedExts.join(', ')}).`;
   }
 
   if (file.size > limits.maxBytes) {
-    return {
-      valid: false,
-      errorKey: 'file_too_large',
-      params: { maxSize: limits.maxMb },
-    };
+    return `Tệp quá lớn (tối đa ${limits.maxMb} MB).`;
   }
 
-  return { valid: true };
+  return null;
 }
