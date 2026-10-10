@@ -11,6 +11,8 @@ import com.myspace.myspace.dto.response.AuthResponse;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
 import com.myspace.myspace.entity.Role;
 import com.myspace.myspace.entity.User;
+import com.myspace.myspace.mapper.UserMapper;
+import com.myspace.myspace.repository.FriendshipRepository;
 import com.myspace.myspace.repository.MediaAssetRepository;
 import com.myspace.myspace.repository.RoleRepository;
 import com.myspace.myspace.repository.UserRepository;
@@ -49,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UploadService uploadService;
     private final MediaAssetRepository mediaAssetRepository;
+    private final FriendshipRepository friendshipRepository;
     private final SearchIndexService searchIndexService;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -68,16 +71,7 @@ public class AuthServiceImpl implements AuthService {
         // Tạo phiên mới cho thiết bị này (không đụng tới phiên ở thiết bị khác)
         String refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
-        CurrentUserResponse userResponse = CurrentUserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .username(user.getUsername())
-                .fullName(user.getFullName())
-                .displayName(user.getDisplayName())
-                .avatarUrl(user.getAvatarUrl())
-                .bio(user.getBio())
-                .role(user.getRole().getName())
-                .build();
+        CurrentUserResponse userResponse = UserMapper.toCurrentUser(user, friendshipRepository.countByUserId(user.getId()));
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -113,16 +107,7 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateToken(userDetails);
         String refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
-        CurrentUserResponse userResponse = CurrentUserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .username(user.getUsername())
-                .fullName(user.getFullName())
-                .displayName(user.getDisplayName())
-                .avatarUrl(user.getAvatarUrl())
-                .bio(user.getBio())
-                .role(user.getRole().getName())
-                .build();
+        CurrentUserResponse userResponse = UserMapper.toCurrentUser(user, 0);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -265,12 +250,8 @@ public class AuthServiceImpl implements AuthService {
         user = userRepository.save(user);
         searchIndexService.indexUser(user);
 
-        return CurrentUserResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .displayName(user.getDisplayName())
-                .avatarUrl(user.getAvatarUrl())
-                .build();
+        // Trả đầy đủ thông tin (trước đây thiếu email/role/bio; FE ghi đè cả object user nên mất role tới khi tải lại)
+        return UserMapper.toCurrentUser(user, friendshipRepository.countByUserId(user.getId()));
     }
 }
 

@@ -4,6 +4,8 @@ import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.HtmlSanitizer;
+import com.myspace.myspace.common.util.MediaUrls;
+import com.myspace.myspace.common.util.SecurityUtils;
 import com.myspace.myspace.common.util.TextUtils;
 import com.myspace.myspace.dto.request.CreatePostRequest;
 import com.myspace.myspace.dto.request.UpdatePostRequest;
@@ -17,11 +19,8 @@ import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.AuthorPostService;
 import com.myspace.myspace.service.UploadService;
 import com.myspace.myspace.service.search.SearchIndexService;
-import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.repository.PostLikeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,11 +29,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.myspace.myspace.repository.MediaAssetRepository;
@@ -113,8 +109,8 @@ public class AuthorPostServiceImpl implements AuthorPostService {
 
         String newContent = HtmlSanitizer.sanitize(request.getContent());
         if (newContent != null && !newContent.equals(post.getContent())) {
-            Set<String> oldUrls = extractCloudinaryUrls(post.getContent());
-            Set<String> newUrls = extractCloudinaryUrls(newContent);
+            Set<String> oldUrls = MediaUrls.ofPost(post.getContent(), null);
+            Set<String> newUrls = MediaUrls.ofPost(newContent, null);
             for (String oldUrl : oldUrls) {
                 if (!newUrls.contains(oldUrl)) {
                     uploadService.deleteEditorMedia(oldUrl, authorId);
@@ -125,9 +121,8 @@ public class AuthorPostServiceImpl implements AuthorPostService {
 
         String newCoverUrl = HtmlSanitizer.safeUrl(request.getCoverImageUrl());
         if (newCoverUrl != null && !newCoverUrl.equals(post.getCoverImageUrl())) {
-            if (post.getCoverImageUrl() != null && post.getCoverImageUrl().contains("res.cloudinary.com")) {
-                uploadService.deleteEditorMedia(post.getCoverImageUrl(), authorId);
-            }
+            // deleteEditorMedia tự bỏ qua URL không phải media của hệ thống / không thuộc tác giả
+            uploadService.deleteEditorMedia(post.getCoverImageUrl(), authorId);
             post.setCoverImageUrl(newCoverUrl);
         }
         
@@ -140,7 +135,7 @@ public class AuthorPostServiceImpl implements AuthorPostService {
         updateMediaStatus(updated.getContent(), updated.getCoverImageUrl(), updated.getId(), authorId);
         searchIndexService.indexPost(updated);
         PostDetailResponse response = PostMapper.toDetailResponse(updated);
-        Long currentUserId = getCurrentUserId();
+        Long currentUserId = SecurityUtils.currentUserId();
         if (currentUserId != null) {
             response.setLiked(postLikeRepository.existsByPostIdAndUserId(postId, currentUserId));
         } else {
@@ -156,27 +151,17 @@ public class AuthorPostServiceImpl implements AuthorPostService {
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
 
         // Xóa tất cả media Cloudinary liên quan
-        Set<String> urls = extractCloudinaryUrls(post.getContent());
-        if (post.getCoverImageUrl() != null && post.getCoverImageUrl().contains("res.cloudinary.com")) {
-            urls.add(post.getCoverImageUrl());
-        }
-        urls.forEach(url -> uploadService.deleteEditorMedia(url, authorId));
+        MediaUrls.ofPost(post.getContent(), post.getCoverImageUrl())
+                .forEach(url -> uploadService.deleteEditorMedia(url, authorId));
 
         postChildrenCleaner.deleteChildrenOf(postId);
         postRepository.delete(post);
         searchIndexService.removePost(postId);
     }
 
-    private Long getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails) {
-            return ((CustomUserDetails) auth.getPrincipal()).getUser().getId();
-        }
-        return null;
-    }
 
     private void populateLikedStatus(List<PostResponse> items) {
-        Long currentUserId = getCurrentUserId();
+        Long currentUserId = SecurityUtils.currentUserId();
         if (currentUserId == null || items.isEmpty()) {
             items.forEach(item -> item.setLiked(false));
             return;
@@ -188,33 +173,10 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     }
 
     private void updateMediaStatus(String content, String coverImageUrl, Long postId, Long authorId) {
-        Set<String> urls = new HashSet<>();
-        if (coverImageUrl != null && coverImageUrl.contains("res.cloudinary.com")) {
-            urls.add(coverImageUrl);
-        }
-        if (content != null) {
-            org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(content);
-            doc.select("img, video, audio").forEach(element -> {
-                String src = element.attr("src");
-                if (src.contains("res.cloudinary.com")) {
-                    urls.add(src);
-                }
-            });
-        }
+        Set<String> urls = MediaUrls.ofPost(content, coverImageUrl);
         if (!urls.isEmpty()) {
             mediaAssetRepository.updateStatusAndPostIdByUrls("ATTACHED", postId, new java.util.ArrayList<>(urls), authorId);
         }
     }
 
-    private Set<String> extractCloudinaryUrls(String content) {
-        Set<String> urls = new HashSet<>();
-        if (content != null) {
-            Pattern pattern = Pattern.compile("https?://res\\.cloudinary\\.com/[^\"'\\s]+");
-            Matcher matcher = pattern.matcher(content);
-            while (matcher.find()) {
-                urls.add(matcher.group());
-            }
-        }
-        return urls;
-    }
 }

@@ -4,6 +4,7 @@ import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.HtmlSanitizer;
+import com.myspace.myspace.common.util.SecurityUtils;
 import com.myspace.myspace.document.PostDocument;
 import com.myspace.myspace.dto.response.PostDetailResponse;
 import com.myspace.myspace.dto.response.PostResponse;
@@ -15,11 +16,8 @@ import com.myspace.myspace.repository.PostRepository;
 import com.myspace.myspace.service.PublicPostService;
 import com.myspace.myspace.service.ViewCountService;
 import com.myspace.myspace.service.search.SearchQueryService;
-import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.repository.PostLikeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -67,7 +65,7 @@ public class PublicPostServiceImpl implements PublicPostService {
     @Override
     @Transactional(readOnly = true)
     public PostDetailResponse getPublicPost(Long id) {
-        Long currentUserId = getCurrentUserId();
+        Long currentUserId = SecurityUtils.currentUserId();
         Post post = postRepository.findById(id)
                 // Bản nháp chỉ tác giả xem được; người khác nhận 404 như bài không tồn tại
                 .filter(p -> p.getPublishedAt() != null || p.getAuthor().getId().equals(currentUserId))
@@ -128,16 +126,9 @@ public class PublicPostServiceImpl implements PublicPostService {
                 .build();
     }
 
-    private Long getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails) {
-            return ((CustomUserDetails) auth.getPrincipal()).getUser().getId();
-        }
-        return null;
-    }
 
     private void populateLikedStatus(List<PostResponse> items) {
-        Long currentUserId = getCurrentUserId();
+        Long currentUserId = SecurityUtils.currentUserId();
         if (currentUserId == null || items.isEmpty()) {
             items.forEach(item -> item.setLiked(false));
             return;
@@ -152,10 +143,9 @@ public class PublicPostServiceImpl implements PublicPostService {
         return limit <= 0 ? 1 : (int) Math.ceil((double) total / limit);
     }
 
-    /**
-     * Elasticsearch chỉ dùng để tìm (match); số like/bình luận/lượt xem lấy từ MySQL vì ES không còn
-     * được index lại sau mỗi lượt like/bình luận. Bài đã xóa khỏi DB nhưng còn sót trong ES thì bị loại.
-     */
+    Elasticsearch chỉ dùng để tìm (match); số like/bình luận/lượt xem lấy từ MySQL vì ES không còn
+    được index lại sau mỗi lượt like/bình luận. Bài đã xóa khỏi DB nhưng còn sót trong ES thì bị loại.
+    
     private void populateCountsFromDatabase(List<PostResponse> items) {
         if (items.isEmpty()) return;
         java.util.Map<Long, Post> posts = postRepository.findAllById(items.stream().map(PostResponse::getId).toList())

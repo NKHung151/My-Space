@@ -4,6 +4,7 @@ import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.dto.request.LoginRequest;
 import com.myspace.myspace.dto.response.CurrentUserResponse;
 import com.myspace.myspace.dto.response.AuthResponse;
+import com.myspace.myspace.mapper.UserMapper;
 import com.myspace.myspace.repository.FriendshipRepository;
 import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.security.jwt.JwtService;
@@ -153,17 +154,8 @@ public class AuthController {
     public ResponseEntity<ApiResponse<CurrentUserResponse>> getMe(Principal principal) {
         return userRepository.findByEmail(principal.getName())
                 .map(user -> {
-                    CurrentUserResponse userResponse = CurrentUserResponse.builder()
-                            .id(user.getId())
-                            .email(user.getEmail())
-                            .username(user.getUsername())
-                            .fullName(user.getFullName())
-                            .displayName(user.getDisplayName())
-                            .avatarUrl(user.getAvatarUrl())
-                            .bio(user.getBio())
-                            .role(user.getRole().getName())
-                            .friendsCount(friendshipRepository.countByUserId(user.getId()))
-                            .build();
+                    CurrentUserResponse userResponse =
+                            UserMapper.toCurrentUser(user, friendshipRepository.countByUserId(user.getId()));
                     return ResponseEntity.ok(ApiResponse.success(userResponse));
                 })
                 .orElseGet(() -> ResponseEntity.status(401).build());

@@ -9,8 +9,7 @@ import com.myspace.myspace.dto.response.AdminPostResponse;
 import com.myspace.myspace.entity.Post;
 import com.myspace.myspace.repository.PostRepository;
 import com.myspace.myspace.service.AdminPostsService;
-import com.myspace.myspace.service.UploadService;
-import com.myspace.myspace.service.search.SearchIndexService;
+import com.myspace.myspace.service.AuthorPostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,8 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,9 +26,7 @@ import java.util.stream.Collectors;
 public class AdminPostsServiceImpl implements AdminPostsService {
 
     private final PostRepository postRepository;
-    private final UploadService uploadService;
-    private final SearchIndexService searchIndexService;
-    private final PostChildrenCleaner postChildrenCleaner;
+    private final AuthorPostService authorPostService;
 
     @Override
     @Transactional(readOnly = true)
@@ -68,26 +63,9 @@ public class AdminPostsServiceImpl implements AdminPostsService {
     public void deletePost(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
-                
-        Long authorId = post.getAuthor().getId();
-        
-        // Extract and delete Cloudinary media
-        if (post.getCoverImageUrl() != null && post.getCoverImageUrl().contains("res.cloudinary.com")) {
-            uploadService.deleteEditorMedia(post.getCoverImageUrl(), authorId);
-        }
-        
-        if (post.getContent() != null) {
-            Pattern pattern = Pattern.compile("https?://res\\.cloudinary\\.com/[^\"'\\s]+");
-            Matcher matcher = pattern.matcher(post.getContent());
-            while (matcher.find()) {
-                String mediaUrl = matcher.group();
-                uploadService.deleteEditorMedia(mediaUrl, authorId);
-            }
-        }
-        
-        postChildrenCleaner.deleteChildrenOf(id);
-        postRepository.delete(post);
-        searchIndexService.removePost(id);
+
+        // Dùng chung quy trình xóa của tác giả (media Cloudinary, dữ liệu con, Elasticsearch) thay vì chép lại
+        authorPostService.deletePost(post.getAuthor().getId(), id);
     }
     
     private AdminPostResponse mapToResponse(Post post) {
