@@ -16,9 +16,10 @@ export class ChatService {
     return this.http.get<ApiResponse<number>>(`${this.apiUrl}/conversations/${targetUserId}`);
   }
 
-  getMessages(conversationId: number, page: number = 0, size: number = 20): Observable<ApiResponse<PageResponse<MessageResponse>>> {
+  // page đánh số từ 1 giống mọi API phân trang khác
+  getMessages(conversationId: number, page: number = 1, limit: number = 20): Observable<ApiResponse<PageResponse<MessageResponse>>> {
     return this.http.get<ApiResponse<PageResponse<MessageResponse>>>(`${this.apiUrl}/conversations/${conversationId}/messages`, {
-      params: { page, size }
+      params: { page, limit }
     });
   }
 

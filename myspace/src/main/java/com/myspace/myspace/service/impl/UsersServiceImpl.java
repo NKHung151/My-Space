@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.mapper.UserMapper;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.exception.AppException;
@@ -12,7 +13,6 @@ import com.myspace.myspace.service.UsersService;
 import com.myspace.myspace.service.search.SearchQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,22 +35,21 @@ public class UsersServiceImpl implements UsersService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<PublicUserResponse> getRecommendedUsers(Long currentUserId, String query, int page, int limit) {
-        Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, limit);
+        Pageable pageable = Paging.of(page, limit);
 
         if (query != null && !query.trim().isEmpty()) {
             // Use Elasticsearch
             String cleanQuery = query.trim().startsWith("@") ? query.trim().substring(1) : query.trim();
             // Loại chính mình ngay trong truy vấn ES (trước đây so Long với String nên không bao giờ loại được)
             SearchQueryService.SearchPage<UserDocument> result =
-                    searchQueryService.searchUsers(cleanQuery, pageable.getPageNumber(), limit, currentUserId);
+                    searchQueryService.searchUsers(cleanQuery, pageable.getPageNumber(), pageable.getPageSize(), currentUserId);
 
             List<PublicUserResponse> items = result.items().stream()
                     .map(UserMapper::toPublicUser)
                     .toList();
             populateFriendship(items, currentUserId);
 
-            int totalPages = (int) Math.ceil((double) result.total() / Math.max(limit, 1));
-            return new PageResponse<>(items, new PageResponse.Meta(result.total(), page, limit, totalPages));
+            return PageResponse.of(items, result.total(), pageable);
         }
 
         // Use MySQL for default recommendations
@@ -62,8 +61,7 @@ public class UsersServiceImpl implements UsersService {
         List<PublicUserResponse> items = usersPage.getContent().stream().map(UserMapper::toPublicUser).toList();
         populateFriendship(items, currentUserId);
 
-        return new PageResponse<>(items,
-                new PageResponse.Meta(usersPage.getTotalElements(), page, limit, usersPage.getTotalPages()));
+        return PageResponse.of(usersPage, items);
     }
 
     @Override

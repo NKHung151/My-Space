@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.mapper.UserMapper;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.TextUtils;
@@ -15,9 +16,7 @@ import com.myspace.myspace.service.RefreshTokenService;
 import com.myspace.myspace.service.search.SearchIndexService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +39,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AdminUserResponse> getUsers(String search, String role, String status, int page, int limit) {
-        Pageable pageable = PageRequest.of(Math.max(page - 1, 0), limit, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = Paging.newestFirst(page, limit);
         
         // Treat empty strings as null for JPQL query
         String searchParam = (search != null && !search.trim().isEmpty()) ? TextUtils.unaccent(search) : null;
@@ -53,12 +52,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
                 .map(UserMapper::toAdminUser)
                 .collect(Collectors.toList());
                 
-        return new PageResponse<>(content, new PageResponse.Meta(
-                usersPage.getTotalElements(),
-                page,
-                limit,
-                usersPage.getTotalPages()
-        ));
+        return PageResponse.of(usersPage, content);
     }
 
     @Override

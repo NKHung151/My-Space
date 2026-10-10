@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.mapper.UserMapper;
 import com.myspace.myspace.mapper.FriendMapper;
 import com.myspace.myspace.common.dto.PageResponse;
@@ -22,9 +23,7 @@ import com.myspace.myspace.service.ViewCountService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -203,7 +202,7 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public PageResponse<PostResponse> getFriendsFeed(Long currentUserId, int page, int limit) {
-        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = Paging.newestFirst(page, limit);
         Page<com.myspace.myspace.entity.Post> postsPage = postRepository.findPostsByFriendship(currentUserId, pageable);
 
         List<PostResponse> items = postsPage.getContent().stream()
@@ -220,8 +219,7 @@ public class FriendServiceImpl implements FriendService {
             });
         }
 
-        return new PageResponse<>(items, new PageResponse.Meta(
-                postsPage.getTotalElements(), page, limit, postsPage.getTotalPages()));
+        return PageResponse.of(postsPage, items);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.mapper.PostMapper;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
@@ -12,9 +13,7 @@ import com.myspace.myspace.service.AdminPostsService;
 import com.myspace.myspace.service.AuthorPostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +30,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AdminPostResponse> getPosts(String search, String tag, int page, int limit) {
-        Pageable pageable = PageRequest.of(Math.max(page - 1, 0), limit, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = Paging.newestFirst(page, limit);
         
         String searchParam = (search != null && !search.trim().isEmpty()) ? TextUtils.unaccent(search) : null;
         String tagParam = (tag != null && !tag.trim().isEmpty()) ? tag.trim() : null;
@@ -42,12 +41,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
                 .map(PostMapper::toAdminResponse)
                 .collect(Collectors.toList());
                 
-        return new PageResponse<>(content, new PageResponse.Meta(
-                postsPage.getTotalElements(),
-                page,
-                limit,
-                postsPage.getTotalPages()
-        ));
+        return PageResponse.of(postsPage, content);
     }
 
     @Override

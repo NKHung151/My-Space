@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
@@ -17,9 +18,7 @@ import com.myspace.myspace.service.search.SearchQueryService;
 import com.myspace.myspace.repository.PostLikeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,18 +37,18 @@ public class PublicPostServiceImpl implements PublicPostService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> getPublicPosts(String q, String tag, Boolean hasVideo, Long authorId, int page, int limit) {
-        Pageable pageable = PageRequest.of(Math.max(page - 1, 0), limit, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = Paging.newestFirst(page, limit);
 
         if (q != null && !q.isBlank()) {
             // Tìm kiếm qua Elasticsearch
             SearchQueryService.SearchPage<PostDocument> result =
-                    searchQueryService.searchPosts(q.trim(), pageable.getPageNumber(), limit, tag, hasVideo);
+                    searchQueryService.searchPosts(q.trim(), pageable.getPageNumber(), pageable.getPageSize(), tag, hasVideo);
             List<PostResponse> items = result.items().stream().map(PostMapper::toResponse).collect(Collectors.toList());
             populateCountsFromDatabase(items);
             populateLikedStatus(items);
             populateRealtimeViewCounts(items);
             // Tổng số lấy từ Elasticsearch (trước đây = số item của trang hiện tại, totalPages luôn = 1)
-            return new PageResponse<>(items, new PageResponse.Meta(result.total(), page, limit, totalPages(result.total(), limit)));
+            return PageResponse.of(items, result.total(), pageable);
         }
 
         // Lấy từ MySQL khi không có từ khóa tìm kiếm
@@ -57,7 +56,7 @@ public class PublicPostServiceImpl implements PublicPostService {
         List<PostResponse> items = postsPage.getContent().stream().map(PostMapper::toResponse).collect(Collectors.toList());
         populateLikedStatus(items);
         populateRealtimeViewCounts(items);
-        return new PageResponse<>(items, new PageResponse.Meta(postsPage.getTotalElements(), page, limit, postsPage.getTotalPages()));
+        return PageResponse.of(postsPage, items);
     }
 
     @Override
@@ -112,9 +111,6 @@ public class PublicPostServiceImpl implements PublicPostService {
         items.forEach(item -> item.setLiked(likedPostIds.contains(item.getId())));
     }
 
-    private static int totalPages(long total, int limit) {
-        return limit <= 0 ? 1 : (int) Math.ceil((double) total / limit);
-    }
 
     // Elasticsearch chỉ dùng để tìm (match); số like/bình luận/lượt xem lấy từ MySQL vì ES không còn
     // được index lại sau mỗi lượt like/bình luận. Bài đã xóa khỏi DB nhưng còn sót trong ES thì bị loại.

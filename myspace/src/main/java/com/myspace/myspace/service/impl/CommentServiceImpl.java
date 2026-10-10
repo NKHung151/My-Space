@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
@@ -17,7 +18,6 @@ import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +37,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<CommentResponse> getCommentsByPost(Long postId, int page, int limit, Long currentUserId) {
-        Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, limit);
+        Pageable pageable = Paging.of(page, limit);
         Page<Comment> commentPage = commentRepository.findByPostIdAndParentIsNullOrderByCreatedAtDesc(postId, pageable);
 
         List<Comment> rootComments = commentPage.getContent();
@@ -81,7 +81,10 @@ public class CommentServiceImpl implements CommentService {
             }
         }
 
-        return new PageResponse<>(items, new PageResponse.Meta(totalComments, page, limit, commentPage.getTotalPages()));
+        // Cố ý khác PageResponse.of: total = tổng mọi bình luận (cả trả lời) để FE hiển thị "N bình luận",
+        // còn totalPages tính theo bình luận gốc (đơn vị phân trang)
+        return new PageResponse<>(items, new PageResponse.Meta(
+                totalComments, commentPage.getNumber() + 1, commentPage.getSize(), commentPage.getTotalPages()));
     }
 
     @Override

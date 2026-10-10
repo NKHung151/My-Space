@@ -98,7 +98,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
 
   loadMessages() {
     if (!this.conversationId) return;
-    this.chatService.getMessages(this.conversationId, 0, 50).subscribe({
+    this.chatService.getMessages(this.conversationId, 1, 50).subscribe({
       next: (res) => {
         if (res.data && res.data.data) {
           // Tin nhắn trả về orderByCreatedAtDesc nên phải reverse lại để cuộn xuống dưới

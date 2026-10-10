@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
@@ -22,9 +23,7 @@ import com.myspace.myspace.service.search.SearchIndexService;
 import com.myspace.myspace.repository.PostLikeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,12 +76,12 @@ public class AuthorPostServiceImpl implements AuthorPostService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> getMyPosts(Long authorId, int page, int limit) {
-        Pageable pageable = PageRequest.of(Math.max(page - 1, 0), limit, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = Paging.newestFirst(page, limit);
         Page<Post> posts = postRepository.findByAuthorId(authorId, pageable);
 
         List<PostResponse> items = posts.getContent().stream().map(PostMapper::toResponse).collect(Collectors.toList());
         populateLikedStatus(items);
-        return new PageResponse<>(items, new PageResponse.Meta(posts.getTotalElements(), page, limit, posts.getTotalPages()));
+        return PageResponse.of(posts, items);
     }
 
     @Override

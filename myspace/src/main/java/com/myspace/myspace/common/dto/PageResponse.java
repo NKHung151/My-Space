@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -28,13 +29,22 @@ public class PageResponse<T> {
     }
 
     public static <T> PageResponse<T> of(Page<T> page) {
+        return of(page, page.getContent());
+    }
+
+    public static <T> PageResponse<T> of(Page<?> page, List<T> items) {
+        return of(items, page.getTotalElements(), page.getPageable());
+    }
+
+    public static <T> PageResponse<T> of(List<T> items, long total, Pageable pageable) {
+        int limit = pageable.getPageSize();
         return PageResponse.<T>builder()
-                .data(page.getContent())
+                .data(items)
                 .meta(Meta.builder()
-                        .total(page.getTotalElements())
-                        .page(page.getNumber() + 1) // Spring Data page là 0-indexed, FE cần 1-indexed
-                        .limit(page.getSize())
-                        .totalPages(page.getTotalPages())
+                        .total(total)
+                        .page(pageable.getPageNumber() + 1) // Spring Data page là 0-indexed, FE cần 1-indexed
+                        .limit(limit)
+                        .totalPages((int) Math.ceil((double) total / limit))
                         .build())
                 .build();
     }

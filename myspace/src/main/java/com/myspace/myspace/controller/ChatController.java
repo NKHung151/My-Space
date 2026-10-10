@@ -1,5 +1,6 @@
 package com.myspace.myspace.controller;
 
+import com.myspace.myspace.common.util.Paging;
 import com.myspace.myspace.common.dto.ApiResponse;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.dto.request.MessageRequest;
@@ -11,7 +12,6 @@ import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -43,9 +43,9 @@ public class ChatController {
     public ResponseEntity<ApiResponse<PageResponse<MessageResponse>>> getMessages(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long conversationId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        PageResponse<MessageResponse> messages = messageService.getConversationMessages(conversationId, userDetails.getUser().getId(), PageRequest.of(page, size));
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit) {
+        PageResponse<MessageResponse> messages = messageService.getConversationMessages(conversationId, userDetails.getUser().getId(), Paging.of(page, limit));
         return ResponseEntity.ok(ApiResponse.success(messages));
     }
 
