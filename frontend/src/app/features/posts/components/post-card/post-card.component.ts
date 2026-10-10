@@ -12,7 +12,6 @@ import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe'
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
 
 import { LocalizedDatePipe } from '../../../../shared/pipes/localized-date.pipe';
-import { FeedPostsService } from '../../services/feed-posts.service';
 
 @Component({
   selector: 'app-post-card',
@@ -27,8 +26,6 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly authModalService = inject(AuthModalService);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly postService = inject(FeedPostsService);
-  private readonly elementRef = inject(ElementRef);
 
   // Signal chứa dữ liệu bài viết hiện tại của card
   private _post = signal<Post>({} as Post);
@@ -50,14 +47,11 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
   @ViewChild('videoEl') videoElRef?: ElementRef<HTMLVideoElement>;
 
   private videoObserver?: IntersectionObserver;
-  private viewObserver?: IntersectionObserver;
-  private viewTracked = false;
 
-  // Sử dụng IntersectionObserver để tự động phát video thu nhỏ khi lướt tới
-  // và tính lượt xem (view count) khi người dùng thấy bài viết trên feed
+  // Sử dụng IntersectionObserver để tự động phát video thu nhỏ khi lướt tới.
+  // Lượt xem chỉ được tính ở trang chi tiết (đọc tới 50% bài) — trước đây mỗi thẻ lướt qua trên feed cũng gọi
+  // POST /view, lướt nhanh là chạm giới hạn 60 request/phút và các thao tác khác (like, bình luận) bị 429.
   ngAfterViewInit(): void {
-    this.setupViewTracking();
-    
     const videoEl = this.videoElRef?.nativeElement;
     if (!videoEl) return;
 
@@ -74,29 +68,8 @@ export class PostCardComponent implements OnDestroy, AfterViewInit {
     this.videoObserver.observe(videoEl);
   }
   
-  private setupViewTracking(): void {
-    if (this.isDetailMode || this.viewTracked || typeof IntersectionObserver === 'undefined') return;
-    
-    this.viewObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !this.viewTracked) {
-          this.viewTracked = true;
-          this.viewObserver?.disconnect();
-          
-          this.postService.trackView(this.post.id).subscribe({
-            next: () => {},
-            error: () => {}
-          });
-        }
-      },
-      { threshold: 0.5 } // Kích hoạt khi thấy 50% card
-    );
-    this.viewObserver.observe(this.elementRef.nativeElement);
-  }
-
   ngOnDestroy(): void {
     this.videoObserver?.disconnect(); // Dọn dẹp listener
-    this.viewObserver?.disconnect();
   }
 
   // Dịch tên danh mục bài viết
