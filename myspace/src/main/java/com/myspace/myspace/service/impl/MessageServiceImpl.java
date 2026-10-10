@@ -73,6 +73,10 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public MessageBroadcastResult saveMessage(Long senderId, Long receiverId, String content) {
+        if (receiverId == null || receiverId.equals(senderId)) {
+            throw new IllegalArgumentException("Người nhận không hợp lệ");
+        }
+        content = validateContent(content);
         Conversation conversation = getOrCreateConversation(senderId, receiverId);
         User sender = userRepository.getReferenceById(senderId);
 
@@ -97,6 +101,11 @@ public class MessageServiceImpl implements MessageService {
         if (!message.getSender().getId().equals(senderId)) {
             throw new IllegalArgumentException("Not authorized to edit this message");
         }
+        // Không sửa tin đã thu hồi (sẽ "hồi sinh" nội dung) hay tin hệ thống của cuộc gọi
+        if (message.getDeletedAt() != null || message.getType() == Message.MessageType.CALL) {
+            throw new IllegalArgumentException("Không thể sửa tin nhắn này");
+        }
+        newContent = validateContent(newContent);
         
         message.setContent(newContent);
         message.setUpdatedAt(LocalDateTime.now());
@@ -117,6 +126,9 @@ public class MessageServiceImpl implements MessageService {
                 
         if (!message.getSender().getId().equals(senderId)) {
             throw new IllegalArgumentException("Not authorized to delete this message");
+        }
+        if (message.getType() == Message.MessageType.CALL) {
+            throw new IllegalArgumentException("Không thể thu hồi tin nhắn này");
         }
         
         message.setDeletedAt(LocalDateTime.now());
@@ -154,6 +166,20 @@ public class MessageServiceImpl implements MessageService {
                 call.getConversation().getUser2().getEmail() : call.getConversation().getUser1().getEmail();
 
         return new MessageBroadcastResult(mapToResponse(message), receiverEmail);
+    }
+
+    private static final int MAX_CONTENT_LENGTH = 5000;
+
+    // Trước đây nhận cả nội dung rỗng/null và không giới hạn độ dài (cột TEXT ghi chú "tối đa 5000 ký tự" nhưng không kiểm tra)
+    private static String validateContent(String content) {
+        String trimmed = content == null ? "" : content.trim();
+        if (trimmed.isEmpty()) {
+            throw new IllegalArgumentException("Tin nhắn không được để trống");
+        }
+        if (trimmed.length() > MAX_CONTENT_LENGTH) {
+            throw new IllegalArgumentException("Tin nhắn tối đa " + MAX_CONTENT_LENGTH + " ký tự");
+        }
+        return trimmed;
     }
 
     private MessageResponse mapToResponse(Message message) {

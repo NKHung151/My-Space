@@ -54,6 +54,9 @@ management.endpoint.health.show-details=always
 spring.servlet.multipart.max-file-size=100MB
 spring.servlet.multipart.max-request-size=101MB
 
+# Origin của frontend được phép gọi API / mở WebSocket (nhiều giá trị cách nhau bởi dấu phẩy)
+app.cors.allowed-origins=http://localhost:4200
+
 # Nếu chạy sau reverse proxy (Nginx...), bật dòng dưới để rate limit dùng đúng IP thật của client
 #server.forward-headers-strategy=native
 

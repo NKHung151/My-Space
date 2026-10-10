@@ -8,4 +8,5 @@ public interface CallService {
     CallBroadcastResult rejectCall(Long callId, Long calleeId);
     CallBroadcastResult cancelCall(Long callId, Long callerId);
     CallBroadcastResult endCall(Long callId, Long userId);
+    String resolveSignalTarget(Long callId, Long senderId);
 }

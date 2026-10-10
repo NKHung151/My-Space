@@ -26,6 +26,9 @@ public class CallServiceImpl implements CallService {
     @Override
     @Transactional
     public CallBroadcastResult initiateCall(Long callerId, Long calleeId, Boolean isVideo) {
+        if (calleeId == null || callerId.equals(calleeId)) {
+            throw new IllegalArgumentException("Không thể gọi cho chính mình");
+        }
         User caller = userRepository.getReferenceById(callerId);
         User callee = userRepository.findById(calleeId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         
@@ -49,6 +52,7 @@ public class CallServiceImpl implements CallService {
         if (!call.getCallee().getId().equals(calleeId)) {
             throw new IllegalArgumentException("Unauthorized");
         }
+        requireStatus(call, Call.CallStatus.RINGING);
         
         call.setStatus(Call.CallStatus.ACCEPTED);
         call.setAnsweredAt(LocalDateTime.now());
@@ -64,6 +68,7 @@ public class CallServiceImpl implements CallService {
         if (!call.getCallee().getId().equals(calleeId)) {
             throw new IllegalArgumentException("Unauthorized");
         }
+        requireStatus(call, Call.CallStatus.RINGING);
 
         call.setStatus(Call.CallStatus.REJECTED);
         call.setEndReason(Call.CallEndReason.CALLEE_REJECT);
@@ -80,6 +85,7 @@ public class CallServiceImpl implements CallService {
         if (!call.getCaller().getId().equals(callerId)) {
             throw new IllegalArgumentException("Unauthorized");
         }
+        requireStatus(call, Call.CallStatus.RINGING);
 
         call.setStatus(Call.CallStatus.CANCELLED);
         call.setEndReason(Call.CallEndReason.CALLER_CANCEL);
@@ -100,6 +106,7 @@ public class CallServiceImpl implements CallService {
         if (!isCaller && !isCallee) {
             throw new IllegalArgumentException("Unauthorized");
         }
+        requireStatus(call, Call.CallStatus.RINGING, Call.CallStatus.ACCEPTED);
 
         call.setStatus(Call.CallStatus.ENDED);
         call.setEndReason(Call.CallEndReason.NORMAL);
@@ -114,6 +121,29 @@ public class CallServiceImpl implements CallService {
 
         String receiverEmail = isCaller ? call.getCallee().getEmail() : call.getCaller().getEmail();
         return new CallBroadcastResult(mapToResponse(call, "ended"), receiverEmail);
+    }
+
+    /**
+     * Tín hiệu WebRTC (offer/answer/ICE) chỉ được chuyển tới người còn lại của 1 cuộc gọi đang diễn ra.
+     * Trước đây server forward tới targetId bất kỳ do client gửi -> ai cũng spam/giả tín hiệu tới người khác được.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public String resolveSignalTarget(Long callId, Long senderId) {
+        Call call = getCallAndValidate(callId);
+        requireStatus(call, Call.CallStatus.RINGING, Call.CallStatus.ACCEPTED);
+        if (call.getCaller().getId().equals(senderId)) return call.getCallee().getEmail();
+        if (call.getCallee().getId().equals(senderId)) return call.getCaller().getEmail();
+        throw new IllegalArgumentException("Unauthorized");
+    }
+
+    // Máy trạng thái: chỉ chuyển trạng thái hợp lệ (vd. không "nhận" cuộc gọi đã kết thúc, không kết thúc 2 lần
+    // -> trước đây mỗi lần gọi end/reject lại sinh thêm 1 tin nhắn hệ thống trong chat)
+    private static void requireStatus(Call call, Call.CallStatus... allowed) {
+        for (Call.CallStatus status : allowed) {
+            if (call.getStatus() == status) return;
+        }
+        throw new IllegalArgumentException("Cuộc gọi không còn ở trạng thái phù hợp (" + call.getStatus() + ")");
     }
 
     private Call getCallAndValidate(Long callId) {

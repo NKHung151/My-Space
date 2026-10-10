@@ -3,8 +3,6 @@ package com.myspace.myspace.controller;
 import com.myspace.myspace.dto.request.CallActionRequest;
 import com.myspace.myspace.dto.request.SignalRequest;
 import com.myspace.myspace.dto.response.CallBroadcastResult;
-import com.myspace.myspace.entity.User;
-import com.myspace.myspace.repository.UserRepository;
 import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.dto.response.MessageBroadcastResult;
 import com.myspace.myspace.service.MessageService;
@@ -26,7 +24,6 @@ public class CallController {
     private final CallService callService;
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final UserRepository userRepository;
 
     @MessageMapping("/call.initiate")
     public void initiateCall(@Payload CallActionRequest request, SimpMessageHeaderAccessor headerAccessor) {
@@ -82,12 +79,10 @@ public class CallController {
 
     @MessageMapping("/call.signal")
     public void handleSignal(@Payload SignalRequest request, SimpMessageHeaderAccessor headerAccessor) {
-        // Chỉ forward WebRTC signals (offer, answer, candidates) cho người kia
+        // Chỉ forward WebRTC signals (offer, answer, candidates) cho người còn lại của cuộc gọi đang diễn ra.
         // Không lưu vào DB vì chúng rất nhiều và chỉ dùng cho ICE negotiation
-        User target = userRepository.findById(request.getTargetId()).orElse(null);
-        if (target != null) {
-            messagingTemplate.convertAndSendToUser(target.getEmail(), "/queue/calls.signal", request);
-        }
+        String targetEmail = callService.resolveSignalTarget(request.getCallId(), getUserId(headerAccessor));
+        messagingTemplate.convertAndSendToUser(targetEmail, "/queue/calls.signal", request);
     }
 
     private Long getUserId(SimpMessageHeaderAccessor headerAccessor) {
