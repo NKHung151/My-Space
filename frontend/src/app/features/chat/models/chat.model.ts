@@ -8,6 +8,7 @@ export interface MessageResponse {
   updatedAt?: string;
   deletedAt?: string;
   isEdited?: boolean;
+  clientMessageId?: string;
 }
 
 export interface PageResponse<T> {

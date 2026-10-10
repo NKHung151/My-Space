@@ -4,6 +4,13 @@ import { ChatService } from './chat.service';
 import { WebSocketService } from '../../../core/websocket/websocket.service';
 import { MessageResponse } from '../models/chat.model';
 import { AuthService } from '../../../core/auth/auth.service';
+import { filter } from 'rxjs';
+
+// crypto.randomUUID chỉ có trong secure context (HTTPS / localhost); mở app qua http://<IP LAN> thì dùng getRandomValues
+function newClientMessageId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+}
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +25,11 @@ export class ChatManagerService {
   
   public unreadCounts = signal<Record<number, number>>({});
 
+  // Tin đã gửi nhưng server chưa xác nhận (chưa nhận lại bản có cùng clientMessageId).
+  // Kết nối lại thì gửi lại đúng các tin này với mã cũ -> server không tạo bản trùng.
+  private pendingMessages = new Map<string, { receiverId: number; content: string; clientMessageId: string }>();
+  static readonly MAX_MESSAGE_LENGTH = 5000;
+
   constructor() {
     // Clear chats on logout
     effect(() => {
@@ -25,11 +37,14 @@ export class ChatManagerService {
       if (!user) {
         this._activeChats.set([]);
         this.unreadCounts.set({});
+        this.pendingMessages.clear(); // không gửi tin của tài khoản cũ dưới tên tài khoản mới
       }
     }, { allowSignalWrites: true });
 
     // Listen to new messages to increment unread counts
     this.webSocketService.subscribeToTopic('/user/queue/messages', (message: MessageResponse) => {
+      // Server xác nhận tin mình gửi -> bỏ khỏi danh sách chờ
+      if (message.clientMessageId) this.pendingMessages.delete(message.clientMessageId);
       // Server gửi lại cả tin của chính mình (để đồng bộ các tab) -> không tính là chưa đọc
       if (message.senderId === this.authService.currentUser()?.id) return;
       // If the message is from someone else and their chat is not open
@@ -45,10 +60,31 @@ export class ChatManagerService {
       }
     });
 
+    // (Tái) kết nối thành công -> gửi lại các tin chưa được xác nhận
+    this.webSocketService.connectionState$.pipe(filter(Boolean)).subscribe(() => this.resendPendingMessages());
+
     // Listen to sync events (when marked read from another tab or locally)
     this.webSocketService.subscribeToTopic('/user/queue/unread.sync', (req: { targetUserId: number }) => {
       this.clearUnread(req.targetUserId);
     });
+  }
+
+  /** Gửi tin nhắn mới; trả false nếu nội dung không hợp lệ. */
+  public sendChatMessage(receiverId: number, content: string): boolean {
+    const text = content.trim();
+    if (!text || text.length > ChatManagerService.MAX_MESSAGE_LENGTH) return false;
+
+    const payload = { receiverId, content: text, clientMessageId: newClientMessageId() };
+    this.pendingMessages.set(payload.clientMessageId, payload);
+    // Đang mất kết nối thì chưa gửi được; tin nằm trong danh sách chờ và được gửi khi kết nối lại
+    if (this.webSocketService.isConnected()) {
+      this.webSocketService.sendMessage('/app/chat.sendMessage', payload);
+    }
+    return true;
+  }
+
+  private resendPendingMessages() {
+    this.pendingMessages.forEach(payload => this.webSocketService.sendMessage('/app/chat.sendMessage', payload));
   }
 
   public loadUnreadCounts() {

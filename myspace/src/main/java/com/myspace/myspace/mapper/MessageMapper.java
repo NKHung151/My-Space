@@ -20,6 +20,7 @@ public final class MessageMapper {
                 .deletedAt(message.getDeletedAt())
                 .isEdited(message.getUpdatedAt() != null)
                 .isRead(message.getIsRead())
+                .clientMessageId(message.getClientMessageId())
                 .build();
     }
 }

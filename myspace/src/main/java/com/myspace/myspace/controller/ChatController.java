@@ -13,6 +13,7 @@ import com.myspace.myspace.security.custom.CustomUserDetails;
 import com.myspace.myspace.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -75,15 +76,24 @@ public class ChatController {
         Long senderId = userDetails.getUser().getId();
         String senderEmail = userDetails.getUsername();
         
-        MessageBroadcastResult result = messageService.saveMessage(senderId, request.getReceiverId(), request.getContent());
-        
-        // Send to receiver
-        messagingTemplate.convertAndSendToUser(
-                result.getReceiverEmail(),
-                "/queue/messages",
-                result.getMessage()
-        );
-        
+        MessageBroadcastResult result;
+        try {
+            result = messageService.saveMessage(senderId, request.getReceiverId(), request.getContent(), request.getClientMessageId());
+        } catch (DataIntegrityViolationException e) {
+            // 2 lần gửi cùng clientMessageId đến đúng cùng lúc: lần sau vướng unique (sender_id, client_message_id)
+            // -> lấy tin lần trước đã lưu để xác nhận lại cho người gửi, thay vì báo lỗi
+            result = messageService.findSentMessage(senderId, request.getClientMessageId()).orElseThrow(() -> e);
+        }
+
+        // Send to receiver (tin gửi lại do trùng thì người nhận đã có rồi)
+        if (!result.isDuplicate()) {
+            messagingTemplate.convertAndSendToUser(
+                    result.getReceiverEmail(),
+                    "/queue/messages",
+                    result.getMessage()
+            );
+        }
+
         // Send to sender (to update their other tabs if any, or acknowledge)
         messagingTemplate.convertAndSendToUser(
                 senderEmail,

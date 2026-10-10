@@ -11,9 +11,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Modifying;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
+    Optional<Message> findBySenderIdAndClientMessageId(Long senderId, String clientMessageId);
+
     Page<Message> findByConversationIdOrderByCreatedAtDesc(Long conversationId, Pageable pageable);
 
     @Query("SELECT m.sender.id, COUNT(m) FROM Message m WHERE (m.conversation.user1.id = :userId OR m.conversation.user2.id = :userId) AND m.sender.id != :userId AND m.isRead = false GROUP BY m.sender.id")

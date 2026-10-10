@@ -143,6 +143,10 @@ export class WebSocketService implements OnDestroy {
     this.subscriptions.set(topic, subscription);
   }
 
+  public isConnected(): boolean {
+    return !!this.client?.connected;
+  }
+
   public sendMessage(destination: string, payload: any): void {
     if (this.client?.connected) {
       this.client.publish({ destination, body: JSON.stringify(payload) });

@@ -11,6 +11,7 @@ import { WebSocketService } from '../../../../core/websocket/websocket.service';
 import { WebRTCService } from '../../../../core/websocket/webrtc.service';
 import { AssetImageDirective } from '../../../../shared/directives/asset-image.directive';
 import { Router } from '@angular/router';
+import { ToastService } from '../../../../core/notifications/toast.service';
 
 @Component({
   selector: 'app-chat-window',
@@ -30,6 +31,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   private webSocketService = inject(WebSocketService);
   private webrtcService = inject(WebRTCService);
   private router = inject(Router);
+  private toast = inject(ToastService);
 
   messages = signal<MessageResponse[]>([]);
   newMessage = '';
@@ -63,7 +65,10 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
         // Chỉ thêm tin nhắn nếu nó thuộc về conversation này
         // Vì /user/queue/messages nhận chung tất cả tin nhắn
         if (this.conversationId && message.conversationId === this.conversationId) {
-          this.messages.update(msgs => [...msgs, message]);
+          // Gộp theo id: cùng 1 tin có thể đến 2 lần (server xác nhận lại tin gửi trùng sau khi kết nối lại)
+          this.messages.update(msgs => msgs.some(m => m.id === message.id)
+            ? msgs.map(m => m.id === message.id ? message : m)
+            : [...msgs, message]);
           this.scrollToBottom();
         }
       }
@@ -121,11 +126,11 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
       });
       this.cancelEdit();
     } else {
-      // Đang trong chế độ gửi tin nhắn mới
-      this.webSocketService.sendMessage('/app/chat.sendMessage', {
-        receiverId: this.targetUser.id,
-        content: content
-      });
+      // Đang trong chế độ gửi tin nhắn mới (kèm clientMessageId, tự gửi lại khi kết nối lại)
+      if (!this.chatManager.sendChatMessage(this.targetUser.id, content)) {
+        this.toast.showError(`Tin nhắn tối đa ${ChatManagerService.MAX_MESSAGE_LENGTH} ký tự.`);
+        return;
+      }
       this.newMessage = ''; // Chỉ clear nếu gửi mới, cancelEdit tự clear
     }
   }

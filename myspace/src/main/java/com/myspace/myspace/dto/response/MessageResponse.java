@@ -18,4 +18,5 @@ public class MessageResponse {
     private LocalDateTime deletedAt;
     private boolean isEdited;
     private Boolean isRead;
+    private String clientMessageId;
 }

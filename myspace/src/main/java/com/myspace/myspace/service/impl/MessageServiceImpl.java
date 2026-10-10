@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.regex.Pattern;
 import java.util.Optional;
 import java.util.List;
 
@@ -75,11 +76,19 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public MessageBroadcastResult saveMessage(Long senderId, Long receiverId, String content) {
+    public MessageBroadcastResult saveMessage(Long senderId, Long receiverId, String content, String clientMessageId) {
         if (receiverId == null || receiverId.equals(senderId)) {
             throw new AppException(HttpStatus.BAD_REQUEST, "Người nhận không hợp lệ.");
         }
         content = validateContent(content);
+        validateClientMessageId(clientMessageId);
+
+        // Client gửi lại cùng mã (mất kết nối giữa chừng, gửi lại sau khi kết nối lại) -> trả lại tin đã lưu, không tạo tin thứ hai
+        Optional<MessageBroadcastResult> existing = findSentMessage(senderId, clientMessageId);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
         Conversation conversation = getOrCreateConversation(senderId, receiverId);
         User sender = userRepository.getReferenceById(senderId);
 
@@ -87,12 +96,28 @@ public class MessageServiceImpl implements MessageService {
         message.setConversation(conversation);
         message.setSender(sender);
         message.setContent(content);
-        message = messageRepository.save(message);
-        
-        String receiverEmail = conversation.getUser1().getId().equals(senderId) ? 
-                conversation.getUser2().getEmail() : conversation.getUser1().getEmail();
-                
-        return new MessageBroadcastResult(MessageMapper.toResponse(message), receiverEmail);
+        message.setClientMessageId(clientMessageId);
+        // Unique (sender_id, client_message_id) trong DB chặn trường hợp 2 lần gửi trùng đến cùng lúc
+        message = messageRepository.saveAndFlush(message);
+
+        return new MessageBroadcastResult(MessageMapper.toResponse(message), otherParticipantEmail(conversation, senderId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<MessageBroadcastResult> findSentMessage(Long senderId, String clientMessageId) {
+        if (clientMessageId == null) return Optional.empty();
+        return messageRepository.findBySenderIdAndClientMessageId(senderId, clientMessageId)
+                .map(message -> new MessageBroadcastResult(
+                        MessageMapper.toResponse(message),
+                        otherParticipantEmail(message.getConversation(), senderId),
+                        true));
+    }
+
+    private static String otherParticipantEmail(Conversation conversation, Long userId) {
+        return conversation.getUser1().getId().equals(userId)
+                ? conversation.getUser2().getEmail()
+                : conversation.getUser1().getEmail();
     }
 
     @Override
@@ -172,6 +197,14 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private static final int MAX_CONTENT_LENGTH = 5000;
+    // Khớp cột client_message_id VARCHAR(64); chỉ nhận ký tự an toàn (UUID có dạng chữ-số-gạch ngang)
+    private static final Pattern CLIENT_MESSAGE_ID = Pattern.compile("^[A-Za-z0-9_-]{1,64}$");
+
+    private static void validateClientMessageId(String clientMessageId) {
+        if (clientMessageId != null && !CLIENT_MESSAGE_ID.matcher(clientMessageId).matches()) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Mã tin nhắn không hợp lệ.");
+        }
+    }
 
     // Trước đây nhận cả nội dung rỗng/null và không giới hạn độ dài (cột TEXT ghi chú "tối đa 5000 ký tự" nhưng không kiểm tra)
     private static String validateContent(String content) {
