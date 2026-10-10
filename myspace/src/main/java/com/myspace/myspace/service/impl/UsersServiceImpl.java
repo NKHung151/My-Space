@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.mapper.UserMapper;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.document.UserDocument;
@@ -44,14 +45,7 @@ public class UsersServiceImpl implements UsersService {
                     searchQueryService.searchUsers(cleanQuery, pageable.getPageNumber(), limit, currentUserId);
 
             List<PublicUserResponse> items = result.items().stream()
-                    .map(doc -> PublicUserResponse.builder()
-                            .id(doc.getId())
-                            .displayName(doc.getDisplayName() != null ? doc.getDisplayName() : doc.getUsername())
-                            .username(doc.getUsername())
-                            .avatarUrl(doc.getAvatarUrl())
-                            .bio(doc.getBio())
-                            .role(doc.getRole())
-                            .build())
+                    .map(UserMapper::toPublicUser)
                     .toList();
             populateFriendship(items, currentUserId);
 
@@ -65,7 +59,7 @@ public class UsersServiceImpl implements UsersService {
                 ? userRepository.findAll(pageable)
                 : userRepository.findByIdNot(currentUserId, pageable);
 
-        List<PublicUserResponse> items = usersPage.getContent().stream().map(this::toPublicUser).toList();
+        List<PublicUserResponse> items = usersPage.getContent().stream().map(UserMapper::toPublicUser).toList();
         populateFriendship(items, currentUserId);
 
         return new PageResponse<>(items,
@@ -78,21 +72,11 @@ public class UsersServiceImpl implements UsersService {
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy hồ sơ."));
 
-        PublicUserResponse response = toPublicUser(user);
+        PublicUserResponse response = UserMapper.toPublicUser(user);
         populateFriendship(List.of(response), currentUserId);
         return response;
     }
 
-    private PublicUserResponse toPublicUser(User user) {
-        return PublicUserResponse.builder()
-                .id(user.getId())
-                .displayName(user.getDisplayName() != null ? user.getDisplayName() : user.getUsername())
-                .username(user.getUsername())
-                .avatarUrl(user.getAvatarUrl())
-                .bio(user.getBio())
-                .role(user.getRole() != null ? user.getRole().getName() : "member")
-                .build();
-    }
 
     private void populateFriendship(List<PublicUserResponse> items, Long currentUserId) {
         if (items.isEmpty()) return;

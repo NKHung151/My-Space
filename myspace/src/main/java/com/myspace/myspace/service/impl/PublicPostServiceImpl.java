@@ -3,12 +3,10 @@ package com.myspace.myspace.service.impl;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
-import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.common.util.SecurityUtils;
 import com.myspace.myspace.document.PostDocument;
 import com.myspace.myspace.dto.response.PostDetailResponse;
 import com.myspace.myspace.dto.response.PostResponse;
-import com.myspace.myspace.dto.response.PublicUserResponse;
 import com.myspace.myspace.dto.response.TagResponse;
 import com.myspace.myspace.entity.Post;
 import com.myspace.myspace.mapper.PostMapper;
@@ -46,7 +44,7 @@ public class PublicPostServiceImpl implements PublicPostService {
             // Tìm kiếm qua Elasticsearch
             SearchQueryService.SearchPage<PostDocument> result =
                     searchQueryService.searchPosts(q.trim(), pageable.getPageNumber(), limit, tag, hasVideo);
-            List<PostResponse> items = result.items().stream().map(this::mapDocToResponse).collect(Collectors.toList());
+            List<PostResponse> items = result.items().stream().map(PostMapper::toResponse).collect(Collectors.toList());
             populateCountsFromDatabase(items);
             populateLikedStatus(items);
             populateRealtimeViewCounts(items);
@@ -87,7 +85,7 @@ public class PublicPostServiceImpl implements PublicPostService {
     @Transactional(readOnly = true)
     public List<TagResponse> getPopularTags(int limit) {
         return postRepository.getPopularTags(limit).stream()
-                .map(row -> new TagResponse((String) row[0], ((Number) row[1]).longValue()))
+                .map(PostMapper::toTagResponse)
                 .collect(Collectors.toList());
     }
 
@@ -100,31 +98,6 @@ public class PublicPostServiceImpl implements PublicPostService {
         viewCountService.incrementViewCount(id, viewerId);
     }
 
-    /** Map PostDocument (Elasticsearch) → PostResponse. */
-    private PostResponse mapDocToResponse(PostDocument doc) {
-        PublicUserResponse author = PublicUserResponse.builder()
-                .id(doc.getAuthorId())
-                .displayName(doc.getAuthorDisplayName())
-                .username(doc.getAuthorUsername())
-                .avatarUrl(doc.getAuthorAvatarUrl())
-                .build();
-
-        return PostResponse.builder()
-                .id(doc.getId())
-                .title(doc.getTitle())
-                .slug(doc.getSlug())
-                .excerpt(HtmlSanitizer.sanitize(doc.getExcerpt()))
-                .coverImageUrl(HtmlSanitizer.safeUrl(doc.getCoverImageUrl()))
-                .hasVideo(doc.getHasVideo())
-                .tag(doc.getTag())
-                .viewCount(doc.getViewCount())
-                .likeCount(doc.getLikeCount())
-                .commentCount(doc.getCommentCount())
-                .author(author)
-                .publishedAt(doc.getPublishedAt())
-                .createdAt(doc.getCreatedAt())
-                .build();
-    }
 
 
     private void populateLikedStatus(List<PostResponse> items) {

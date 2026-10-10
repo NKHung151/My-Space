@@ -2,6 +2,7 @@ package com.myspace.myspace.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.myspace.myspace.mapper.MediaMapper;
 import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.common.util.AfterCommit;
 import com.myspace.myspace.common.util.FileSignature;
@@ -182,14 +183,7 @@ public class UploadServiceImpl implements UploadService {
             asset.setMimeType(format);
             asset.setOwner(userRepository.getReferenceById(userId));
             asset.setStatus(status);
-            mediaAssetRepository.save(asset);
-
-            return UploadResponse.builder()
-                    .url(url)
-                    .mediaId(publicId)
-                    .mediaType(resourceType)
-                    .mimeType(format)
-                    .build();
+            return MediaMapper.toUploadResponse(mediaAssetRepository.save(asset));
         } catch (IOException e) {
             log.error("Error uploading to Cloudinary", e);
             throw new AppException(HttpStatus.SERVICE_UNAVAILABLE, "Không thể tải tệp lên, vui lòng thử lại sau.");

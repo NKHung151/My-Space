@@ -1,7 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.mapper.CallMapper;
 import com.myspace.myspace.dto.response.CallBroadcastResult;
-import com.myspace.myspace.dto.response.CallResponse;
 import com.myspace.myspace.entity.Call;
 import com.myspace.myspace.entity.Conversation;
 import com.myspace.myspace.entity.User;
@@ -42,7 +42,7 @@ public class CallServiceImpl implements CallService {
         call.setIsVideo(isVideo);
         call = callRepository.save(call);
 
-        return new CallBroadcastResult(mapToResponse(call, "incoming"), callee.getEmail());
+        return new CallBroadcastResult(CallMapper.toResponse(call, "incoming"), callee.getEmail());
     }
 
     @Override
@@ -58,7 +58,7 @@ public class CallServiceImpl implements CallService {
         call.setAnsweredAt(LocalDateTime.now());
         call = callRepository.save(call);
 
-        return new CallBroadcastResult(mapToResponse(call, "accepted"), call.getCaller().getEmail());
+        return new CallBroadcastResult(CallMapper.toResponse(call, "accepted"), call.getCaller().getEmail());
     }
 
     @Override
@@ -75,7 +75,7 @@ public class CallServiceImpl implements CallService {
         call.setEndedAt(LocalDateTime.now());
         call = callRepository.save(call);
 
-        return new CallBroadcastResult(mapToResponse(call, "rejected"), call.getCaller().getEmail());
+        return new CallBroadcastResult(CallMapper.toResponse(call, "rejected"), call.getCaller().getEmail());
     }
 
     @Override
@@ -92,7 +92,7 @@ public class CallServiceImpl implements CallService {
         call.setEndedAt(LocalDateTime.now());
         call = callRepository.save(call);
 
-        return new CallBroadcastResult(mapToResponse(call, "cancelled"), call.getCallee().getEmail());
+        return new CallBroadcastResult(CallMapper.toResponse(call, "cancelled"), call.getCallee().getEmail());
     }
 
     @Override
@@ -120,7 +120,7 @@ public class CallServiceImpl implements CallService {
         call = callRepository.save(call);
 
         String receiverEmail = isCaller ? call.getCallee().getEmail() : call.getCaller().getEmail();
-        return new CallBroadcastResult(mapToResponse(call, "ended"), receiverEmail);
+        return new CallBroadcastResult(CallMapper.toResponse(call, "ended"), receiverEmail);
     }
 
     /**
@@ -151,15 +151,4 @@ public class CallServiceImpl implements CallService {
                 .orElseThrow(() -> new IllegalArgumentException("Call not found"));
     }
 
-    private CallResponse mapToResponse(Call call, String actionType) {
-        return CallResponse.builder()
-                .id(call.getId())
-                .callerId(call.getCaller().getId())
-                .calleeId(call.getCallee().getId())
-                .status(call.getStatus().name())
-                .type(actionType)
-                .isVideo(call.getIsVideo())
-                .createdAt(call.getCreatedAt())
-                .build();
-    }
 }

@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.mapper.UserMapper;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.TextUtils;
 import com.myspace.myspace.common.exception.AppException;
@@ -49,7 +50,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
         Page<User> usersPage = userRepository.searchAdminUsers(searchParam, roleParam, statusParam, pageable);
         
         List<AdminUserResponse> content = usersPage.getContent().stream()
-                .map(this::mapToResponse)
+                .map(UserMapper::toAdminUser)
                 .collect(Collectors.toList());
                 
         return new PageResponse<>(content, new PageResponse.Meta(
@@ -65,7 +66,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
     public AdminUserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng."));
-        return mapToResponse(user);
+        return UserMapper.toAdminUser(user);
     }
 
     @Override
@@ -100,20 +101,7 @@ public class AdminUsersServiceImpl implements AdminUsersService {
         
         User updated = userRepository.save(user);
         searchIndexService.indexUser(updated);
-        return mapToResponse(updated);
+        return UserMapper.toAdminUser(updated);
     }
     
-    private AdminUserResponse mapToResponse(User user) {
-        return AdminUserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .username(user.getUsername())
-                .displayName(user.getDisplayName())
-                .avatarUrl(user.getAvatarUrl())
-                .role(user.getRole() != null ? user.getRole().getName() : null)
-                .status(user.getStatus())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
-    }
 }

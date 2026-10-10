@@ -66,18 +66,7 @@ public class AuthServiceImpl implements AuthService {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userDetails.getUser();
 
-        String accessToken = jwtService.generateToken(userDetails);
-
-        // Tạo phiên mới cho thiết bị này (không đụng tới phiên ở thiết bị khác)
-        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
-
-        CurrentUserResponse userResponse = UserMapper.toCurrentUser(user, friendshipRepository.countByUserId(user.getId()));
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .user(userResponse)
-                .build();
+        return issueSession(userDetails, friendshipRepository.countByUserId(user.getId()));
     }
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -102,17 +91,17 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         searchIndexService.indexUser(user);
 
-        // Đăng nhập luôn sau khi đăng ký thành công
-        CustomUserDetails userDetails = new CustomUserDetails(user);
-        String accessToken = jwtService.generateToken(userDetails);
-        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
+        // Đăng nhập luôn sau khi đăng ký thành công (tài khoản mới chưa có bạn bè)
+        return issueSession(new CustomUserDetails(user), 0);
+    }
 
-        CurrentUserResponse userResponse = UserMapper.toCurrentUser(user, 0);
-
+    /** Cấp access token + refresh token cho 1 phiên mới (không đụng tới phiên ở thiết bị khác). */
+    private AuthResponse issueSession(CustomUserDetails userDetails, long friendsCount) {
+        User user = userDetails.getUser();
         return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .user(userResponse)
+                .accessToken(jwtService.generateToken(userDetails))
+                .refreshToken(refreshTokenService.createRefreshToken(user.getId()))
+                .user(UserMapper.toCurrentUser(user, friendsCount))
                 .build();
     }
 

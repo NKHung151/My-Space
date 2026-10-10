@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.mapper.MessageMapper;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.exception.AppException;
 import com.myspace.myspace.dto.response.MessageResponse;
@@ -67,7 +68,7 @@ public class MessageServiceImpl implements MessageService {
         }
 
         Page<Message> messages = messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId, pageable);
-        return PageResponse.of(messages.map(this::mapToResponse));
+        return PageResponse.of(messages.map(MessageMapper::toResponse));
     }
 
     @Override
@@ -89,7 +90,7 @@ public class MessageServiceImpl implements MessageService {
         String receiverEmail = conversation.getUser1().getId().equals(senderId) ? 
                 conversation.getUser2().getEmail() : conversation.getUser1().getEmail();
                 
-        return new MessageBroadcastResult(mapToResponse(message), receiverEmail);
+        return new MessageBroadcastResult(MessageMapper.toResponse(message), receiverEmail);
     }
 
     @Override
@@ -115,7 +116,7 @@ public class MessageServiceImpl implements MessageService {
         String receiverEmail = conversation.getUser1().getId().equals(senderId) ? 
                 conversation.getUser2().getEmail() : conversation.getUser1().getEmail();
         
-        return new MessageBroadcastResult(mapToResponse(message), receiverEmail);
+        return new MessageBroadcastResult(MessageMapper.toResponse(message), receiverEmail);
     }
 
     @Override
@@ -138,7 +139,7 @@ public class MessageServiceImpl implements MessageService {
         String receiverEmail = conversation.getUser1().getId().equals(senderId) ? 
                 conversation.getUser2().getEmail() : conversation.getUser1().getEmail();
         
-        return new MessageBroadcastResult(mapToResponse(message), receiverEmail);
+        return new MessageBroadcastResult(MessageMapper.toResponse(message), receiverEmail);
     }
 
     @Override
@@ -165,7 +166,7 @@ public class MessageServiceImpl implements MessageService {
         String receiverEmail = call.getCaller().getId().equals(call.getConversation().getUser1().getId()) ?
                 call.getConversation().getUser2().getEmail() : call.getConversation().getUser1().getEmail();
 
-        return new MessageBroadcastResult(mapToResponse(message), receiverEmail);
+        return new MessageBroadcastResult(MessageMapper.toResponse(message), receiverEmail);
     }
 
     private static final int MAX_CONTENT_LENGTH = 5000;
@@ -182,21 +183,6 @@ public class MessageServiceImpl implements MessageService {
         return trimmed;
     }
 
-    private MessageResponse mapToResponse(Message message) {
-        return MessageResponse.builder()
-                .id(message.getId())
-                .conversationId(message.getConversation().getId())
-                .senderId(message.getSender().getId())
-                // Tin nhắn đã thu hồi không được trả nội dung gốc về client
-                .content(message.getDeletedAt() != null ? null : message.getContent())
-                .type(message.getType().name())
-                .createdAt(message.getCreatedAt())
-                .updatedAt(message.getUpdatedAt())
-                .deletedAt(message.getDeletedAt())
-                .isEdited(message.getUpdatedAt() != null)
-                .isRead(message.getIsRead())
-                .build();
-    }
 
     @Override
     @Transactional(readOnly = true)

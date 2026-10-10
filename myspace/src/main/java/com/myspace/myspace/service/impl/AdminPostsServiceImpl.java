@@ -1,10 +1,10 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.mapper.PostMapper;
 import com.myspace.myspace.common.exception.AppException;
 import org.springframework.http.HttpStatus;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.TextUtils;
-import com.myspace.myspace.common.util.HtmlSanitizer;
 import com.myspace.myspace.dto.response.AdminPostResponse;
 import com.myspace.myspace.entity.Post;
 import com.myspace.myspace.repository.PostRepository;
@@ -39,7 +39,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
         Page<Post> postsPage = postRepository.searchAdminPosts(searchParam, tagParam, pageable);
         
         List<AdminPostResponse> content = postsPage.getContent().stream()
-                .map(this::mapToResponse)
+                .map(PostMapper::toAdminResponse)
                 .collect(Collectors.toList());
                 
         return new PageResponse<>(content, new PageResponse.Meta(
@@ -55,7 +55,7 @@ public class AdminPostsServiceImpl implements AdminPostsService {
     public AdminPostResponse getPostById(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
-        return mapToResponse(post);
+        return PostMapper.toAdminResponse(post);
     }
 
     @Override
@@ -68,18 +68,4 @@ public class AdminPostsServiceImpl implements AdminPostsService {
         authorPostService.deletePost(post.getAuthor().getId(), id);
     }
     
-    private AdminPostResponse mapToResponse(Post post) {
-        return AdminPostResponse.builder()
-                .id(post.getId())
-                .title(post.getTitle())
-                .content(HtmlSanitizer.sanitize(post.getContent()))
-                .tag(post.getTag())
-                .createdAt(post.getCreatedAt())
-                .author(AdminPostResponse.AdminPostAuthorResponse.builder()
-                        .id(post.getAuthor().getId())
-                        .displayName(post.getAuthor().getDisplayName())
-                        .avatarUrl(post.getAuthor().getAvatarUrl())
-                        .build())
-                .build();
-    }
 }

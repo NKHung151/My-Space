@@ -1,5 +1,7 @@
 package com.myspace.myspace.service.impl;
 
+import com.myspace.myspace.mapper.UserMapper;
+import com.myspace.myspace.mapper.FriendMapper;
 import com.myspace.myspace.common.dto.PageResponse;
 import com.myspace.myspace.common.util.AfterCommit;
 import com.myspace.myspace.dto.response.FriendRequestResponse;
@@ -75,12 +77,7 @@ public class FriendServiceImpl implements FriendService {
         friendRequestRepository.save(request);
 
         // Push real-time notification to the receiver (dùng email = principal name của WebSocket)
-        FriendRequestResponse response = FriendRequestResponse.builder()
-                .id(request.getId())
-                .status(request.getStatus())
-                .createdAt(request.getCreatedAt())
-                .sender(PostMapper.toPublicUser(sender))
-                .build();
+        FriendRequestResponse response = FriendMapper.toRequestResponse(request);
         log.info("[WS] Sending friend-request notification to user: {}", receiver.getEmail());
         notifyAfterCommit(
                 receiver.getEmail(),
@@ -119,7 +116,7 @@ public class FriendServiceImpl implements FriendService {
         }
 
         // Thông báo cho người GỬI lời mời: lời mời đã được chấp nhận (dùng email = principal name)
-        PublicUserResponse currentUserResponse = PostMapper.toPublicUser(currentUser);
+        PublicUserResponse currentUserResponse = UserMapper.toPublicUser(currentUser);
         notifyAfterCommit(
                 senderUser.getEmail(),
                 "/queue/friend-accept",
@@ -127,7 +124,7 @@ public class FriendServiceImpl implements FriendService {
         );
 
         // Thông báo cho người CHẤP NHẬN (currentUser): thêm senderUser vào danh sách bạn
-        PublicUserResponse senderResponse = PostMapper.toPublicUser(senderUser);
+        PublicUserResponse senderResponse = UserMapper.toPublicUser(senderUser);
         notifyAfterCommit(
                 currentUser.getEmail(),
                 "/queue/friend-accept",
@@ -184,19 +181,14 @@ public class FriendServiceImpl implements FriendService {
     @Override
     public List<PublicUserResponse> getFriends(Long userId) {
         return friendshipRepository.findFriendsByUserId(userId).stream()
-                .map(PostMapper::toPublicUser)
+                .map(UserMapper::toPublicUser)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<FriendRequestResponse> getPendingRequests(Long currentUserId) {
         return friendRequestRepository.findByReceiverIdAndStatus(currentUserId, "pending").stream()
-                .map(req -> FriendRequestResponse.builder()
-                        .id(req.getId())
-                        .status(req.getStatus())
-                        .createdAt(req.getCreatedAt())
-                        .sender(PostMapper.toPublicUser(req.getSender()))
-                        .build())
+                .map(FriendMapper::toRequestResponse)
                 .collect(Collectors.toList());
     }
 

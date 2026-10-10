@@ -12,12 +12,7 @@ public final class CommentMapper {
         if (comment == null) return null;
 
         User author = comment.getAuthor();
-        PublicUserResponse authorResponse = PublicUserResponse.builder()
-                .id(author.getId())
-                .displayName(author.getDisplayName())
-                .username(author.getUsername())
-                .avatarUrl(author.getAvatarUrl())
-                .build();
+        PublicUserResponse authorResponse = UserMapper.toPublicUser(author);
 
         Long replyToUserId = null;
         String replyToDisplayName = null;
