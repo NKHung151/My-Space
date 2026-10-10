@@ -44,8 +44,8 @@ export class AdminDashboardComponent implements OnInit {
     this.loading.set(true);
     this.error.set('');
     this.dashboardService.getOverview().subscribe({
-      next: response => {
-        this.overview.set(response.data);
+      next: overview => {
+        this.overview.set(overview);
         this.loading.set(false);
       },
       error: () => {

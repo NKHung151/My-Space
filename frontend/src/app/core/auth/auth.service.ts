@@ -2,6 +2,7 @@ import { Injectable, signal, WritableSignal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
+import { unwrap } from '../http/api.operators';
 import { ApiResponse } from '../http/api-response.model';
 import {
   AuthMessage,
@@ -39,7 +40,7 @@ export class AuthService {
       { withCredentials: true },
     )
       .pipe(
-        map(response => response.data),
+        unwrap(),
         tap(session => {
           if (session?.accessToken) {
             this.setSession(session);
@@ -50,7 +51,7 @@ export class AuthService {
 
   register(userData: RegisterRequest): Observable<AuthSession> {
     return this.http.post<ApiResponse<AuthSession>>(`${this.apiUrl}/register`, userData).pipe(
-      map(response => response.data),
+      unwrap(),
       tap(session => {
         if (session?.accessToken) {
           this.setSession(session);
@@ -65,7 +66,7 @@ export class AuthService {
     return this.http.post<ApiResponse<AuthMessage>>(
       `${this.apiUrl}/forgot-password`,
       payload,
-    ).pipe(map(response => response.data));
+    ).pipe(unwrap());
   }
 
   resetPassword(payload: ResetPasswordRequest): Observable<AuthMessage> {
@@ -74,14 +75,14 @@ export class AuthService {
       payload,
       { withCredentials: true },
     ).pipe(
-      map(response => response.data),
+      unwrap(),
       tap(() => this.clearSession())
     );
   }
 
   getMe(): Observable<CurrentUser> {
     return this.http.get<ApiResponse<CurrentUser>>(`${this.apiUrl}/me`).pipe(
-      map(response => response.data),
+      unwrap(),
       tap(user => this.storeCurrentUser(user)),
     );
   }
@@ -93,7 +94,7 @@ export class AuthService {
     avatarMediaId?: string;
   }): Observable<CurrentUser> {
     return this.http.patch<ApiResponse<CurrentUser>>(`${this.apiUrl}/me`, payload).pipe(
-      map(response => response.data),
+      unwrap(),
       tap(user => this.storeCurrentUser(user)),
     );
   }
@@ -106,7 +107,7 @@ export class AuthService {
         { withCredentials: true },
       )
       .pipe(
-        map(response => response.data),
+        unwrap(),
         tap(() => this.clearSession()),
       );
   }
@@ -120,7 +121,7 @@ export class AuthService {
           { withCredentials: true },
         )
         .pipe(
-          map(response => response.data),
+          unwrap(),
           tap(session => this.setSession(session)),
           finalize(() => {
             this.refreshRequest$ = undefined;

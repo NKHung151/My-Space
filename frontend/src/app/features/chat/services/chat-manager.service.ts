@@ -88,8 +88,8 @@ export class ChatManagerService {
   }
 
   public loadUnreadCounts() {
-    this.chatService.getUnreadCounts().subscribe(res => {
-      this.unreadCounts.set(res.data || {});
+    this.chatService.getUnreadCounts().subscribe(counts => {
+      this.unreadCounts.set(counts || {});
     });
   }
 

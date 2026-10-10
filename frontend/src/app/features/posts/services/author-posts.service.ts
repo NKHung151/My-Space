@@ -1,14 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/http/api-response.model';
+import { unwrap } from '../../../core/http/api.operators';
 import { CreatePostPayload, Post, UpdatePostPayload } from '../models/post.model';
-
 
 //  AuthorPostsService — Quản lý bài viết của tác giả đã đăng nhập (CRUD).
 //  Yêu cầu Authorization header (được tự động đính kèm bởi AuthInterceptor).
-
 @Injectable({ providedIn: 'root' })
 export class AuthorPostsService {
   private readonly http = inject(HttpClient);
@@ -16,29 +15,21 @@ export class AuthorPostsService {
 
   // Lấy chi tiết một bài viết của tác giả
   getAuthorPost(postId: string | number): Observable<Post> {
-    return this.http
-      .get<ApiResponse<Post>>(`${this.baseUrl}/${postId}`)
-      .pipe(map((res) => res.data));
+    return this.http.get<ApiResponse<Post>>(`${this.baseUrl}/${postId}`).pipe(unwrap());
   }
 
   // Tạo bài viết mới
   createAuthorPost(payload: CreatePostPayload): Observable<Post> {
-    return this.http
-      .post<ApiResponse<Post>>(this.baseUrl, payload)
-      .pipe(map((res) => res.data));
+    return this.http.post<ApiResponse<Post>>(this.baseUrl, payload).pipe(unwrap());
   }
 
   /** Cập nhật nội dung bài viết */
   updateAuthorPost(postId: string | number, payload: UpdatePostPayload): Observable<Post> {
-    return this.http
-      .patch<ApiResponse<Post>>(`${this.baseUrl}/${postId}`, payload)
-      .pipe(map((res) => res.data));
+    return this.http.patch<ApiResponse<Post>>(`${this.baseUrl}/${postId}`, payload).pipe(unwrap());
   }
 
   /** Xóa vĩnh viễn bài viết */
   deleteAuthorPost(postId: string | number): Observable<void> {
-    return this.http
-      .delete<ApiResponse<void>>(`${this.baseUrl}/${postId}`)
-      .pipe(map(() => undefined));
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/${postId}`).pipe(unwrap());
   }
 }

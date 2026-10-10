@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { PaginationMeta } from '../../../core/http/api-response.model';
+import { PageMeta } from '../../../core/http/api-response.model';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { UiStateComponent } from '../../../shared/components/ui-state/ui-state.component';
@@ -38,7 +38,7 @@ export class AdminPostsComponent implements OnInit {
   readonly errorMessage = signal('');
   readonly selectedPost = signal<AdminPost | null>(null);
   readonly panelOpen = signal(false);
-  readonly pagination = signal<PaginationMeta>({ total: 0, page: 1, limit: 8, totalPages: 0 });
+  readonly pagination = signal<PageMeta>({ total: 0, page: 1, limit: 8, totalPages: 0 });
 
   readonly filterForm = this.fb.nonNullable.group({
     search: '',
@@ -74,7 +74,7 @@ export class AdminPostsComponent implements OnInit {
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: response => {
         this.posts.set(response.items);
-        if (response.meta) this.pagination.set(response.meta);
+        this.pagination.set(response.meta);
         this.loading.set(false);
       },
       error: () => {
@@ -91,9 +91,9 @@ export class AdminPostsComponent implements OnInit {
     this.selectedPost.set(post);
 
     this.postsService.getPost(post.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: response => {
+      next: post => {
         if (requestVersion !== this.detailRequestVersion || !this.panelOpen()) return;
-        this.selectedPost.set(response.data);
+        this.selectedPost.set(post);
         this.detailLoading.set(false);
       },
       error: () => {

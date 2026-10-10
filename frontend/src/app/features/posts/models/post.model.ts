@@ -1,18 +1,5 @@
 import { User } from '../../users/models/user.model';
 
-// ─── Kết quả phân trang chung ───────────────────────────────────────────────
-export interface PageMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-export interface PaginatedResult<T> {
-  items: T[];
-  meta: PageMeta;
-}
-
 // ─── Model bài viết (dùng cho cả danh sách lẫn chi tiết) ─────────────────────
 // List API (PostResponse): content = null/undefined
 // Detail API (PostDetailResponse): content = string

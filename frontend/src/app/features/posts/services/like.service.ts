@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, WritableSignal, DestroyRef } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/http/api-response.model';
+import { unwrap } from '../../../core/http/api.operators';
 import { Post } from '../models/post.model';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthModalService } from '../../../core/auth/auth-modal.service';
@@ -22,7 +23,7 @@ export class LikeService {
     const req = isCurrentlyLiked
       ? this.http.delete<ApiResponse<LikeToggleResponse>>(url)
       : this.http.post<ApiResponse<LikeToggleResponse>>(url, {});
-    return req.pipe(map((res) => res.data));
+    return req.pipe(unwrap());
   }
 
   optimisticTogglePostLike<T extends Post>(
@@ -114,6 +115,6 @@ export class LikeService {
     const req = isCurrentlyLiked
       ? this.http.delete<ApiResponse<LikeToggleResponse>>(url)
       : this.http.post<ApiResponse<LikeToggleResponse>>(url, {});
-    return req.pipe(map((res) => res.data));
+    return req.pipe(unwrap());
   }
 }

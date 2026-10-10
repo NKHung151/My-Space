@@ -1,26 +1,24 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { ApiResponse } from '../../../../core/http/api-response.model';
+import { ApiResponse, Page, PageResponse } from '../../../../core/http/api-response.model';
+import { unwrap, unwrapPage } from '../../../../core/http/api.operators';
 import {
   AdminUser,
   AdminUsersFilters,
   UpdateAdminUserRequest,
 } from '../models/admin-user.model';
-import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class AdminUsersService {
+  private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/admin/users`;
 
-  constructor(private readonly http: HttpClient) {}
-
-  getUsers(filters: AdminUsersFilters): Observable<{ items: AdminUser[]; meta: any }> {
+  getUsers(filters: AdminUsersFilters): Observable<Page<AdminUser>> {
     let params = new HttpParams()
       .set('page', filters.page)
       .set('limit', filters.limit);
-
     if (filters.search) {
       params = params.set('search', filters.search);
     }
@@ -30,26 +28,14 @@ export class AdminUsersService {
     if (filters.status) {
       params = params.set('status', filters.status);
     }
-
-    return this.http.get<ApiResponse<any>>(this.apiUrl, { params }).pipe(
-      map(res => {
-        const pageData = res.data;
-        return {
-          items: Array.isArray(pageData?.data) ? pageData.data : (pageData || []),
-          meta: pageData?.meta || res.meta || { page: 1, totalPages: 1 }
-        };
-      })
-    );
+    return this.http.get<ApiResponse<PageResponse<AdminUser>>>(this.apiUrl, { params }).pipe(unwrapPage());
   }
 
-  getUser(userId: number): Observable<ApiResponse<AdminUser>> {
-    return this.http.get<ApiResponse<AdminUser>>(`${this.apiUrl}/${userId}`);
+  getUser(userId: number): Observable<AdminUser> {
+    return this.http.get<ApiResponse<AdminUser>>(`${this.apiUrl}/${userId}`).pipe(unwrap());
   }
 
-  updateUser(
-    userId: number,
-    payload: UpdateAdminUserRequest,
-  ): Observable<ApiResponse<AdminUser>> {
-    return this.http.patch<ApiResponse<AdminUser>>(`${this.apiUrl}/${userId}`, payload);
+  updateUser(userId: number, payload: UpdateAdminUserRequest): Observable<AdminUser> {
+    return this.http.patch<ApiResponse<AdminUser>>(`${this.apiUrl}/${userId}`, payload).pipe(unwrap());
   }
 }

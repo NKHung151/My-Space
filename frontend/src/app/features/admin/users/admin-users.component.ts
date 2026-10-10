@@ -5,7 +5,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
-import { PaginationMeta } from '../../../core/http/api-response.model';
+import { PageMeta } from '../../../core/http/api-response.model';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { UiStateComponent } from '../../../shared/components/ui-state/ui-state.component';
@@ -35,7 +35,7 @@ export class AdminUsersComponent implements OnInit {
   readonly pageSize = 8;
   readonly users = signal<AdminUser[]>([]);
   readonly directoryTotal = signal(0);
-  readonly pagination = signal<PaginationMeta>({ total: 0, page: 1, limit: this.pageSize, totalPages: 0 });
+  readonly pagination = signal<PageMeta>({ total: 0, page: 1, limit: this.pageSize, totalPages: 0 });
   readonly loading = signal(true);
   readonly errorMessage = signal('');
   readonly selectedUser = signal<AdminUser | null>(null);
@@ -96,9 +96,7 @@ export class AdminUsersComponent implements OnInit {
     }).subscribe({
       next: response => {
         this.users.set(response.items);
-        if (response.meta) {
-          this.pagination.set(response.meta);
-        }
+        this.pagination.set(response.meta);
         this.directoryTotal.set(Number((response.meta as any)?.['directoryTotal'] ?? response.meta?.total ?? 0));
         this.loading.set(false);
       },
@@ -137,11 +135,10 @@ export class AdminUsersComponent implements OnInit {
     this.detailLoading.set(true);
 
     this.adminUsersService.getUser(user.id).subscribe({
-      next: response => {
+      next: selected => {
         if (!this.drawerOpen()) {
           return;
         }
-        const selected = response.data;
         this.selectedUser.set(selected);
         this.editForm.reset({
           role: selected.role ?? 'user',
@@ -181,11 +178,11 @@ export class AdminUsersComponent implements OnInit {
     const status: AdminUserStatus = input.checked ? 'active' : 'inactive';
     this.setUpdating(user.id, true);
     this.adminUsersService.updateUser(user.id, { status }).subscribe({
-      next: response => {
-        this.replaceUser(response.data);
+      next: updated => {
+        this.replaceUser(updated);
         this.setUpdating(user.id, false);
-        const label = response.data.status === 'active' ? 'Đang hoạt động' : 'Không hoạt động';
-        this.toastService.showSuccess(`Trạng thái tài khoản của ${this.userName(response.data)} đã chuyển thành “${label}”.`);
+        const label = updated.status === 'active' ? 'Đang hoạt động' : 'Không hoạt động';
+        this.toastService.showSuccess(`Trạng thái tài khoản của ${this.userName(updated)} đã chuyển thành “${label}”.`);
       },
       error: () => {
         input.checked = user.status === 'active';
@@ -213,11 +210,11 @@ export class AdminUsersComponent implements OnInit {
         status: values.active ? 'active' : 'inactive',
       }),
     }).subscribe({
-      next: response => {
-        this.replaceUser(response.data);
+      next: updated => {
+        this.replaceUser(updated);
         this.saving.set(false);
         this.closeDrawer();
-        this.toastService.showSuccess(`Đã lưu thay đổi của ${this.userName(response.data)}.`);
+        this.toastService.showSuccess(`Đã lưu thay đổi của ${this.userName(updated)}.`);
       },
       error: () => {
         this.saving.set(false);

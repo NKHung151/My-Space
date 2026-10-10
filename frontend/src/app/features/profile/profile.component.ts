@@ -12,7 +12,6 @@ import { AuthorPostsService } from '../posts/services/author-posts.service';
 import { FeedPostsService } from '../posts/services/feed-posts.service';
 import { FriendUser } from '../friends/models/friend.model';
 import { FriendsService } from '../friends/services/friends.service';
-import { User } from '../users/models/user.model';
 import { UsersService } from '../users/services/users.service';
 import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
 import { FriendButtonComponent } from '../friends/components/friend-button/friend-button.component';
@@ -126,13 +125,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.showFriendsModal.set(true);
     document.body.classList.add('profile-modal-open');
 
-    const request: Observable<Array<any>> = this.isOwnProfile()
+    const request: Observable<FriendUser[]> = this.isOwnProfile()
       ? this.friendsService.getFriends()
       : of([]);
     request.subscribe({
       next: people => {
         if (this.showFriendsModal() && this.peopleModalMode() === mode) {
-          this.people.set(people.map(person => this.toFriendUser(person)));
+          this.people.set(people);
         }
         this.peopleLoading.set(false);
       },
@@ -278,15 +277,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.loadingProfile.set(false);
       },
     });
-  }
-  private toFriendUser(person: FriendUser | User): FriendUser {
-    return {
-      id: person.id,
-      username: person.username,
-      displayName: person.displayName,
-      avatarUrl: person.avatarUrl || null,
-      bio: person.bio || null,
-    };
   }
 
   private formatError(error: unknown): string {

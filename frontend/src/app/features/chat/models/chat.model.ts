@@ -10,8 +10,3 @@ export interface MessageResponse {
   isEdited?: boolean;
   clientMessageId?: string;
 }
-
-export interface PageResponse<T> {
-  data: T[];
-  meta: any;
-}

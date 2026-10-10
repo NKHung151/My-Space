@@ -208,7 +208,7 @@ export class PostEditorComponent implements OnInit, OnDestroy {
     this.isUploading = true;
     this.toast.showLoading('Đang tải tệp lên...', 'Đang xử lý');
 
-    this.uploadsService.uploadEditorMedia(mediaType, file).subscribe({
+    this.uploadsService.uploadEditorMedia(file).subscribe({
       next: (upload) => {
         const tag = mediaType === 'image' ? `<img src="${upload.url}" />` : `<video src="${upload.url}" controls></video>`;
         this.insertHtmlAtCursor(tag);

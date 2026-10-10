@@ -4,6 +4,7 @@ import { WebSocketService } from '../websocket/websocket.service';
 import { AuthService } from '../auth/auth.service';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../http/api-response.model';
+import { unwrap } from '../http/api.operators';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 @Injectable({
@@ -51,10 +52,10 @@ export class PresenceService {
 
   private loadInitialPresence() {
     // Lấy trạng thái online ban đầu
-    this.http.get<ApiResponse<number[]>>(`${environment.apiUrl}/presence`).subscribe({
-      next: (response) => {
-        if (response.data) {
-          this._onlineUsers.set(new Set(response.data));
+    this.http.get<ApiResponse<number[]>>(`${environment.apiUrl}/presence`).pipe(unwrap()).subscribe({
+      next: (userIds) => {
+        if (userIds) {
+          this._onlineUsers.set(new Set(userIds));
         }
       },
       error: (err) => console.error('[PresenceService] Failed to load initial presence', err)

@@ -1,11 +1,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { Observable, map, tap, BehaviorSubject, of, catchError } from 'rxjs';
+import { Observable, tap, BehaviorSubject, of, catchError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse, ApiItemResponse } from '../../../core/http/api-response.model';
+import { ApiResponse, Page, PageResponse } from '../../../core/http/api-response.model';
+import { unwrap, unwrapPage } from '../../../core/http/api.operators';
 import { AuthService } from '../../../core/auth/auth.service';
-import { FriendUser, FriendshipStatus } from '../models/friend.model';
+import { FriendRequestResponse, FriendUser, FriendshipStatus } from '../models/friend.model';
 import { Post } from '../../posts/models/post.model';
 
 @Injectable({ providedIn: 'root' })
@@ -31,33 +32,25 @@ export class FriendsService {
     });
   }
 
-  getFeed(page?: number, limit?: number): Observable<{ items: Post[], meta: any }> {
+  getFeed(page?: number, limit?: number): Observable<Page<Post>> {
     let params = new HttpParams();
     if (page) params = params.set('page', page);
     if (limit) params = params.set('limit', limit);
-    return this.http.get<ApiResponse<any>>(`${this.baseUrl}/feed`, { params })
-      .pipe(map(response => {
-        const pageData = response.data;
-        return { 
-          items: Array.isArray(pageData?.data) ? pageData.data : [], 
-          meta: pageData?.meta || { page: 1, totalPages: 1 } 
-        };
-      }));
+
+    return this.http.get<ApiResponse<PageResponse<Post>>>(`${this.baseUrl}/feed`, { params }).pipe(unwrapPage());
   }
 
   getFriends(): Observable<FriendUser[]> {
-    return this.http.get<ApiItemResponse<FriendUser[]>>(`${this.baseUrl}`)
-      .pipe(map(response => response.data));
+    return this.http.get<ApiResponse<FriendUser[]>>(this.baseUrl).pipe(unwrap());
   }
 
-  getRequests(): Observable<{ sender: FriendUser }[]> {
-    return this.http.get<ApiItemResponse<any[]>>(`${this.baseUrl}/requests`)
-      .pipe(map(response => response.data));
+  getRequests(): Observable<FriendRequestResponse[]> {
+    return this.http.get<ApiResponse<FriendRequestResponse[]>>(`${this.baseUrl}/requests`).pipe(unwrap());
   }
 
   getFriendStatus(userId: string | number): Observable<FriendshipStatus> {
     if (!this.authService.isAuthenticated()) return of('none');
-    
+
     const idStr = String(userId);
     if (!this.statusCache.has(idStr)) {
       this.statusCache.set(idStr, new BehaviorSubject<FriendshipStatus>('none'));
@@ -67,7 +60,7 @@ export class FriendsService {
   }
 
   private fetchFriendStatus(userId: string) {
-    this.http.get<ApiItemResponse<{ status: string }>>(`${this.baseUrl}/status/${userId}`)
+    this.http.get<ApiResponse<{ status: string }>>(`${this.baseUrl}/status/${userId}`)
       .pipe(catchError(() => of({ data: { status: 'none' as FriendshipStatus } })))
       .subscribe(res => {
         if (this.statusCache.has(userId)) {
@@ -78,28 +71,28 @@ export class FriendsService {
       });
   }
 
-  sendRequest(userId: string | number): Observable<any> {
+  sendRequest(userId: string | number): Observable<unknown> {
     const idStr = String(userId);
     return this.http.post(`${this.baseUrl}/requests/${idStr}`, {}).pipe(
       tap(() => this.updateStatus(idStr, 'pending_sent'))
     );
   }
 
-  acceptRequest(userId: string | number): Observable<any> {
+  acceptRequest(userId: string | number): Observable<unknown> {
     const idStr = String(userId);
     return this.http.post(`${this.baseUrl}/requests/${idStr}/accept`, {}).pipe(
       tap(() => this.updateStatus(idStr, 'friends'))
     );
   }
 
-  rejectRequest(userId: string | number): Observable<any> {
+  rejectRequest(userId: string | number): Observable<unknown> {
     const idStr = String(userId);
     return this.http.post(`${this.baseUrl}/requests/${idStr}/reject`, {}).pipe(
       tap(() => this.updateStatus(idStr, 'none'))
     );
   }
 
-  removeFriend(userId: string | number): Observable<any> {
+  removeFriend(userId: string | number): Observable<unknown> {
     const idStr = String(userId);
     return this.http.delete(`${this.baseUrl}/${idStr}`).pipe(
       tap(() => this.updateStatus(idStr, 'none'))

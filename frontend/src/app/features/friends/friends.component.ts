@@ -8,7 +8,7 @@ import { AuthorTooltipComponent } from '../users/components/author-tooltip/autho
 import { FriendButtonComponent } from './components/friend-button/friend-button.component';
 import { AssetImageDirective } from '../../shared/directives/asset-image.directive';
 import { Post } from '../posts/models/post.model';
-import { FriendUser } from './models/friend.model';
+import { FriendRequestResponse, FriendUser } from './models/friend.model';
 
 @Component({
   selector: 'app-friends',
@@ -25,7 +25,7 @@ export class FriendsComponent implements OnInit {
   
   posts: Post[] = [];
   friends: FriendUser[] = [];
-  requests: any[] = [];
+  requests: FriendRequestResponse[] = [];
   
   loading = true;
   loadingFeed = false;

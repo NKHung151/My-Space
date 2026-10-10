@@ -49,9 +49,9 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // 1. Get or create conversation ID
     this.chatService.getConversationId(this.targetUser.id).subscribe({
-      next: (res) => {
-        if (res.data) {
-          this.conversationId = res.data;
+      next: (conversationId) => {
+        if (conversationId) {
+          this.conversationId = conversationId;
           this.loadMessages();
         }
       },
@@ -104,12 +104,10 @@ export class ChatWindowComponent implements OnInit, OnDestroy {
   loadMessages() {
     if (!this.conversationId) return;
     this.chatService.getMessages(this.conversationId, 1, 50).subscribe({
-      next: (res) => {
-        if (res.data && res.data.data) {
-          // Tin nhắn trả về orderByCreatedAtDesc nên phải reverse lại để cuộn xuống dưới
-          this.messages.set(res.data.data.reverse());
-          this.scrollToBottom();
-        }
+      next: (page) => {
+        // Tin nhắn trả về orderByCreatedAtDesc nên phải reverse lại để cuộn xuống dưới
+        this.messages.set(page.items.reverse());
+        this.scrollToBottom();
       }
     });
   }

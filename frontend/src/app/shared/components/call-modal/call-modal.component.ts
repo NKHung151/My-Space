@@ -28,8 +28,8 @@ export class CallModalComponent {
         if (!this.partnerInfo || this.partnerInfo.id !== call.partnerId) {
           // Load partner info
           // Lấy nhanh từ danh sách bạn bè
-          this.friendService.getFriends().subscribe((res: any) => {
-            this.partnerInfo = res?.find((f: any) => f.id === call.partnerId) || null;
+          this.friendService.getFriends().subscribe(friends => {
+            this.partnerInfo = friends.find(f => f.id === call.partnerId) || null;
           });
         }
         

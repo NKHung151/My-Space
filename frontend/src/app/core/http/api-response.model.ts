@@ -1,34 +1,32 @@
 /**
- * ApiResponse<T> - Interface chuẩn hoá cho tất cả response trả về từ API.
- * 
- * Format chuẩn:
- * - Trả về 1 object đơn:  { success: true, data: { ... }, status: 200, message: 'ok' }
- * - Trả về 1 mảng:        { success: true, data: [...], status: 200, message: 'ok' }
- * - Trả về nhiều resource: { success: true, data: { resource1: {...}, resource2: {...} }, status: 200, message: 'ok' }
- * - Trả về phân trang:    { success: true, data: [...], meta: { page, limit, total, totalPages }, status: 200, message: 'ok' }
- * - Khi có lỗi:           { success: false, data: null, status: 4xx|5xx, message: '...', details?: [...] }
+ * Body chuẩn của mọi API — khớp common/dto/ApiResponse ở BE.
+ * - Thành công: { success: true, data, status: 200, message: 'ok' }
+ * - Lỗi:        { success: false, data: null, status: 4xx|5xx, message, details? }
  */
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
   status: number;
   message: string;
-  meta?: PaginationMeta;
-  details?: any;
+  details?: unknown;
 }
 
-export interface ApiItemResponse<T> {
-  success: boolean;
-  data: T;
-  status: number;
-  message: string;
-}
-
-
-export interface PaginationMeta {
+/** Khớp PageResponse.Meta ở BE — page đánh số từ 1. */
+export interface PageMeta {
   total: number;
   page: number;
   limit: number;
   totalPages: number;
 }
 
+/** Khớp PageResponse ở BE (nằm trong ApiResponse.data của các API phân trang). */
+export interface PageResponse<T> {
+  data: T[];
+  meta: PageMeta;
+}
+
+/** Trang dữ liệu đã bóc khỏi ApiResponse — kiểu duy nhất component dùng cho danh sách phân trang. */
+export interface Page<T> {
+  items: T[];
+  meta: PageMeta;
+}
