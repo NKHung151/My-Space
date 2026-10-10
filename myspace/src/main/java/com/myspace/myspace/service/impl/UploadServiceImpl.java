@@ -3,6 +3,7 @@ package com.myspace.myspace.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.myspace.myspace.common.exception.AppException;
+import com.myspace.myspace.common.util.AfterCommit;
 import com.myspace.myspace.common.util.FileSignature;
 import com.myspace.myspace.dto.response.UploadResponse;
 import com.myspace.myspace.moderation.ModerationClient;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -79,12 +81,29 @@ public class UploadServiceImpl implements UploadService {
             return;
         }
 
-        try {
-            String resourceType = "video".equals(asset.getMediaType()) ? "video" : "image";
-            cloudinary.uploader().destroy(asset.getPublicId(), ObjectUtils.asMap("resource_type", resourceType));
+        String publicId = asset.getPublicId();
+        String resourceType = "video".equals(asset.getMediaType()) ? "video" : "image";
+
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            // Đang trong transaction (xóa/sửa bài, đổi avatar): xóa bản ghi cùng transaction,
+            // chỉ xóa file trên Cloudinary SAU KHI commit — rollback thì file vẫn còn nguyên
             mediaAssetRepository.delete(asset);
+            AfterCommit.run(() -> destroyOnCloudinary(publicId, resourceType));
+        } else {
+            // Không có transaction (job dọn media tạm): xóa file trước, thành công mới xóa bản ghi để lần sau còn thử lại
+            if (destroyOnCloudinary(publicId, resourceType)) {
+                mediaAssetRepository.delete(asset);
+            }
+        }
+    }
+
+    private boolean destroyOnCloudinary(String publicId, String resourceType) {
+        try {
+            cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", resourceType));
+            return true;
         } catch (Exception e) {
-            log.error("Error deleting media from Cloudinary", e);
+            log.error("Error deleting media {} from Cloudinary", publicId, e);
+            return false;
         }
     }
 

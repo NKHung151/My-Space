@@ -1,5 +1,6 @@
 package com.myspace.myspace.service.search.impl;
 
+import com.myspace.myspace.common.util.AfterCommit;
 import com.myspace.myspace.document.PostDocument;
 import com.myspace.myspace.document.UserDocument;
 import com.myspace.myspace.entity.Post;
@@ -23,11 +24,14 @@ public class SearchIndexServiceImpl implements SearchIndexService {
 
     @Override
     public void indexUser(User user) {
-        try {
-            userSearchRepository.save(toDocument(user));
-        } catch (Exception e) {
-            log.error("Failed to index user [id={}] to Elasticsearch: {}", user.getId(), e.getMessage());
-        }
+        UserDocument doc = toDocument(user); // dựng ngay khi còn trong transaction (tránh lazy-loading sau commit)
+        AfterCommit.run(() -> {
+            try {
+                userSearchRepository.save(doc);
+            } catch (Exception e) {
+                log.error("Failed to index user [id={}] to Elasticsearch: {}", doc.getId(), e.getMessage());
+            }
+        });
     }
 
     @Override
@@ -42,11 +46,14 @@ public class SearchIndexServiceImpl implements SearchIndexService {
 
     @Override
     public void indexPost(Post post) {
-        try {
-            postSearchRepository.save(toDocument(post));
-        } catch (Exception e) {
-            log.error("Failed to index post [id={}] to Elasticsearch: {}", post.getId(), e.getMessage());
-        }
+        PostDocument doc = toDocument(post);
+        AfterCommit.run(() -> {
+            try {
+                postSearchRepository.save(doc);
+            } catch (Exception e) {
+                log.error("Failed to index post [id={}] to Elasticsearch: {}", doc.getId(), e.getMessage());
+            }
+        });
     }
 
     @Override
@@ -61,11 +68,13 @@ public class SearchIndexServiceImpl implements SearchIndexService {
 
     @Override
     public void removePost(Long postId) {
-        try {
-            postSearchRepository.deleteById(postId);
-        } catch (Exception e) {
-            log.error("Failed to remove post [id={}] from Elasticsearch: {}", postId, e.getMessage());
-        }
+        AfterCommit.run(() -> {
+            try {
+                postSearchRepository.deleteById(postId);
+            } catch (Exception e) {
+                log.error("Failed to remove post [id={}] from Elasticsearch: {}", postId, e.getMessage());
+            }
+        });
     }
 
     private UserDocument toDocument(User user) {

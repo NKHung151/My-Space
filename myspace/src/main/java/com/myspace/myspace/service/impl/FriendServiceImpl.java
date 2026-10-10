@@ -1,6 +1,7 @@
 package com.myspace.myspace.service.impl;
 
 import com.myspace.myspace.common.dto.PageResponse;
+import com.myspace.myspace.common.util.AfterCommit;
 import com.myspace.myspace.dto.response.FriendRequestResponse;
 import com.myspace.myspace.dto.response.FriendshipStatusResponse;
 import com.myspace.myspace.dto.response.PostResponse;
@@ -81,7 +82,7 @@ public class FriendServiceImpl implements FriendService {
                 .sender(PostMapper.toPublicUser(sender))
                 .build();
         log.info("[WS] Sending friend-request notification to user: {}", receiver.getEmail());
-        messagingTemplate.convertAndSendToUser(
+        notifyAfterCommit(
                 receiver.getEmail(),
                 "/queue/friend-requests",
                 response
@@ -119,7 +120,7 @@ public class FriendServiceImpl implements FriendService {
 
         // Thông báo cho người GỬI lời mời: lời mời đã được chấp nhận (dùng email = principal name)
         PublicUserResponse currentUserResponse = PostMapper.toPublicUser(currentUser);
-        messagingTemplate.convertAndSendToUser(
+        notifyAfterCommit(
                 senderUser.getEmail(),
                 "/queue/friend-accept",
                 currentUserResponse
@@ -127,7 +128,7 @@ public class FriendServiceImpl implements FriendService {
 
         // Thông báo cho người CHẤP NHẬN (currentUser): thêm senderUser vào danh sách bạn
         PublicUserResponse senderResponse = PostMapper.toPublicUser(senderUser);
-        messagingTemplate.convertAndSendToUser(
+        notifyAfterCommit(
                 currentUser.getEmail(),
                 "/queue/friend-accept",
                 senderResponse
@@ -147,7 +148,7 @@ public class FriendServiceImpl implements FriendService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         // Báo cho người từ chối (currentUser) biết để ẩn lời mời khỏi giao diện
-        messagingTemplate.convertAndSendToUser(
+        notifyAfterCommit(
                 currentUser.getEmail(),
                 "/queue/friend-reject",
                 senderId
@@ -166,14 +167,14 @@ public class FriendServiceImpl implements FriendService {
                 .orElseThrow(() -> new IllegalArgumentException("Friend not found"));
 
         // Báo cho người bị xóa (friendUser) biết rằng currentUserId đã không còn là bạn
-        messagingTemplate.convertAndSendToUser(
+        notifyAfterCommit(
                 friendUser.getEmail(),
                 "/queue/friend-remove",
                 currentUserId
         );
 
         // Báo cho người chủ động xóa (currentUser) biết để tự xóa friendId khỏi danh sách
-        messagingTemplate.convertAndSendToUser(
+        notifyAfterCommit(
                 currentUser.getEmail(),
                 "/queue/friend-remove",
                 friendId
@@ -229,5 +230,13 @@ public class FriendServiceImpl implements FriendService {
 
         return new PageResponse<>(items, new PageResponse.Meta(
                 postsPage.getTotalElements(), page, limit, postsPage.getTotalPages()));
+    }
+
+    /**
+     * Đẩy thông báo WebSocket sau khi transaction commit: nếu gửi trước, client có thể gọi API ngay
+     * mà dữ liệu chưa commit (thấy trạng thái cũ), hoặc nhận thông báo cho thao tác đã bị rollback.
+     */
+    private void notifyAfterCommit(String userEmail, String destination, Object payload) {
+        AfterCommit.run(() -> messagingTemplate.convertAndSendToUser(userEmail, destination, payload));
     }
 }
