@@ -1,10 +1,11 @@
-# Sao chép file này thành application.properties rồi điền giá trị thật (application.properties bị .gitignore chặn).
+# Sao chép file này thành application.properties (bị .gitignore chặn).
+# Secret đọc từ biến môi trường dạng ${TÊN_BIẾN:giá-trị-mặc-định} -> không cần ghi secret thật vào file.
 spring.application.name=myspace
 
 # Datasource — tạo DB rỗng trước: CREATE DATABASE myspace CHARACTER SET utf8mb4;
-spring.datasource.url=jdbc:mysql://localhost:3306/myspace
-spring.datasource.username=root
-spring.datasource.password=CHANGE_ME
+spring.datasource.url=${DB_URL:jdbc:mysql://localhost:3306/myspace}
+spring.datasource.username=${DB_USERNAME:root}
+spring.datasource.password=${DB_PASSWORD}
 
 # Schema do Flyway quản lý (db/migration/V*.sql); Hibernate chỉ kiểm tra entity khớp với DB
 spring.jpa.hibernate.ddl-auto=validate
@@ -23,11 +24,11 @@ spring.data.redis.host=localhost
 spring.data.redis.port=6379
 
 # JWT — secret tối thiểu 256 bit (64 ký tự hex). Sinh bằng: openssl rand -hex 64
-jwt.secret=CHANGE_ME
+jwt.secret=${JWT_SECRET}
 jwt.access-token.expiration=900000
 jwt.refresh-token.expiration=86400000
 # Cookie refresh_token chỉ gửi qua HTTPS — bật true khi deploy production
-app.cookie.secure=false
+app.cookie.secure=${COOKIE_SECURE:false}
 
 # Jackson: bỏ field null khỏi JSON response
 spring.jackson.default-property-inclusion=non_null
@@ -35,15 +36,15 @@ spring.jackson.default-property-inclusion=non_null
 # Mail (Gmail SMTP — dùng App Password, không dùng mật khẩu tài khoản)
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
-spring.mail.username=CHANGE_ME@gmail.com
-spring.mail.password=CHANGE_ME
+spring.mail.username=${MAIL_USERNAME}
+spring.mail.password=${MAIL_APP_PASSWORD}
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
 # Cloudinary
-cloudinary.cloud-name=CHANGE_ME
-cloudinary.api-key=CHANGE_ME
-cloudinary.api-secret=CHANGE_ME
+cloudinary.cloud-name=${CLOUDINARY_CLOUD_NAME}
+cloudinary.api-key=${CLOUDINARY_API_KEY}
+cloudinary.api-secret=${CLOUDINARY_API_SECRET}
 
 # Actuator
 management.endpoints.web.exposure.include=health,info,metrics
@@ -62,4 +63,4 @@ app.cors.allowed-origins=http://localhost:4200
 
 # Service kiểm duyệt ảnh (nsfw-ai)
 moderation.url=http://127.0.0.1:8000
-moderation.api-key=
+moderation.api-key=${MODERATION_API_KEY:}

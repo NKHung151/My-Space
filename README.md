@@ -316,7 +316,7 @@ erDiagram
 
 ## Cấu hình môi trường
 
-Sao chép `myspace/src/main/resources/application.properties.example` thành `application.properties` rồi điền giá trị thật. **Không commit `application.properties` lên repo.**
+Sao chép `myspace/src/main/resources/application.properties.example` thành `application.properties`. Các secret được đọc từ biến môi trường (`DB_PASSWORD`, `JWT_SECRET`, `MAIL_USERNAME`, `MAIL_APP_PASSWORD`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, ...) nên không cần ghi secret thật vào file. **Không commit `application.properties` lên repo.**
 
 ### Backend
 
