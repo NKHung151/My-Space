@@ -17,13 +17,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findByAuthorId(Long authorId, Pageable pageable);
     Optional<Post> findByIdAndAuthorId(Long id, Long authorId);
 
-    @Query("SELECT p FROM Post p WHERE (:tag IS NULL OR p.tag = :tag) AND (:hasVideo IS NULL OR p.hasVideo = :hasVideo) AND (:authorId IS NULL OR p.author.id = :authorId)")
+    // Chỉ bài đã xuất bản (bản nháp chỉ tác giả xem qua /api/author/posts)
+    @Query("SELECT p FROM Post p WHERE p.publishedAt IS NOT NULL AND (:tag IS NULL OR p.tag = :tag) AND (:hasVideo IS NULL OR p.hasVideo = :hasVideo) AND (:authorId IS NULL OR p.author.id = :authorId)")
     Page<Post> findPublicPosts(@Param("tag") String tag, @Param("hasVideo") Boolean hasVideo, @Param("authorId") Long authorId, Pageable pageable);
 
-    @Query(value = "SELECT tag as tag, count(*) as count FROM posts WHERE tag IS NOT NULL GROUP BY tag ORDER BY count DESC LIMIT :limit", nativeQuery = true)
+    @Query(value = "SELECT tag as tag, count(*) as count FROM posts WHERE tag IS NOT NULL AND published_at IS NOT NULL GROUP BY tag ORDER BY count DESC LIMIT :limit", nativeQuery = true)
     List<Object[]> getPopularTags(@Param("limit") int limit);
 
-    @Query("SELECT p FROM Post p INNER JOIN Friendship f ON p.author.id = f.friend.id WHERE f.user.id = :userId")
+    @Query("SELECT p FROM Post p INNER JOIN Friendship f ON p.author.id = f.friend.id WHERE f.user.id = :userId AND p.publishedAt IS NOT NULL")
     Page<Post> findPostsByFriendship(@Param("userId") Long userId, Pageable pageable);
 
     @Query("SELECT p FROM Post p WHERE " +

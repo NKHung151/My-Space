@@ -284,7 +284,8 @@ export class PostEditorComponent implements OnInit, OnDestroy {
 
     const request$ = this.currentPostId
       ? this.postsService.updateAuthorPost(this.currentPostId, this.draft)
-      : this.postsService.createAuthorPost(this.draft);
+      // Nút "Lưu" là đăng bài: trước đây không gửi publish nên bài luôn ở trạng thái chưa xuất bản (publishedAt = null)
+      : this.postsService.createAuthorPost({ ...this.draft, publish: true });
 
     request$.subscribe({
       next: (post: Post) => {

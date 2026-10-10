@@ -67,10 +67,12 @@ public class PublicPostServiceImpl implements PublicPostService {
     @Override
     @Transactional(readOnly = true)
     public PostDetailResponse getPublicPost(Long id) {
+        Long currentUserId = getCurrentUserId();
         Post post = postRepository.findById(id)
+                // Bản nháp chỉ tác giả xem được; người khác nhận 404 như bài không tồn tại
+                .filter(p -> p.getPublishedAt() != null || p.getAuthor().getId().equals(currentUserId))
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
         PostDetailResponse response = PostMapper.toDetailResponse(post);
-        Long currentUserId = getCurrentUserId();
         if (currentUserId != null) {
             response.setLiked(postLikeRepository.existsByPostIdAndUserId(id, currentUserId));
         } else {
@@ -93,8 +95,10 @@ public class PublicPostServiceImpl implements PublicPostService {
 
     @Override
     public void increaseViewCount(Long id, String viewerId) {
-        // Only verify post exists, then increment in Redis
-        postRepository.findById(id).orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
+        // Chỉ đếm lượt xem cho bài đã xuất bản, rồi cộng dồn ở Redis
+        postRepository.findById(id)
+                .filter(p -> p.getPublishedAt() != null)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy bài viết."));
         viewCountService.incrementViewCount(id, viewerId);
     }
 
@@ -156,7 +160,8 @@ public class PublicPostServiceImpl implements PublicPostService {
         if (items.isEmpty()) return;
         java.util.Map<Long, Post> posts = postRepository.findAllById(items.stream().map(PostResponse::getId).toList())
                 .stream().collect(Collectors.toMap(Post::getId, p -> p));
-        items.removeIf(item -> !posts.containsKey(item.getId()));
+        // Bỏ bài đã xóa khỏi DB (còn sót trong ES) và bài chưa xuất bản
+        items.removeIf(item -> !posts.containsKey(item.getId()) || posts.get(item.getId()).getPublishedAt() == null);
         items.forEach(item -> {
             Post post = posts.get(item.getId());
             item.setLikeCount(post.getLikeCount());
