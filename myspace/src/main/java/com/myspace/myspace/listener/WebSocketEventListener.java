@@ -1,4 +1,4 @@
-package com.myspace.myspace.config;
+package com.myspace.myspace.listener;
 
 import com.myspace.myspace.dto.response.PresenceResponse;
 import com.myspace.myspace.repository.UserRepository;
