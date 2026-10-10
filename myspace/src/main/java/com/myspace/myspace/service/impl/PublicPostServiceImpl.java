@@ -143,8 +143,8 @@ public class PublicPostServiceImpl implements PublicPostService {
         return limit <= 0 ? 1 : (int) Math.ceil((double) total / limit);
     }
 
-    Elasticsearch chỉ dùng để tìm (match); số like/bình luận/lượt xem lấy từ MySQL vì ES không còn
-    được index lại sau mỗi lượt like/bình luận. Bài đã xóa khỏi DB nhưng còn sót trong ES thì bị loại.
+    // Elasticsearch chỉ dùng để tìm (match); số like/bình luận/lượt xem lấy từ MySQL vì ES không còn
+    // được index lại sau mỗi lượt like/bình luận. Bài đã xóa khỏi DB nhưng còn sót trong ES thì bị loại.
     
     private void populateCountsFromDatabase(List<PostResponse> items) {
         if (items.isEmpty()) return;
