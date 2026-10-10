@@ -447,4 +447,4 @@ Mỗi ảnh upload (bài viết hoặc avatar) được kiểm tra tự động 
 4. `APPROVED` → upload lên Cloudinary bình thường.
 5. Service AI không phản hồi → **HTTP 503**.
 
-**Giới hạn hiện tại:** chỉ phát hiện bạo lực/vũ khí; chưa xử lý nội dung khiêu dâm; không quét video/audio; giới hạn 10 MB/ảnh.
+**Giới hạn hiện tại:** chỉ phát hiện bạo lực/vũ khí; không quét video/audio; giới hạn 10 MB/ảnh.
